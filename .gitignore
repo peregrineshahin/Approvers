@@ -1,0 +1,12 @@
+*.o
+.depend
+*.exe
+*.out
+*.gcda
+*.profraw
+*.s
+*.nnue
+*.txt
+*.swp
+cfish*
+TODO
