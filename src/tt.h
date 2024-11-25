@@ -65,7 +65,8 @@ typedef struct Cluster Cluster;
 struct TranspositionTable {
   size_t clusterCount;
   Cluster *table;
-  alloc_t alloc;
+  void *mem;
+  size_t allocSize;
   uint8_t generation8; // Size must be not bigger than TTEntry::genBound8
 };
 

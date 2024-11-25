@@ -115,6 +115,9 @@ static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void update_pv(Move *pv, Move move, Move *childPv);
 static void update_cm_stats(Stack *ss, Piece pc, Square s, int bonus);
+static int32_t get_correction(const correction_history_t hist, Color side, Key materialKey);
+static void add_correction_history(
+    correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position *pos, Stack *ss, Move move,
     int bonus, Depth depth);
 static void update_capture_stats(const Position *pos, Move move, Move *captures,
@@ -161,6 +164,7 @@ void search_clear(void)
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
     stats_clear(pos->lowPlyHistory);
+    stats_clear(pos->corrHistory);
   }
 
   mainThread.previousScore = VALUE_INFINITE;
@@ -487,9 +491,6 @@ void thread_search(Position *pos)
           failedHighCnt = 0;
           if (pos->threadIdx == 0)
             Threads.stopOnPonderhit = false;
-        } else if (bestValue >= beta) {
-          beta = min(bestValue + delta, VALUE_INFINITE);
-          failedHighCnt++;
         } else {
           rm->move[pvIdx].bestMoveCount++;
           break;
@@ -614,7 +615,7 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
   Key posKey;
   Move ttMove, move, excludedMove, bestMove;
   Depth extension, newDepth;
-  Value bestValue, value, ttValue, eval, maxValue, probCutBeta;
+  Value bestValue, value, ttValue, eval, rawEval, maxValue, probCutBeta;
   bool ttHit, formerPv, givesCheck, improving, didLMR;
   bool captureOrPromotion, inCheck, doFullDepthSearch, moveCountPruning;
   bool ttCapture, singularQuietLMR;
@@ -669,6 +670,7 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
   (ss+1)->ttPv = false;
   (ss+1)->excludedMove = bestMove = 0;
   (ss+2)->killers[0] = (ss+2)->killers[1] = 0;
+  (ss+2)->cutoffCnt = 0;
   Square prevSq = to_sq((ss-1)->currentMove);
 
   // Initialize statScore to zero for the grandchildren of the current
@@ -736,14 +738,16 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
   // Step 6. Static evaluation of the position
   if (inCheck) {
     // Skip early pruning when in check
-    ss->staticEval = eval = VALUE_NONE;
+    ss->staticEval = eval = rawEval = VALUE_NONE;
     improving = false;
     goto moves_loop;
   } else if (ttHit) {
     // Never assume anything about values stored in TT
-    if ((eval = tte_eval(tte)) == VALUE_NONE)
-      eval = evaluate(pos);
-    ss->staticEval = eval;
+    if ((rawEval = tte_eval(tte)) == VALUE_NONE)
+      rawEval = evaluate(pos);
+
+    eval = ss->staticEval =
+            rawEval + get_correction(pos->corrHistory, stm(), material_key());
 
     if (eval == VALUE_DRAW)
       eval = value_draw(pos);
@@ -754,12 +758,15 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
       eval = ttValue;
   } else {
     if ((ss-1)->currentMove != MOVE_NULL)
-      ss->staticEval = eval = evaluate(pos);
+      rawEval = evaluate(pos);
     else
-      ss->staticEval = eval = -(ss-1)->staticEval + 2 * Tempo;
+      rawEval = -(ss-1)->staticEval + 2 * Tempo;
+
+     eval = ss->staticEval =
+            rawEval + get_correction(pos->corrHistory, stm(), material_key());
 
     tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0,
-        eval);
+        rawEval);
   }
 
   // Step 7. Razoring
@@ -772,6 +779,14 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
   improving =  (ss-2)->staticEval == VALUE_NONE
              ? (ss->staticEval > (ss-4)->staticEval || (ss-4)->staticEval == VALUE_NONE)
              :  ss->staticEval > (ss-2)->staticEval;
+
+  if (   move_is_ok((ss-1)->currentMove)
+      && !(ss-1)->checkersBB
+      && !captured_piece())
+  {
+    int bonus = clamp(-depth * 4 * ((ss-1)->staticEval + ss->staticEval - 2 * Tempo), -1000, 1000);
+    history_update(*pos->history, !stm(), (ss-1)->currentMove, bonus);
+  }
 
   // Step 8. Futility pruning: child node
   if (   !PvNode
@@ -877,7 +892,7 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
                 && tte_depth(tte) >= depth - 3
                 && ttValue != VALUE_NONE))
             tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv,
-                BOUND_LOWER, depth - 3, move, ss->staticEval);
+                BOUND_LOWER, depth - 3, move, rawEval);
           return value;
         }
       }
@@ -1034,6 +1049,9 @@ moves_loop: // When in check search starts from here.
 
       if (value < singularBeta) {
         extension = 1;
+        if (!PvNode && value < singularBeta - 75)
+            extension = 2;
+
         singularQuietLMR = !ttCapture;
       }
 
@@ -1062,6 +1080,8 @@ moves_loop: // When in check search starts from here.
         if (value >= beta) {
           return beta;
         }
+      } else if (cutNode) {
+        extension -= 1;
       }
 
       // The call to search_NonPV with the same value of ss messed up our
@@ -1151,6 +1171,9 @@ moves_loop: // When in check search starts from here.
         if (ttCapture)
           r++;
 
+        if ((ss+1)->cutoffCnt > 3)
+          r++;
+
         // Increase reduction for cut nodes
         if (cutNode)
           r += 2;
@@ -1226,6 +1249,10 @@ moves_loop: // When in check search starts from here.
       (ss+1)->pv = pv;
       (ss+1)->pv[0] = 0;
 
+      // Extend move from transposition table if we are about to dive into qsearch.
+      if (move == ttMove && ss->ply <= pos->rootDepth * 2)
+          newDepth = max(newDepth, 1);
+      
       value = -search_PV(pos, ss+1, -beta, -alpha, newDepth);
     }
 
@@ -1278,6 +1305,8 @@ moves_loop: // When in check search starts from here.
       if (value > alpha) {
         bestMove = move;
 
+        ss->cutoffCnt += !ttMove + (extension < 2);
+
         if (PvNode && !rootNode) // Update pv even in fail-high case
           update_pv(ss->pv, move, (ss+1)->pv);
 
@@ -1307,6 +1336,10 @@ moves_loop: // When in check search starts from here.
   if (Threads.stop)
     return VALUE_DRAW;
   */
+
+  if (!PvNode && bestValue >= beta && abs(bestValue) < VALUE_TB_WIN_IN_MAX_PLY
+      && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY && abs(alpha) < VALUE_TB_WIN_IN_MAX_PLY)
+      bestValue = (bestValue * depth + beta) / (depth + 1);
 
   // Step 20. Check for mate and stalemate
   // All legal moves have been searched and if there are no legal moves,
@@ -1361,8 +1394,17 @@ moves_loop: // When in check search starts from here.
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), ss->ttPv,
         bestValue >= beta ? BOUND_LOWER :
         PvNode && bestMove ? BOUND_EXACT : BOUND_UPPER,
-        depth, bestMove, ss->staticEval);
+        depth, bestMove, rawEval);
 
+  // Adjust correction history
+  if (!inCheck && (!bestMove || !is_capture_or_promotion(pos, bestMove))
+      && !(bestValue >= beta && bestValue <= ss->staticEval)
+      && !(!bestMove && bestValue >= ss->staticEval))
+  {
+      add_correction_history(pos->corrHistory, stm(), material_key(), depth,
+          bestValue - ss->staticEval);
+  }
+    
 
   return bestValue;
 }
@@ -1393,7 +1435,7 @@ INLINE Value qsearch_node(Position *pos, Stack *ss, Value alpha, Value beta,
   TTEntry *tte;
   Key posKey;
   Move ttMove, move, bestMove;
-  Value bestValue, value, ttValue, futilityValue, futilityBase, oldAlpha;
+  Value bestValue, value, rawEval, ttValue, futilityValue, futilityBase, oldAlpha;
   bool ttHit, pvHit, givesCheck;
   Depth ttDepth;
   int moveCount;
@@ -1435,28 +1477,36 @@ INLINE Value qsearch_node(Position *pos, Stack *ss, Value alpha, Value beta,
 
   // Evaluate the position statically
   if (InCheck) {
+    rawEval = VALUE_NONE;
     ss->staticEval = VALUE_NONE;
     bestValue = futilityBase = -VALUE_INFINITE;
   } else {
     if (ttHit) {
       // Never assume anything about values stored in TT
-      if ((ss->staticEval = bestValue = tte_eval(tte)) == VALUE_NONE)
-         ss->staticEval = bestValue = evaluate(pos);
+      if ((rawEval = tte_eval(tte)) == VALUE_NONE)
+         rawEval = evaluate(pos);
+      
+      ss->staticEval = bestValue = ss->staticEval =
+            rawEval + get_correction(pos->corrHistory, stm(), material_key());
+      
 
       // Can ttValue be used as a better position evaluation?
       if (    ttValue != VALUE_NONE
           && (tte_bound(tte) & (ttValue > bestValue ? BOUND_LOWER : BOUND_UPPER)))
         bestValue = ttValue;
-    } else
-      ss->staticEval = bestValue =
+    } else {
+      rawEval =
       (ss-1)->currentMove != MOVE_NULL ? evaluate(pos)
                                        : -(ss-1)->staticEval + 2 * Tempo;
+      
+      ss->staticEval = bestValue = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+    }
 
     // Stand pat. Return immediately if static value is at least beta
     if (bestValue >= beta) {
       if (!ttHit)
         tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false,
-            BOUND_LOWER, DEPTH_NONE, 0, ss->staticEval);
+            BOUND_LOWER, DEPTH_NONE, 0, rawEval);
 
       return bestValue;
     }
@@ -1564,10 +1614,13 @@ INLINE Value qsearch_node(Position *pos, Stack *ss, Value alpha, Value beta,
   if (InCheck && bestValue == -VALUE_INFINITE)
     return mated_in(ss->ply); // Plies to mate from the root
 
+  if (abs(bestValue) < VALUE_TB_WIN_IN_MAX_PLY && bestValue >= beta)
+      bestValue = (3 * bestValue + beta) / 4;
+      
   tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
       bestValue >= beta ? BOUND_LOWER :
       PvNode && bestValue > oldAlpha  ? BOUND_EXACT : BOUND_UPPER,
-      ttDepth, bestMove, ss->staticEval);
+      ttDepth, bestMove, rawEval);
 
   return bestValue;
 }
@@ -1657,6 +1710,26 @@ static void update_pv(Move *pv, Move move, Move *childPv)
   for (*pv++ = move; childPv && *childPv; )
     *pv++ = *childPv++;
   *pv = 0;
+}
+
+// differential.
+static void add_correction_history(
+    correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff)
+{
+    int32_t *entry = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t newWeight = min(16, 1 + depth);
+    int32_t scaledDiff = diff * CORRECTION_HISTORY_GRAIN;
+    int32_t update =
+        *entry * (CORRECTION_HISTORY_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight;
+    // Clamp entry in-bounds.
+    *entry = max(-CORRECTION_HISTORY_MAX,
+        min(CORRECTION_HISTORY_MAX, update / CORRECTION_HISTORY_WEIGHT_SCALE));
+}
+
+// Get the correction history differential for the given side and materialKey.
+static int32_t get_correction(const correction_history_t hist, Color side, Key materialKey)
+{
+    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
 }
 
 // update_cm_stats() updates countermove and follow-up move history.

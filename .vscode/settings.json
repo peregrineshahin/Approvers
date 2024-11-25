@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "timeman.h": "c",
+        "chrono": "c",
+        "bitboard.h": "c"
+    }
+}

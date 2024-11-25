@@ -88,6 +88,7 @@ struct Stack {
   Move killers[2];
   Value staticEval;
   Value statScore;
+  int cutoffCnt;
   int moveCount;
   bool ttPv;
   uint8_t ply;
@@ -169,6 +170,7 @@ struct Position {
   ButterflyHistory *history;
   LowPlyHistory *lowPlyHistory;
   CapturePieceToHistory *captureHistory;
+  correction_history_t corrHistory;
   PawnEntry *pawnTable;
   MaterialEntry *materialTable;
   CounterMoveHistoryStat *counterMoveHistory;

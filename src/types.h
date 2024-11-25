@@ -127,7 +127,7 @@
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
 
-enum { MAX_MOVES = 256, MAX_PLY = 246 };
+enum { MAX_MOVES = 100, MAX_PLY = 64 };
 
 // A move needs 16 bits to be stored
 //
@@ -324,6 +324,13 @@ typedef struct PawnEntry PawnEntry;
 typedef struct MaterialEntry MaterialEntry;
 
 enum { MAX_LPH = 4 };
+enum
+{
+    CORRECTION_HISTORY_ENTRY_NB = 4096,
+    CORRECTION_HISTORY_GRAIN = 256,
+    CORRECTION_HISTORY_WEIGHT_SCALE = 256,
+    CORRECTION_HISTORY_MAX = CORRECTION_HISTORY_GRAIN * 32,
+};
 
 typedef Move CounterMoveStat[16][64];
 typedef int16_t PieceToHistory[16][64];
@@ -331,6 +338,7 @@ typedef PieceToHistory CounterMoveHistoryStat[16][64];
 typedef int16_t ButterflyHistory[2][4096];
 typedef int16_t CapturePieceToHistory[16][64][8];
 typedef int16_t LowPlyHistory[MAX_LPH][4096];
+typedef int32_t correction_history_t[2][CORRECTION_HISTORY_ENTRY_NB];
 
 struct ExtMove {
   Move move;

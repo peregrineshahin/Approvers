@@ -78,9 +78,6 @@ extern size_t largePageMinimum;
 typedef HANDLE FD;
 #define FD_ERR INVALID_HANDLE_VALUE
 typedef HANDLE map_t;
-typedef struct {
-  void *ptr;
-} alloc_t;
 
 void flockfile(FILE *F);
 void funlockfile(FILE *F);
@@ -90,10 +87,6 @@ void funlockfile(FILE *F);
 typedef int FD;
 #define FD_ERR -1
 typedef size_t map_t;
-typedef struct {
-  void *ptr;
-  size_t size;
-} alloc_t;
 
 #endif
 
@@ -102,10 +95,8 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 FD open_file(const char *name);
 void close_file(FD fd);
 size_t file_size(FD fd);
-const void *map_file(FD fd, map_t *map);
-void unmap_file(const void *data, map_t map);
-void *allocate_memory(size_t size, bool lp, alloc_t *alloc);
-void free_memory(alloc_t *alloc);
+void *map_file(FD fd, map_t *map);
+void unmap_file(void *data, map_t map);
 
 struct PRNG
 {
@@ -164,12 +155,12 @@ INLINE uint16_t from_be_u16(uint16_t v)
   return is_little_endian() ? __builtin_bswap16(v) : v;
 }
 
-INLINE uint32_t read_le_u32(const void *p)
+INLINE uint32_t read_le_u32(void *p)
 {
   return from_le_u32(*(uint32_t *)p);
 }
 
-INLINE uint16_t read_le_u16(const void *p)
+INLINE uint16_t read_le_u16(void *p)
 {
   return from_le_u16(*(uint16_t *)p);
 }
