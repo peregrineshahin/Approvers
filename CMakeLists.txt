@@ -3,6 +3,9 @@ project(Peregrine C)
 
 set(CMAKE_C_STANDARD 11)
 
+# Enable this to use the Kaggle environment
+# add_definitions(-DKAGGLE)
+
 include_directories(src)
 
 add_executable(Peregrine

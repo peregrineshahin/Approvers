@@ -287,6 +287,20 @@ void uci_loop(int argc, char **argv)
         str++;
     }
 
+    // At this point we have received a command, so stop pondering
+    Threads.ponder = false;
+    Threads.stop = true;
+
+    LOCK(Threads.lock);
+    if (Threads.searching) {
+      Threads.stop = true;
+      Threads.sleeping = false;
+      thread_wait_until_sleeping(threads_main());
+    }
+    UNLOCK(Threads.lock);
+
+    Threads.stop = false;
+
     // The GUI sends 'ponderhit' to tell us the player has played the
     // expected move. In case Threads.stopOnPonderhit is set we are waiting
     // for 'ponderhit' to stop the search (for instance because we have

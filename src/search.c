@@ -255,23 +255,6 @@ void mainthread_search(void)
       thread_search(pos); // Let's start searching!
   }
 
-  // When we reach the maximum depth, we can arrive here without Threads.stop
-  // having been raised. However, if we are pondering or in an infinite
-  // search, the UCI protocol states that we shouldn't print the best
-  // move before the GUI sends a "stop" or "ponderhit" command. We
-  // therefore simply wait here until the GUI sends one of those commands
-  // (which also raises Threads.stop).
-  LOCK(Threads.lock);
-  if (!Threads.stop && (Threads.ponder || Limits.infinite)) {
-    Threads.sleeping = true;
-    UNLOCK(Threads.lock);
-    thread_wait(pos, &Threads.stop);
-  } else
-    UNLOCK(Threads.lock);
-
-  // Stop the other threads if they have not stopped already
-  Threads.stop = true;
-
   // Wait until all threads have finished
   if (pos->rootMoves->size > 0) {
       for (int idx = 1; idx < Threads.numThreads; idx++)
@@ -347,6 +330,29 @@ void mainthread_search(void)
 
   printf("\n");
   fflush(stdout);
+
+#ifdef KAGGLE
+  // Start pondering right after the best move has been printed if we can
+  if (bestThread->rootMoves->move[0].pvSize >= 2) {
+    Threads.ponder = true;
+    Threads.stop = false;
+
+    // This is breaking something
+    // const Move bestMove = bestThread->rootMoves->move[0].pv[0];
+    // const Move ponder = bestThread->rootMoves->move[0].pv[1];
+
+    // do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
+    // do_move(pos, ponder, gives_check(pos, pos->st, ponder));
+
+    thread_search(pos);
+
+    Threads.ponder = false;
+    Threads.stop = true;
+
+    // undo_move(pos, ponder);
+    // undo_move(pos, bestMove);
+  }
+#endif
 }
 
 
@@ -502,9 +508,11 @@ void thread_search(Position *pos)
       stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 skip_search:
+#ifndef KAGGLE
       if (    pos->threadIdx == 0
           && (Threads.stop || pvIdx + 1 == multiPV || time_elapsed() > 3000))
         uci_print_pv(pos, pos->rootDepth, alpha, beta);
+#endif
     }
 
     if (!Threads.stop)
@@ -941,15 +949,6 @@ moves_loop: // When in check search starts from here.
       continue;
 
     ss->moveCount = ++moveCount;
-
-    if (rootNode && pos->threadIdx == 0 && time_elapsed() > 3000) {
-      char buf[16];
-      printf("info depth %d currmove %s currmovenumber %d\n",
-             depth,
-             uci_move(buf, move, is_chess960()),
-             moveCount + pos->pvIdx);
-      fflush(stdout);
-    }
 
     if (PvNode)
       (ss+1)->pv = NULL;
