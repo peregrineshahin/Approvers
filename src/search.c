@@ -873,6 +873,22 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
 
 moves_loop: // When in check search starts from here.
   ;  // Avoid a compiler warning. A label must be followed by a statement.
+
+    ttCapture = ttMove && is_capture_or_promotion(pos, ttMove);
+    // Step 11. A small Probcut idea, when we are in check
+    probCutBeta = beta + 400;
+    if (   inCheck
+        && !PvNode
+        && depth >= 4
+        && ttCapture
+        && (tte_bound(tte) & BOUND_LOWER)
+        &&  tte_depth(tte) >= depth - 3
+        && ttValue >= probCutBeta
+        && abs(ttValue) <= VALUE_KNOWN_WIN
+        && abs(beta) <= VALUE_KNOWN_WIN
+       )
+        return probCutBeta;
+
   PieceToHistory *cmh  = (ss-1)->history;
   PieceToHistory *fmh  = (ss-2)->history;
   PieceToHistory *fmh2 = (ss-4)->history;
@@ -882,7 +898,6 @@ moves_loop: // When in check search starts from here.
 
   value = bestValue;
   singularQuietLMR = moveCountPruning = false;
-  ttCapture = ttMove && is_capture_or_promotion(pos, ttMove);
   formerPv = ss->ttPv && !PvNode;
 
   // Step 12. Loop through moves
