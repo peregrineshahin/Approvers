@@ -1173,11 +1173,11 @@ moves_loop: // When in check search starts from here.
           r++;
       }
 
-      Depth d = clamp(newDepth - r, 1, newDepth);
+      Depth d = clamp(newDepth - r, 1, newDepth + (PvNode || cutNode));
 
       value = -search_NonPV(pos, ss+1, -(alpha+1), d, 1);
 
-      doFullDepthSearch = (value > alpha && d != newDepth);
+      doFullDepthSearch = (value > alpha && d < newDepth);
       didLMR = true;
     } else {
       doFullDepthSearch = !PvNode || moveCount > 1;
