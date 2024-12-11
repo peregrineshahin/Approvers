@@ -27,8 +27,6 @@ add_executable(Peregrine
         src/movegen.h
         src/movepick.c
         src/movepick.h
-        src/numa.c
-        src/numa.h
         src/pawns.c
         src/pawns.h
         src/position.c

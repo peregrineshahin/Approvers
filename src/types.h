@@ -118,12 +118,6 @@
 #define Is64Bit 0
 #endif
 
-#ifdef NUMA
-#define HasNuma 1
-#else
-#define HasNuma 0
-#endif
-
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
 

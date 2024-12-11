@@ -29,7 +29,6 @@
 
 #include "evaluate.h"
 #include "misc.h"
-#include "numa.h"
 #include "search.h"
 #include "settings.h"
 #include "thread.h"
@@ -48,15 +47,6 @@ static void on_clear_hash(Option *opt)
 static void on_hash_size(Option *opt)
 {
   delayedSettings.ttSize = opt->value;
-}
-
-static void on_numa(Option *opt)
-{
-#ifdef NUMA
-  read_numa_nodes(opt->valString);
-#else
-  (void)opt;
-#endif
 }
 
 static void on_threads(Option *opt)
@@ -90,7 +80,6 @@ static Option optionsMap[] = {
   { "UCI_AnalyseMode", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },
   { "UCI_Chess960", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },
   { "LargePages", OPT_TYPE_CHECK, 1, 0, 0, NULL, on_large_pages, 0, NULL },
-  { "NUMA", OPT_TYPE_STRING, 0, 0, 0, "all", on_numa, 0, NULL },
   { 0 }
 };
 
@@ -102,13 +91,6 @@ void options_init()
   char *s;
   size_t len;
 
-#ifdef NUMA
-  // On a non-NUMA machine, disable the NUMA option to diminish confusion.
-  if (!numaAvail)
-    optionsMap[OPT_NUMA].type = OPT_TYPE_DISABLED;
-#else
-  optionsMap[OPT_NUMA].type = OPT_TYPE_DISABLED;
-#endif
 #ifdef _WIN32
   // Disable the LargePages option if the machine does not support it.
   if (!large_pages_supported())

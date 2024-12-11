@@ -48,8 +48,7 @@ enum {
   OPT_NODES_TIME,
   OPT_ANALYSE_MODE,
   OPT_CHESS960,
-  OPT_LARGE_PAGES,
-  OPT_NUMA
+  OPT_LARGE_PAGES
 };
 
 struct Option {

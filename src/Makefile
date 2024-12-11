@@ -40,8 +40,7 @@ PGOBENCH = ./$(EXE) bench 16 1 13
 ### Object files
 OBJS = benchmark.o bitbase.o bitboard.o endgame.o evaluate.o main.o \
 	material.o misc.o movegen.o movepick.o pawns.o position.o psqt.o \
-	search.o thread.o timeman.o tt.o uci.o ucioption.o \
-        numa.o settings.o
+	search.o thread.o timeman.o tt.o uci.o ucioption.o settings.o
 
 ### ==========================================================================
 ### Section 2. High-level Configuration
@@ -54,7 +53,6 @@ OBJS = benchmark.o bitbase.o bitboard.o endgame.o evaluate.o main.o \
 # debug = yes/no      --- -DNDEBUG         --- Enable/Disable debug mode
 # optimize = yes/no   --- (-O3/-fast etc.) --- Enable/Disable optimizations
 # arch = (name)       --- (-arch)          --- Target architecture
-# numa = yes/no       --- -DNUMA           --- Enable NUMA support
 # lto = yes/no        --- -flto            --- Enable link-time optimization
 # bits = 64/32        --- -DIS_64BIT       --- 64-/32-bit operating system
 # prefetch = yes/no   --- -DUSE_PREFETCH   --- Use prefetch asm-instruction
@@ -86,7 +84,6 @@ optimize = yes
 lto = no
 debug = no
 sanitize = no
-numa = yes
 bits = 64
 prefetch = no
 popcnt = no
@@ -658,16 +655,6 @@ ifeq ($(native),yes)
 	else
 		CFLAGS += -march=native
 	endif
-endif
-
-### numa
-ifeq ($(numa),yes)
-	CFLAGS += -DNUMA
-        ifeq ($(KERNEL),Linux)
-        ifneq ($(comp),mingw)
-		LDFLAGS += -lnuma
-        endif
-        endif
 endif
 
 ### 3.9 Link Time Optimization

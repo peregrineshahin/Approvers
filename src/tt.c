@@ -26,7 +26,6 @@
 #endif
 
 #include "bitboard.h"
-#include "numa.h"
 #include "settings.h"
 #include "thread.h"
 #include "tt.h"
