@@ -49,7 +49,7 @@ static const uint64_t ttHitAverageResolution = 1024;
 static const int RazorMargin = 510;
 
 INLINE int futility_margin(Depth d, bool improving) {
-  return 223 * (d - improving);
+  return 180 * (d - improving);
 }
 
 // Reductions lookup tables, initialized at startup
@@ -758,7 +758,7 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
 
   // Step 8. Futility pruning: child node
   if (   !PvNode
-      &&  depth < 8
+      &&  depth < 5
       &&  eval - futility_margin(depth, improving) >= beta
       &&  eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
     return eval; // - futility_margin(depth); (do not do the right thing)
