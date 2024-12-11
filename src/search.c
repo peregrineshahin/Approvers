@@ -81,21 +81,6 @@ static Value value_draw(Position *pos)
   return VALUE_DRAW + 2 * (pos->nodes & 1) - 1;
 }
 
-// Skill structure is used to implement strength limit
-struct Skill {
-/*
-  Skill(int l) : level(l) {}
-  int enabled() const { return level < 20; }
-  int time_to_pick(Depth depth) const { return depth == 1 + level; }
-  Move best_move(size_t multiPV) { return best ? best : pick_best(multiPV); }
-  Move pick_best(size_t multiPV);
-*/
-
-  int level;
-  Move best;
-//  Move best = 0;
-};
-
 
 static Value search_PV(Position *pos, Stack *ss, Value alpha, Value beta,
     Depth depth);
@@ -277,7 +262,6 @@ void mainthread_search(void)
   Position *bestThread = pos;
   if (    option_value(OPT_MULTI_PV) == 1
       && !Limits.depth
-//      && !Skill(option_value(OPT_SKILL_LEVEL)).enabled()
       &&  pos->rootMoves->move[0].pv[0] != 0)
   {
     int i, num = 0, maxNum = min(pos->rootMoves->size, Threads.numThreads);
@@ -401,14 +385,6 @@ void thread_search(Position *pos)
   memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
   int multiPV = option_value(OPT_MULTI_PV);
-#if 0
-  Skill skill(option_value(OPT_SKILL_LEVEL));
-
-  // When playing with strength handicap enable MultiPV search that we will
-  // use behind the scenes to retrieve a set of possible moves.
-  if (skill.enabled())
-      multiPV = std::max(multiPV, (size_t)4);
-#endif
 
   RootMoves *rm = pos->rootMoves;
   multiPV = min(multiPV, rm->size);
@@ -532,12 +508,6 @@ skip_search:
     if (pos->threadIdx != 0)
       continue;
 
-#if 0
-    // If skill level is enabled and time is up, pick a sub-optimal best move
-    if (skill.enabled() && skill.time_to_pick(thread->rootDepth))
-      skill.pick_best(multiPV);
-#endif
-
     // Do we have time for the next iteration? Can we stop searching now?
     if (    use_time_management()
         && !Threads.stop
@@ -587,13 +557,6 @@ skip_search:
     return;
 
   mainThread.previousTimeReduction = timeReduction;
-
-#if 0
-  // If skill level is enabled, swap best PV line with the sub-optimal one
-  if (skill.enabled())
-    std::swap(rm[0], *std::find(rm.begin(),
-              rm.end(), skill.best_move(multiPV)));
-#endif
 }
 
 // search_node() is the main search function template for both PV
@@ -1795,41 +1758,6 @@ static void update_quiet_stats(const Position *pos, Stack *ss, Move move,
   if (depth > 11 && ss->ply < MAX_LPH)
     lph_update(*pos->lowPlyHistory, ss->ply, move, stat_bonus(depth - 7));
 }
-
-#if 0
-// When playing with strength handicap, choose best move among a set of RootMoves
-// using a statistical rule dependent on 'level'. Idea by Heinz van Saanen.
-
-  Move Skill::pick_best(size_t multiPV) {
-
-    const RootMoves& rm = Threads.main()->rootMoves;
-    static PRNG rng(now()); // PRNG sequence should be non-deterministic
-
-    // RootMoves are already sorted by score in descending order
-    Value topScore = rm[0].score;
-    int delta = std::min(topScore - rm[multiPV - 1].score, PawnValueMg);
-    int weakness = 120 - 2 * level;
-    int maxScore = -VALUE_INFINITE;
-
-    // Choose best move. For each move score we add two terms, both dependent on
-    // weakness. One is deterministic and bigger for weaker levels, and one is
-    // random. Then we choose the move with the resulting highest score.
-    for (size_t i = 0; i < multiPV; ++i)
-    {
-        // This is our magic formula
-        int push = (  weakness * int(topScore - rm[i].score)
-                    + delta * (rng.rand<unsigned>() % weakness)) / 128;
-
-        if (rm[i].score + push > maxScore)
-        {
-            maxScore = rm[i].score + push;
-            best = rm[i].pv[0];
-        }
-    }
-
-    return best;
-  }
-#endif
 
 
 // check_time() is used to print debug info and, more importantly, to detect
