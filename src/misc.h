@@ -82,9 +82,6 @@ typedef struct {
   void *ptr;
 } alloc_t;
 
-void flockfile(FILE *F);
-void funlockfile(FILE *F);
-
 #else /* Unix */
 
 typedef int FD;
