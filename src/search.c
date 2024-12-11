@@ -38,6 +38,8 @@
 
 LimitsType Limits;
 
+extern char lastFen[256];
+
 static int base_ct;
 
 // Different node types, used as template parameter
@@ -321,20 +323,22 @@ void mainthread_search(void)
     Threads.ponder = true;
     Threads.stop = false;
 
-    // This is breaking something
-    // const Move bestMove = bestThread->rootMoves->move[0].pv[0];
-    // const Move ponder = bestThread->rootMoves->move[0].pv[1];
+    const Move bestMove = bestThread->rootMoves->move[0].pv[0];
+    const Move ponder = bestThread->rootMoves->move[0].pv[1];
 
-    // do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
-    // do_move(pos, ponder, gives_check(pos, pos->st, ponder));
+    char command[2048];
+    snprintf(command, 2048, "%s moves %s %s",
+      lastFen,
+      uci_move(buf, bestMove, is_chess960()),
+      uci_move(buf, ponder, is_chess960()));
 
+    position(pos, command);
+
+    prepare_for_search(pos, true);
     thread_search(pos);
 
     Threads.ponder = false;
     Threads.stop = true;
-
-    // undo_move(pos, ponder);
-    // undo_move(pos, bestMove);
   }
 #endif
 }
@@ -1860,6 +1864,11 @@ void start_thinking(Position *root, bool ponderMode)
   if (Threads.searching)
     thread_wait_until_sleeping(threads_main());
 
+  prepare_for_search(root, ponderMode);
+  thread_wake_up(threads_main(), THREAD_SEARCH);
+}
+
+void prepare_for_search(Position *root, bool ponderMode) {
   Threads.stopOnPonderhit = false;
   Threads.stop = false;
   Threads.increaseDepth = true;
@@ -1912,5 +1921,4 @@ void start_thinking(Position *root, bool ponderMode)
   }
 
   Threads.searching = true;
-  thread_wake_up(threads_main(), THREAD_SEARCH);
 }

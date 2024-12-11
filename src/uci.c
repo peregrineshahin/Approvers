@@ -34,6 +34,8 @@
 extern void benchmark(Position *pos, char *str);
 #endif
 
+char lastFen[256];
+
 // FEN string of the initial position, normal chess
 static const char StartFEN[] =
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -339,7 +341,10 @@ void uci_loop(int argc, char **argv)
       fflush(stdout);
     }
     else if (strcmp(token, "go") == 0)        go(&pos, str);
-    else if (strcmp(token, "position") == 0)  position(&pos, str);
+    else if (strcmp(token, "position") == 0) {
+      position(&pos, str);
+      pos_fen(&pos, lastFen);
+    }
     else if (strcmp(token, "setoption") == 0) setoption(str);
 
     // Additional custom non-UCI commands, useful for debugging
