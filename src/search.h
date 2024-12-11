@@ -82,5 +82,6 @@ void search_init(void);
 void search_clear(void);
 uint64_t perft(Position *pos, Depth depth);
 void start_thinking(Position *pos, bool ponderMode);
+void prepare_for_search(Position *root, bool ponderMode);
 
 #endif
