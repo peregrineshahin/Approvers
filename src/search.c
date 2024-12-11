@@ -483,7 +483,6 @@ void thread_search(Position *pos)
       // Sort the PV lines searched so far and update the GUI
       stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
-skip_search:
 #ifndef KAGGLE
       if (    pos->threadIdx == 0
           && (Threads.stop || pvIdx + 1 == multiPV || time_elapsed() > 3000))

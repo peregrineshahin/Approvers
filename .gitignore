@@ -65,3 +65,6 @@ cmake-build-*
 
 # JetBrains
 .idea/
+
+# src file to kaggle
+src.zip
