@@ -79,9 +79,6 @@ typedef HANDLE FD;
 #define FD_ERR INVALID_HANDLE_VALUE
 typedef HANDLE map_t;
 
-void flockfile(FILE *F);
-void funlockfile(FILE *F);
-
 #else /* Unix */
 
 typedef int FD;
