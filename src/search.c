@@ -944,15 +944,22 @@ moves_loop: // When in check search starts from here.
             && (*fmh )[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
           continue;
 
+
+        Value futilityValue = (bestValue < ss->staticEval - 45 ? 140 : 43) + 141 * lmrDepth;;
         // Futility pruning: parent node
         if (   lmrDepth < 7
             && !inCheck
-            && ss->staticEval + 283 + 170 * lmrDepth <= alpha
+            && futilityValue <= alpha
             &&  (*cmh )[movedPiece][to_sq(move)]
               + (*fmh )[movedPiece][to_sq(move)]
               + (*fmh2)[movedPiece][to_sq(move)]
               + (*fmh3)[movedPiece][to_sq(move)] / 2 < 27376)
+        {
+            if (bestValue <= futilityValue && abs(bestValue) < VALUE_TB_WIN_IN_MAX_PLY
+                && futilityValue < VALUE_TB_WIN_IN_MAX_PLY)
+                bestValue = (bestValue + futilityValue * 3) / 4;
           continue;
+        }
 
         // Prune moves with negative SEE at low depths and below a decreasing
         // threshold at higher depths.
