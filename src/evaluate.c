@@ -21,7 +21,7 @@
 #include "bitboard.h"
 #include "evaluate.h"
 #include "nnue.h"
-#include "pawns.h"
+#include "position.h"
 
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);

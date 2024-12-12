@@ -20,7 +20,6 @@
 
 #include "movegen.h"
 #include "movepick.h"
-#include "pawns.h"
 #include "search.h"
 #include "settings.h"
 #include "thread.h"
@@ -69,7 +68,6 @@ static THREAD_FUNC thread_init(void* arg) {
     }
 
     Position* pos        = calloc(sizeof(Position), 1);
-    pos->pawnTable       = calloc(PAWN_ENTRIES * sizeof(PawnEntry), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
@@ -156,7 +154,6 @@ static void thread_destroy(Position* pos) {
     CloseHandle(pos->stopEvent);
 #endif
 
-    free(pos->pawnTable);
     free(pos->counterMoves);
     free(pos->history);
     free(pos->captureHistory);

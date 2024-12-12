@@ -39,7 +39,7 @@ PGOBENCH = ./$(EXE) bench 16 1 13
 
 ### Object files
 OBJS = benchmark.o bitbase.o bitboard.o evaluate.o main.o \
-	misc.o movegen.o movepick.o pawns.o position.o psqt.o \
+	misc.o movegen.o movepick.o position.o psqt.o \
 	search.o thread.o timeman.o tt.o uci.o ucioption.o settings.o nnue.o
 
 ### ==========================================================================

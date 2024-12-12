@@ -6,7 +6,6 @@
 #include "bitboard.h"
 #include "misc.h"
 #include "movegen.h"
-#include "pawns.h"
 #include "position.h"
 
 #include "thread.h"
@@ -835,9 +834,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
             st->nonPawn += NonPawnPieceValue[promotion];
         }
 
-        // Update pawn hash key and prefetch access to pawnsTable
+        // Update pawn hash key
         st->pawnKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-        prefetch2(&pos->pawnTable[st->pawnKey & (PAWN_ENTRIES - 1)]);
 
         // Reset ply counters.
         st->plyCounters = 0;
