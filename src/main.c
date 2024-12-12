@@ -22,6 +22,7 @@
 
 #include "bitboard.h"
 #include "endgame.h"
+#include "nnue.h"
 #include "pawns.h"
 #include "position.h"
 #include "search.h"
@@ -31,6 +32,7 @@
 
 
 int main(int argc, char** argv) {
+    nnue_init();
     psqt_init();
     bitboards_init();
     zob_init();

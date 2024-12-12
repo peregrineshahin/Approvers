@@ -364,6 +364,10 @@ void uci_loop(int argc, char** argv) {
 
             // Additional custom non-UCI commands, useful for debugging
 #ifndef KAGGLE
+        else if (strcmp(token, "eval") == 0) {
+            printf("Evaluation: %d\n", evaluate(&pos));
+            fflush(stdout);
+        }
         else if (strcmp(token, "bench") == 0)
             benchmark(&pos, str);
 #endif

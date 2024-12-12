@@ -21,6 +21,7 @@
 #include "bitboard.h"
 #include "evaluate.h"
 #include "material.h"
+#include "nnue.h"
 #include "pawns.h"
 
 // Struct EvalInfo contains various information computed and collected
@@ -783,9 +784,7 @@ make_v:
 }
 
 Value evaluate(const Position* pos) {
-    Value v;
-
-    v = evaluate_classical(pos);
+    Value v = nnue_evaluate(pos);
 
     // Damp down the evalation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
