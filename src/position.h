@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "bitboard.h"
+#include "nnue.h"
 #include "types.h"
 
 
@@ -116,6 +117,8 @@ struct Stack {
         };
     };
     Square ksq;
+
+    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;

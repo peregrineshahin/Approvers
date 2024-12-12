@@ -67,10 +67,34 @@ static void build_accumulator(Accumulator *acc, const Position *pos, Color side)
     }
 }
 
-Value nnue_evaluate(const Position *pos) {
-    Accumulator acc = {0};
-    build_accumulator(&acc, pos, WHITE);
-    build_accumulator(&acc, pos, BLACK);
+void nnue_add_piece(Accumulator *acc, Piece pc, Square sq) {
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, WHITE);
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, BLACK);
 
-    return output_transform(&acc, pos);
+    for (int i = 0; i < L1SIZE; i++) {
+        acc->values[WHITE][i] += in_weights[white * L1SIZE + i];
+        acc->values[BLACK][i] += in_weights[black * L1SIZE + i];
+    }
+}
+
+void nnue_remove_piece(Accumulator *acc, Piece pc, Square sq) {
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, WHITE);
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, BLACK);
+
+    for (int i = 0; i < L1SIZE; i++) {
+        acc->values[WHITE][i] -= in_weights[white * L1SIZE + i];
+        acc->values[BLACK][i] -= in_weights[black * L1SIZE + i];
+    }
+}
+
+Value nnue_evaluate(Position *pos) {
+    Accumulator *acc = &pos->st->accumulator;
+
+    if (acc->needs_refresh) {
+        build_accumulator(acc, pos, WHITE);
+        build_accumulator(acc, pos, BLACK);
+        acc->needs_refresh = false;
+    }
+
+    return output_transform(acc, pos);
 }

@@ -695,6 +695,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
+    Accumulator* acc = &st->accumulator;
+    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
     st->plyCounters += 0x101;  // Increment both rule50 and pliesFromNull
@@ -724,6 +727,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
+        nnue_remove_piece(acc, piece, from);
+        nnue_remove_piece(acc, captured, rfrom);
+
+        nnue_add_piece(acc, piece, to);
+        nnue_add_piece(acc, captured, rto);
+
         st->psq += psqt.psq[captured][rto] - psqt.psq[captured][rfrom];
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
@@ -749,6 +758,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
         }
         else
             st->nonPawn -= NonPawnPieceValue[captured];
+
+        nnue_remove_piece(acc, captured, capsq);
 
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
@@ -788,8 +799,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
     }
 
     // Move the piece. The tricky Chess960 castling is handled earlier.
-    if (likely(type_of_m(m) != CASTLING))
+    if (likely(type_of_m(m) != CASTLING)) {
         move_piece(pos, us, piece, from, to);
+
+        nnue_remove_piece(acc, piece, from);
+        nnue_add_piece(acc, piece, to);
+    }
 
     // If the moving piece is a pawn do some special extra work
     if (type_of_p(piece) == PAWN)
@@ -806,6 +821,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
+
+            nnue_remove_piece(acc, piece, to);
+            nnue_add_piece(acc, promotion, to);
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
@@ -919,6 +937,8 @@ void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
+
+    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
 
     if (unlikely(st->epSquare))
     {

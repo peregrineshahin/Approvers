@@ -288,6 +288,8 @@ void thread_search(Position* pos) {
         ss[i].ply = i;
     ss->pv = pv;
 
+    ss->accumulator.needs_refresh = 1;
+
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;

@@ -16,10 +16,14 @@
 typedef struct  Accumulator Accumulator;
 
 struct Accumulator {
+    bool needs_refresh;
     alignas(64) int16_t values[2][L1SIZE];
 };
 
 void nnue_init();
-Value nnue_evaluate(const Position *pos);
+
+void nnue_add_piece(Accumulator *acc, Piece pc, Square sq);
+void nnue_remove_piece(Accumulator *acc, Piece pc, Square sq);
+Value nnue_evaluate(Position *pos);
 
 #endif //NNUE_H
