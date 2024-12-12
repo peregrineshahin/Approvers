@@ -31,8 +31,8 @@ typedef struct Option Option;
 typedef void (*OnChange)(Option *);
 
 enum {
-  OPT_TYPE_CHECK, OPT_TYPE_SPIN, OPT_TYPE_BUTTON, OPT_TYPE_STRING,
-  OPT_TYPE_COMBO, OPT_TYPE_DISABLED
+  OPT_TYPE_CHECK, OPT_TYPE_SPIN, OPT_TYPE_BUTTON,
+  OPT_TYPE_DISABLED
 };
 
 enum {
@@ -56,7 +56,6 @@ struct Option {
 };
 
 void options_init(void);
-void options_free(void);
 void print_options(void);
 int option_value(int opt);
 const char *option_string_value(int opt);

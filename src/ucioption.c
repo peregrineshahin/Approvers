@@ -101,40 +101,20 @@ void options_init()
       opt->value = opt->def;
     case OPT_TYPE_BUTTON:
       break;
-    case OPT_TYPE_STRING:
-      opt->valString = strdup(opt->defString);
-      break;
-    case OPT_TYPE_COMBO:
-      s = strstr(opt->defString, " var");
-      len = strlen(opt->defString) - strlen(s);
-      opt->valString = malloc(len + 1);
-      strncpy(opt->valString, opt->defString, len);
-      opt->valString[len] = 0;
-      for (s = opt->valString; *s; s++)
-        *s = tolower(*s);
-      break;
     }
     if (opt->onChange)
       opt->onChange(opt);
   }
 }
 
-void options_free(void)
-{
-  for (Option *opt = optionsMap; opt->name != NULL; opt++)
-    if (opt->type == OPT_TYPE_STRING)
-      free(opt->valString);
-}
-
 static const char *optTypeStr[] = {
-  "check", "spin", "button", "string", "combo"
+  "check", "spin", "button"
 };
 
 // print_options() prints all options in the format required by the
 // UCI protocol.
 
-void print_options(void)
-{
+void print_options(void) {
   for (Option *opt = optionsMap; opt->name != NULL; opt++) {
     if (opt->type == OPT_TYPE_DISABLED)
       continue;
@@ -146,10 +126,6 @@ void print_options(void)
     case OPT_TYPE_SPIN:
       printf(" default %d min %d max %d", opt->def, opt->minVal, opt->maxVal);
     case OPT_TYPE_BUTTON:
-      break;
-    case OPT_TYPE_STRING:
-    case OPT_TYPE_COMBO:
-      printf(" default %s", opt->defString);
       break;
     }
     printf("\n");
@@ -204,15 +180,6 @@ bool option_set_by_name(char *name, char *value)
         opt->value = val;
       case OPT_TYPE_BUTTON:
         break;
-      case OPT_TYPE_STRING:
-        free(opt->valString);
-        opt->valString = strdup(value);
-        break;
-      case OPT_TYPE_COMBO:
-        free(opt->valString);
-        opt->valString = strdup(value);
-        for (char *s = opt->valString; *s; s++)
-          *s = tolower(*s);
       }
       if (opt->onChange)
         opt->onChange(opt);
