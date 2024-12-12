@@ -10,7 +10,6 @@ include_directories(src)
 
 add_executable(Peregrine
         src/benchmark.c
-        src/bitbase.c
         src/bitboard.c
         src/bitboard.h
         src/config.h
