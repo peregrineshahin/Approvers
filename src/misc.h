@@ -89,12 +89,6 @@ typedef size_t map_t;
 
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
-FD open_file(const char *name);
-void close_file(FD fd);
-size_t file_size(FD fd);
-void *map_file(FD fd, map_t *map);
-void unmap_file(void *data, map_t map);
-
 struct PRNG
 {
   uint64_t s;
