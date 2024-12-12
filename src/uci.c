@@ -211,7 +211,6 @@ void uci_loop(int argc, char **argv)
 {
   Position pos;
   char fen[strlen(StartFEN) + 1];
-  char str_buf[64];
   char *token;
 
   LOCK_INIT(Threads.lock);

@@ -258,9 +258,8 @@ void mainthread_search(void)
 
     char command[2048];
     snprintf(command, 2048, "%s moves %s %s",
-      lastFen,
-      uci_move(buf, bestMove, is_chess960()),
-      uci_move(buf, ponder, is_chess960()));
+      lastFen, uci_move(buf, bestMove), uci_move(buf, ponder));
+
     position(pos, command);
 
     prepare_for_search(pos, true);

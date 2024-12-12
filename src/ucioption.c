@@ -81,9 +81,6 @@ static Option optionsMap[] = {
 
 void options_init()
 {
-  char *s;
-  size_t len;
-
 #ifdef _WIN32
   // Disable the LargePages option if the machine does not support it.
   if (!large_pages_supported())

@@ -48,11 +48,10 @@ static THREAD_FUNC thread_init(void *arg)
 {
   int idx = (intptr_t)arg;
 
-  int node = 0;
 #ifdef PER_THREAD_CMH
   int t = idx;
 #else
-  int t = node;
+  int t = 0;
 #endif
   if (t >= numCmhTables) {
     int old = numCmhTables;
