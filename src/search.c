@@ -134,48 +134,6 @@ void search_clear(void) {
     mainThread.previousTimeReduction = 1;
 }
 
-
-// perft() is our utility to verify move generation. All the leaf nodes
-// up to the given depth are generated and counted, and the sum is returned.
-
-static uint64_t perft_helper(Position* pos, Depth depth);
-
-INLINE uint64_t perft_node(Position* pos, Depth depth, const bool Root) {
-    uint64_t   cnt, nodes = 0;
-    const bool leaf = (depth == 2);
-
-    ExtMove* m    = Root ? pos->moveList : (pos->st - 1)->endMoves;
-    ExtMove* last = pos->st->endMoves = generate_legal(pos, m);
-    for (; m < last; m++)
-    {
-        if (Root && depth <= 1)
-        {
-            cnt = 1;
-            nodes++;
-        }
-        else
-        {
-            do_move(pos, m->move, gives_check(pos, pos->st, m->move));
-            cnt =
-              leaf ? (uint64_t) (generate_legal(pos, last) - last) : perft_helper(pos, depth - 1);
-            nodes += cnt;
-            undo_move(pos, m->move);
-        }
-        if (Root)
-        {
-            char buf[16];
-            printf("%s: %" PRIu64 "\n", uci_move(buf, m->move), cnt);
-        }
-    }
-    return nodes;
-}
-
-static NOINLINE uint64_t perft_helper(Position* pos, Depth depth) {
-    return perft_node(pos, depth, false);
-}
-
-NOINLINE uint64_t perft(Position* pos, Depth depth) { return perft_node(pos, depth, true); }
-
 // mainthread_search() is called by the main thread when the program
 // receives the UCI 'go' command. It searches from the root position and
 // outputs the "bestmove".
@@ -357,7 +315,7 @@ void thread_search(Position* pos) {
         while (true)
         {
             Depth adjustedDepth = max(1, pos->rootDepth - failedHighCnt - searchAgainCounter);
-            bestValue           = search_node(pos, ss, alpha, beta, adjustedDepth, false, true);
+            bestValue           = search(pos, ss, alpha, beta, adjustedDepth, false, true);
 
             // Bring the best move to the front. It is critical that sorting
             // is done with a stable algorithm because all the values but the
@@ -460,16 +418,16 @@ void thread_search(Position* pos) {
     mainThread.previousTimeReduction = timeReduction;
 }
 
-// search_node() is the main search function template for both PV
+// search() is the main search function template for both PV
 // and non-PV nodes
-Value search_node(
+Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
-        return qsearch_node(pos, ss, alpha, beta, 0, PvNode, checkers());
+        return qsearch(pos, ss, alpha, beta, 0, PvNode, checkers());
 
     Move     pv[MAX_PLY + 1], capturesSearched[32], quietsSearched[64];
     TTEntry* tte;
@@ -634,7 +592,7 @@ Value search_node(
 
     // Step 7. Razoring
     if (!rootNode && depth == 1 && eval <= alpha - RazorMargin)
-        return qsearch_node(pos, ss, alpha, beta, 0, PvNode, false);
+        return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
 
     improving = (ss - 2)->staticEval == VALUE_NONE
@@ -668,7 +626,7 @@ Value search_node(
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
-        Value nullValue = -search_node(pos, ss + 1, -beta, -beta + 1, depth - R, !cutNode, false);
+        Value nullValue = -search(pos, ss + 1, -beta, -beta + 1, depth - R, !cutNode, false);
         undo_null_move(pos);
 
         if (nullValue >= beta)
@@ -685,7 +643,7 @@ Value search_node(
             pos->nmpMinPly = ss->ply + 3 * (depth - R) / 4;
             pos->nmpColor  = stm();
 
-            Value v = search_node(pos, ss, beta - 1, beta, depth - R, false, false);
+            Value v = search(pos, ss, beta - 1, beta, depth - R, false, false);
 
             pos->nmpMinPly = 0;
 
@@ -725,13 +683,12 @@ Value search_node(
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
-                value =
-                  -qsearch_node(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false, givesCheck);
+                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false, givesCheck);
 
                 // If the qsearch held, perform the regular search
                 if (value >= probCutBeta)
-                    value = -search_node(pos, ss + 1, -probCutBeta, -probCutBeta + 1, depth - 4,
-                                         !cutNode, false);
+                    value = -search(pos, ss + 1, -probCutBeta, -probCutBeta + 1, depth - 4,
+                                    !cutNode, false);
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
@@ -875,8 +832,7 @@ moves_loop:  // When in check search starts from here.
             ss->excludedMove    = move;
             Move cm             = ss->countermove;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
-            value =
-              search_node(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
+            value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
 
             if (value < singularBeta)
@@ -910,7 +866,7 @@ moves_loop:  // When in check search starts from here.
                 ss->mpKillers[1] = k2;
 
                 ss->excludedMove = move;
-                value = search_node(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode, false);
+                value            = search(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode, false);
                 ss->excludedMove = 0;
 
                 if (value >= beta)
@@ -1052,12 +1008,12 @@ moves_loop:  // When in check search starts from here.
             }
 
             Depth d = clamp(newDepth - r, 1, newDepth);
-            value   = -search_node(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+            value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d != newDepth)
             {
 
-                value = -search_node(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+                value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_bonus(newDepth);
@@ -1072,7 +1028,7 @@ moves_loop:  // When in check search starts from here.
         // Step 17. Full depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            value = -search_node(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+            value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
@@ -1087,7 +1043,7 @@ moves_loop:  // When in check search starts from here.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
                 newDepth = max(newDepth, 1);
 
-            value = -search_node(pos, ss + 1, -beta, -alpha, newDepth, false, true);
+            value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
         }
 
         // Step 18. Undo move
@@ -1253,16 +1209,16 @@ moves_loop:  // When in check search starts from here.
     return bestValue;
 }
 
-// qsearch_node() is the quiescence search function template, which is
+// qsearch() is the quiescence search function template, which is
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
-Value qsearch_node(Position*  pos,
-                   Stack*     ss,
-                   Value      alpha,
-                   Value      beta,
-                   Depth      depth,
-                   const int  NT,
-                   const bool InCheck) {
+Value qsearch(Position*  pos,
+              Stack*     ss,
+              Value      alpha,
+              Value      beta,
+              Depth      depth,
+              const int  NT,
+              const bool InCheck) {
     const bool PvNode = NT == PV;
 
     Move     pv[MAX_PLY + 1];
@@ -1420,7 +1376,7 @@ Value qsearch_node(Position*  pos,
         // Make and search the move
         do_move(pos, move, givesCheck);
 
-        value = -qsearch_node(pos, ss + 1, -beta, -alpha, depth - 1, PvNode, givesCheck);
+        value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode, givesCheck);
         undo_move(pos, move);
 
 
