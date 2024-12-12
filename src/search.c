@@ -38,8 +38,6 @@
 
 LimitsType Limits;
 
-extern char lastFen[256];
-
 static int base_ct;
 
 // Different node types, used as template parameter
@@ -256,11 +254,13 @@ void mainthread_search(void)
     const Move bestMove = pos->rootMoves->move[0].pv[0];
     const Move ponder = pos->rootMoves->move[0].pv[1];
 
-    char command[2048];
-    snprintf(command, 2048, "%s moves %s %s",
-      lastFen, uci_move(buf, bestMove), uci_move(buf, ponder));
+    do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
+    do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
-    position(pos, command);
+    pos->completedDepth = 0;
+    pos->rootDepth = 0;
+    pos->pvLast = 0;
+    pos->ttHitAverage = 0;
 
     prepare_for_search(pos, true);
     thread_search(pos);
