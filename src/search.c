@@ -214,13 +214,6 @@ void mainthread_search(void)
 
   base_ct = option_value(OPT_CONTEMPT) * PawnValueEg / 100;
 
-  const char *s = option_string_value(OPT_ANALYSIS_CONTEMPT);
-  if (Limits.infinite || option_value(OPT_ANALYSE_MODE))
-    base_ct =  strcmp(s, "off") == 0 ? 0
-             : strcmp(s, "white") == 0 && us == BLACK ? -base_ct
-             : strcmp(s, "black") == 0 && us == WHITE ? -base_ct
-             : base_ct;
-
   if (pos->rootMoves->size > 0) {
     Move bookMove = 0;
 
