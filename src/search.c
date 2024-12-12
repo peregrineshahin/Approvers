@@ -1093,26 +1093,24 @@ moves_loop: // When in check search starts from here.
 
       value = -search_NonPV(pos, ss+1, -(alpha+1), d, 1);
 
-      doFullDepthSearch = (value > alpha && d != newDepth);
-      didLMR = true;
-    } else {
-      doFullDepthSearch = !PvNode || moveCount > 1;
-      didLMR = false;
-    }
+      if (value > alpha && d != newDepth) {
 
-    // Step 17. Full depth search when LMR is skipped or fails high.
-    if (doFullDepthSearch) {
-      value = -search_NonPV(pos, ss+1, -(alpha+1), newDepth, !cutNode);
+        value = -search_NonPV(pos, ss+1, -(alpha+1), newDepth, !cutNode);
 
-      if (didLMR && !captureOrPromotion) {
-        int bonus = value > alpha ?  stat_bonus(newDepth)
-                                  : -stat_bonus(newDepth);
+        if (!captureOrPromotion) {
+            int bonus = value > alpha ?  stat_bonus(newDepth)
+                                      : -stat_bonus(newDepth);
 
-        if (move == ss->killers[0])
-          bonus += bonus / 4;
+            if (move == ss->killers[0])
+              bonus += bonus / 4;
 
-        update_cm_stats(ss, movedPiece, to_sq(move), bonus);
+            update_cm_stats(ss, movedPiece, to_sq(move), bonus);
+        }
       }
+    } 
+    // Step 17. Full depth search when LMR is skipped or fails high.
+    else if (!PvNode || moveCount > 1) {
+         value = -search_NonPV(pos, ss+1, -(alpha+1), newDepth, !cutNode);
     }
 
     // For PV nodes only, do a full PV search on the first move or after a fail
