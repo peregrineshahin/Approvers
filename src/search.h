@@ -77,5 +77,7 @@ void     start_thinking(Position* pos, bool ponderMode);
 void     prepare_for_search(Position* root, bool ponderMode);
 Value    qsearch_node(
      Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT, const bool InCheck);
+Value search_node(
+  Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT);
 
 #endif

@@ -78,10 +78,6 @@ static Value stat_bonus(Depth depth) {
 // and to avoid three-fold blindness. (Yucks, ugly hack)
 static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1) - 1; }
 
-
-static Value search_PV(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth);
-static Value search_NonPV(Position* pos, Stack* ss, Value alpha, Depth depth, bool cutNode);
-
 static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
@@ -361,7 +357,7 @@ void thread_search(Position* pos) {
         while (true)
         {
             Depth adjustedDepth = max(1, pos->rootDepth - failedHighCnt - searchAgainCounter);
-            bestValue           = search_PV(pos, ss, alpha, beta, adjustedDepth);
+            bestValue           = search_node(pos, ss, alpha, beta, adjustedDepth, false, true);
 
             // Bring the best move to the front. It is critical that sorting
             // is done with a stable algorithm because all the values but the
@@ -466,7 +462,7 @@ void thread_search(Position* pos) {
 
 // search_node() is the main search function template for both PV
 // and non-PV nodes
-INLINE Value search_node(
+Value search_node(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
@@ -672,7 +668,7 @@ INLINE Value search_node(
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
-        Value nullValue = -search_NonPV(pos, ss + 1, -beta, depth - R, !cutNode);
+        Value nullValue = -search_node(pos, ss + 1, -beta, -beta + 1, depth - R, !cutNode, false);
         undo_null_move(pos);
 
         if (nullValue >= beta)
@@ -689,7 +685,7 @@ INLINE Value search_node(
             pos->nmpMinPly = ss->ply + 3 * (depth - R) / 4;
             pos->nmpColor  = stm();
 
-            Value v = search_NonPV(pos, ss, beta - 1, depth - R, false);
+            Value v = search_node(pos, ss, beta - 1, beta, depth - R, false, false);
 
             pos->nmpMinPly = 0;
 
@@ -734,8 +730,8 @@ INLINE Value search_node(
 
                 // If the qsearch held, perform the regular search
                 if (value >= probCutBeta)
-                    value = -search_NonPV(pos, ss + 1, -probCutBeta, depth - 4, !cutNode);
-
+                    value = -search_node(pos, ss + 1, -probCutBeta, -probCutBeta + 1, depth - 4,
+                                         !cutNode, false);
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
@@ -879,7 +875,8 @@ moves_loop:  // When in check search starts from here.
             ss->excludedMove    = move;
             Move cm             = ss->countermove;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
-            value            = search_NonPV(pos, ss, singularBeta - 1, singularDepth, cutNode);
+            value =
+              search_node(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
 
             if (value < singularBeta)
@@ -913,7 +910,7 @@ moves_loop:  // When in check search starts from here.
                 ss->mpKillers[1] = k2;
 
                 ss->excludedMove = move;
-                value            = search_NonPV(pos, ss, beta - 1, (depth + 3) / 2, cutNode);
+                value = search_node(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode, false);
                 ss->excludedMove = 0;
 
                 if (value >= beta)
@@ -1055,14 +1052,12 @@ moves_loop:  // When in check search starts from here.
             }
 
             Depth d = clamp(newDepth - r, 1, newDepth);
-
-            value = -search_NonPV(pos, ss + 1, -(alpha + 1), d, 1);
+            value   = -search_node(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d != newDepth)
             {
 
-                value = -search_NonPV(pos, ss + 1, -(alpha + 1), newDepth, !cutNode);
-
+                value = -search_node(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_bonus(newDepth);
@@ -1077,7 +1072,7 @@ moves_loop:  // When in check search starts from here.
         // Step 17. Full depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            value = -search_NonPV(pos, ss + 1, -(alpha + 1), newDepth, !cutNode);
+            value = -search_node(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
@@ -1092,7 +1087,7 @@ moves_loop:  // When in check search starts from here.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
                 newDepth = max(newDepth, 1);
 
-            value = -search_PV(pos, ss + 1, -beta, -alpha, newDepth);
+            value = -search_node(pos, ss + 1, -beta, -alpha, newDepth, false, true);
         }
 
         // Step 18. Undo move
@@ -1256,17 +1251,6 @@ moves_loop:  // When in check search starts from here.
 
 
     return bestValue;
-}
-
-// search_PV() is the main search function for PV nodes
-static NOINLINE Value search_PV(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
-    return search_node(pos, ss, alpha, beta, depth, 0, PV);
-}
-
-// search_NonPV is the main search function for non-PV nodes
-static NOINLINE Value
-search_NonPV(Position* pos, Stack* ss, Value alpha, Depth depth, bool cutNode) {
-    return search_node(pos, ss, alpha, alpha + 1, depth, cutNode, NonPV);
 }
 
 // qsearch_node() is the quiescence search function template, which is
