@@ -269,7 +269,6 @@ static void set_state(Position* pos, Stack* st) {
         Square s  = pop_lsb(&b);
         Piece  pc = piece_on(s);
         st->key ^= zob.psq[pc][s];
-        st->psq += psqt.psq[pc][s];
     }
 
     if (st->epSquare != 0)
@@ -731,7 +730,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         nnue_add_piece(acc, piece, to);
         nnue_add_piece(acc, captured, rto);
 
-        st->psq += psqt.psq[captured][rto] - psqt.psq[captured][rfrom];
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
@@ -765,9 +763,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Update material hash key
         key ^= zob.psq[captured][capsq];
         st->materialKey -= matKey[captured];
-
-        // Update incremental scores
-        st->psq -= psqt.psq[captured][capsq];
 
         // Reset ply counters
         st->plyCounters = 0;
@@ -827,9 +822,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             st->pawnKey ^= zob.psq[piece][to];
             st->materialKey += matKey[promotion] - matKey[piece];
 
-            // Update incremental score
-            st->psq += psqt.psq[promotion][to] - psqt.psq[piece][to];
-
             // Update material
             st->nonPawn += NonPawnPieceValue[promotion];
         }
@@ -840,9 +832,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Reset ply counters.
         st->plyCounters = 0;
     }
-
-    // Update incremental scores
-    st->psq += psqt.psq[piece][to] - psqt.psq[piece][from];
 
     // Update the key with the final value
     st->key = key;

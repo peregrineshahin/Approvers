@@ -92,8 +92,6 @@ static const Score PBonus[8][8] = {
 
 #undef S
 
-struct PSQT psqt;
-
 // init() initializes piece-square tables: the white halves of the tables
 // are copied from Bonus[] adding the piece value, then the black  halves
 // of the tables are initialized by flipping and changing the sign of the
@@ -104,17 +102,6 @@ void psqt_init(void) {
     {
         PieceValue[MG][make_piece(BLACK, pt)] = PieceValue[MG][pt];
         PieceValue[EG][make_piece(BLACK, pt)] = PieceValue[EG][pt];
-
-        Score score = make_score(PieceValue[MG][pt], PieceValue[EG][pt]);
-
-        for (Square s = 0; s < 64; s++)
-        {
-            int f = min(file_of(s), FILE_H - file_of(s));
-            psqt.psq[make_piece(WHITE, pt)][s] =
-              score
-              + (type_of_p(pt) == PAWN ? PBonus[rank_of(s)][file_of(s)] : Bonus[pt][rank_of(s)][f]);
-            psqt.psq[make_piece(BLACK, pt)][s ^ 0x38] = -psqt.psq[make_piece(WHITE, pt)][s];
-        }
     }
     union {
         uint16_t val[2];
