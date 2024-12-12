@@ -48,6 +48,8 @@ void time_init(Color us, int ply)
   // Make sure that timeLeft > 0 since we may use it as a divisor
   TimePoint timeLeft = max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
 
+  timeLeft = 100 * timeLeft / 100;
+
   // x basetime (+z increment)
   // If there is a healthy increment, timeLeft can exceed actual available
   // game time for the current move, so also cap to 20% of available game time.
