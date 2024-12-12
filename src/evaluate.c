@@ -150,7 +150,6 @@ static const Score BishopOnKingRing    = S( 24,  0);
 static const Score BishopOutpost       = S( 31, 23);
 static const Score BishopPawns         = S(  3,  7);
 static const Score BishopXRayPawns     = S(  4,  5);
-static const Score CorneredBishop      = S( 50, 50);
 static const Score FlankAttacks        = S(  8,  0);
 static const Score Hanging             = S( 69, 36);
 static const Score KnightKingProtector = S(  8,  9);
