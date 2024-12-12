@@ -4,7 +4,7 @@
 #include "types.h"
 
 enum {
-    Tempo = 28
+    Tempo = 16
 };
 
 Value evaluate(Position* pos);
