@@ -488,7 +488,7 @@ INLINE Value search_node(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, maxValue, probCutBeta;
-    bool     ttHit, formerPv, givesCheck, improving, didLMR;
+    bool     ttHit, formerPv, givesCheck, improving;
     bool     captureOrPromotion, inCheck, doFullDepthSearch, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
