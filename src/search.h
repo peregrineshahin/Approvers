@@ -57,16 +57,12 @@ typedef struct RootMoves RootMoves;
 struct LimitsType {
   int time[2];
   int inc[2];
-  int npmsec;
-  int movestogo;
   int depth;
   int movetime;
   int mate;
   bool infinite;
   uint64_t nodes;
   TimePoint startTime;
-  int numSearchmoves;
-  Move searchmoves[MAX_MOVES];
 };
 
 typedef struct LimitsType LimitsType;

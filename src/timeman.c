@@ -35,53 +35,24 @@ struct TimeManagement Time; // Our global time management struct
 void time_init(Color us, int ply)
 {
   int moveOverhead    = option_value(OPT_MOVE_OVERHEAD);
-  int slowMover       = option_value(OPT_SLOW_MOVER);
-  int npmsec          = option_value(OPT_NODES_TIME);
 
   // opt_scale is a percentage of available time to use for the current move.
   // max_scale is a multiplier applied to optimumTime.
   double opt_scale, max_scale;
 
-  // If we have to play in 'nodes as time' mode, then convert from time
-  // to nodes, and use resulting values in time management formulas.
-  // WARNING: Given npms (nodes per millisecond) must be much lower then
-  // the real engine speed to avoid time losses.
-  if (npmsec) {
-    if (!Time.availableNodes) // Only once at game start
-      Time.availableNodes = npmsec * Limits.time[us]; // Time is in msec
-
-    // Convert from millisecs to nodes
-    Limits.time[us] = (int)Time.availableNodes;
-    Limits.inc[us] *= npmsec;
-    Limits.npmsec = npmsec;
-  }
-
   Time.startTime = Limits.startTime;
 
   // Maximum move horizon of 50 moves
-  int mtg = Limits.movestogo ? min(Limits.movestogo, 50) : 50;
+  int mtg = 50;
 
   // Make sure that timeLeft > 0 since we may use it as a divisor
   TimePoint timeLeft = max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
 
-  // A user may scale time usage by setting UCI option "Slow Mover".
-  // Default is 100 and changing this value will probably lose Elo.
-  timeLeft = slowMover * timeLeft / 100;
-
   // x basetime (+z increment)
   // If there is a healthy increment, timeLeft can exceed actual available
   // game time for the current move, so also cap to 20% of available game time.
-  if (Limits.movestogo == 0) {
-    opt_scale = min(0.008 + pow(ply + 3.0, 0.5) / 250.0,
-                    0.2 * Limits.time[us] / (double)timeLeft);
-    max_scale = min(7.0, 4.0 + ply / 12.0);
-  }
-  // x moves in y seconds (+z increment)
-  else {
-    opt_scale = min((0.8 + ply / 120.0) / mtg,
-                     0.8 * Limits.time[us] / (double)timeLeft);
-    max_scale = min(6.3, 1.5 + 0.11 * mtg);
-  }
+  opt_scale = min(0.008 + pow(ply + 3.0, 0.5) / 250.0, 0.2 * Limits.time[us] / (double)timeLeft);
+  max_scale = min(7.0, 4.0 + ply / 12.0);
 
   // Never use more than 80% of the available time for this move
   Time.optimumTime = opt_scale * timeLeft;

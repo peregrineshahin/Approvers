@@ -255,11 +255,6 @@ void mainthread_search(void)
     fflush(stdout);
   }
 
-  // When playing in 'nodes as time' mode, subtract the searched nodes from
-  // the available ones before exiting.
-  if (Limits.npmsec)
-    Time.availableNodes += Limits.inc[us] - threads_nodes_searched();
-
   // Check if there are threads with a better score than main thread
   Position *bestThread = pos;
   if (    option_value(OPT_MULTI_PV) == 1
@@ -1877,19 +1872,6 @@ void prepare_for_search(Position *root, bool ponderMode) {
   // Generate all legal moves.
   ExtMove list[MAX_MOVES];
   ExtMove *end = generate_legal(root, list);
-
-  // Implement searchmoves option.
-  if (Limits.numSearchmoves) {
-    ExtMove *p = list;
-    for (ExtMove *m = p; m < end; m++)
-      for (int i = 0; i < Limits.numSearchmoves; i++)
-        if (m->move == Limits.searchmoves[i]) {
-          (p++)->move = m->move;
-          break;
-        }
-    end = p;
-  }
-
   RootMoves *moves = Threads.pos[0]->rootMoves;
   moves->size = end - list;
   for (int i = 0; i < moves->size; i++)

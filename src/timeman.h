@@ -44,8 +44,7 @@ void time_init(Color us, int ply);
 
 INLINE TimePoint time_elapsed(void)
 {
-  return Limits.npmsec ? (int64_t)threads_nodes_searched()
-                       : now() - Time.startTime;
+  return now() - Time.startTime;
 }
 
 #endif
