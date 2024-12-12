@@ -18,12 +18,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-
 #include "bitboard.h"
-#include "endgame.h"
 #include "nnue.h"
-#include "pawns.h"
 #include "position.h"
 #include "search.h"
 #include "thread.h"
@@ -37,7 +33,6 @@ int main(int argc, char** argv) {
     bitboards_init();
     zob_init();
     bitbases_init();
-    endgames_init();
     threads_init();
     options_init();
     search_clear();
