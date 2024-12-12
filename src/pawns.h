@@ -33,69 +33,60 @@
 // a pointer to an Entry object.
 
 struct PawnEntry {
-  Key key;
-  Bitboard passedPawns[2];
-  Bitboard pawnAttacks[2];
-  Bitboard pawnAttacksSpan[2];
-  Score kingSafety[2];
-  Score score;
-  uint8_t kingSquares[2];
-  uint8_t castlingRights[2];
-  uint8_t semiopenFiles[2];
-  uint8_t pawnsOnSquares[2][2]; // [color][light/dark squares]
-  uint8_t blockedCount;
-  uint8_t passedCount;
-  uint8_t openFiles;
+    Key      key;
+    Bitboard passedPawns[2];
+    Bitboard pawnAttacks[2];
+    Bitboard pawnAttacksSpan[2];
+    Score    kingSafety[2];
+    Score    score;
+    uint8_t  kingSquares[2];
+    uint8_t  castlingRights[2];
+    uint8_t  semiopenFiles[2];
+    uint8_t  pawnsOnSquares[2][2];  // [color][light/dark squares]
+    uint8_t  blockedCount;
+    uint8_t  passedCount;
+    uint8_t  openFiles;
 };
 
 typedef struct PawnEntry PawnEntry;
-typedef PawnEntry PawnTable[PAWN_ENTRIES];
+typedef PawnEntry        PawnTable[PAWN_ENTRIES];
 
-Score do_king_safety_white(PawnEntry *pe, const Position *pos, Square ksq);
-Score do_king_safety_black(PawnEntry *pe, const Position *pos, Square ksq);
+Score do_king_safety_white(PawnEntry* pe, const Position* pos, Square ksq);
+Score do_king_safety_black(PawnEntry* pe, const Position* pos, Square ksq);
 
-Value shelter_storm_white(const Position *pos, Square ksq);
-Value shelter_storm_black(const Position *pos, Square ksq);
+Value shelter_storm_white(const Position* pos, Square ksq);
+Value shelter_storm_black(const Position* pos, Square ksq);
 
-void pawn_entry_fill(const Position *pos, PawnEntry *e, Key k);
+void pawn_entry_fill(const Position* pos, PawnEntry* e, Key k);
 
-INLINE PawnEntry *pawn_probe(const Position *pos)
-{
-  Key key = pawn_key();
-  PawnEntry *e = &pos->pawnTable[key & (PAWN_ENTRIES - 1)];
+INLINE PawnEntry* pawn_probe(const Position* pos) {
+    Key        key = pawn_key();
+    PawnEntry* e   = &pos->pawnTable[key & (PAWN_ENTRIES - 1)];
 
-  if (unlikely(e->key != key))
-    pawn_entry_fill(pos, e, key);
+    if (unlikely(e->key != key))
+        pawn_entry_fill(pos, e, key);
 
-  return e;
+    return e;
 }
 
-INLINE int semiopen_file(PawnEntry *pe, Color c, int f)
-{
-  return pe->semiopenFiles[c] & (1 << f);
+INLINE int semiopen_file(PawnEntry* pe, Color c, int f) { return pe->semiopenFiles[c] & (1 << f); }
+
+INLINE int pawns_on_same_color_squares(PawnEntry* pe, Color c, Square s) {
+    return pe->pawnsOnSquares[c][!!(DarkSquares & sq_bb(s))];
 }
 
-INLINE int pawns_on_same_color_squares(PawnEntry *pe, Color c, Square s)
-{
-  return pe->pawnsOnSquares[c][!!(DarkSquares & sq_bb(s))];
+INLINE Score king_safety_white(PawnEntry* pe, const Position* pos, Square ksq) {
+    if (pe->kingSquares[WHITE] == ksq && pe->castlingRights[WHITE] == can_castle_c(WHITE))
+        return pe->kingSafety[WHITE];
+    else
+        return pe->kingSafety[WHITE] = do_king_safety_white(pe, pos, ksq);
 }
 
-INLINE Score king_safety_white(PawnEntry *pe, const Position *pos, Square ksq)
-{
-  if (   pe->kingSquares[WHITE] == ksq
-      && pe->castlingRights[WHITE] == can_castle_c(WHITE))
-    return pe->kingSafety[WHITE];
-  else
-    return pe->kingSafety[WHITE] = do_king_safety_white(pe, pos, ksq);
-}
-
-INLINE Score king_safety_black(PawnEntry *pe, const Position *pos, Square ksq)
-{
-  if (   pe->kingSquares[BLACK] == ksq
-      && pe->castlingRights[BLACK] == can_castle_c(BLACK))
-    return pe->kingSafety[BLACK];
-  else
-    return pe->kingSafety[BLACK] = do_king_safety_black(pe, pos, ksq);
+INLINE Score king_safety_black(PawnEntry* pe, const Position* pos, Square ksq) {
+    if (pe->kingSquares[BLACK] == ksq && pe->castlingRights[BLACK] == can_castle_c(BLACK))
+        return pe->kingSafety[BLACK];
+    else
+        return pe->kingSafety[BLACK] = do_king_safety_black(pe, pos, ksq);
 }
 
 #endif

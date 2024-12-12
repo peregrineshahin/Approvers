@@ -23,13 +23,13 @@
 
 #include "types.h"
 
-typedef Value (EgFunc)(const Position *, Color);
+typedef Value(EgFunc)(const Position*, Color);
 
 #define NUM_EVAL 9
 #define NUM_SCALING 6
 
-extern EgFunc *endgame_funcs[NUM_EVAL + NUM_SCALING + 6];
-extern Key endgame_keys[NUM_EVAL + NUM_SCALING][2];
+extern EgFunc* endgame_funcs[NUM_EVAL + NUM_SCALING + 6];
+extern Key     endgame_keys[NUM_EVAL + NUM_SCALING][2];
 
 void endgames_init(void);
 

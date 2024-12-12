@@ -1,5 +1,7 @@
 #include "types.h"
 
-enum { Tempo = 28 };
+enum {
+    Tempo = 28
+};
 
-Value evaluate(const Position *pos);
+Value evaluate(const Position* pos);

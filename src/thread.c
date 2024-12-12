@@ -28,218 +28,212 @@
 #include "tt.h"
 #include "uci.h"
 
-static void thread_idle_loop(Position *pos);
+static void thread_idle_loop(Position* pos);
 
 #ifndef _WIN32
-#define THREAD_FUNC void *
+    #define THREAD_FUNC void*
 #else
-#define THREAD_FUNC DWORD WINAPI
+    #define THREAD_FUNC DWORD WINAPI
 #endif
 
 // Global objects
-ThreadPool Threads;
-MainThread mainThread;
-CounterMoveHistoryStat **cmhTables = NULL;
-int numCmhTables = 0;
+ThreadPool               Threads;
+MainThread               mainThread;
+CounterMoveHistoryStat** cmhTables    = NULL;
+int                      numCmhTables = 0;
 
 // thread_init() is where a search thread starts and initialises itself.
 
-static THREAD_FUNC thread_init(void *arg)
-{
-  int idx = (intptr_t)arg;
+static THREAD_FUNC thread_init(void* arg) {
+    int idx = (intptr_t) arg;
 
 #ifdef PER_THREAD_CMH
-  int t = idx;
+    int t = idx;
 #else
-  int t = 0;
+    int t = 0;
 #endif
-  if (t >= numCmhTables) {
-    int old = numCmhTables;
-    numCmhTables = t + 16;
-    cmhTables = realloc(cmhTables,
-        numCmhTables * sizeof(CounterMoveHistoryStat *));
-    while (old < numCmhTables)
-      cmhTables[old++] = NULL;
-  }
-  if (!cmhTables[t]) {
-    cmhTables[t] = calloc(sizeof(CounterMoveHistoryStat), 1);
-     for (int c = 0; c < 2; c++)
-      for (int j = 0; j < 16; j++)
-        for (int k = 0; k < 64; k++)
-          (*cmhTables[t])[c][0][j][k] = CounterMovePruneThreshold - 1;
-  }
+    if (t >= numCmhTables)
+    {
+        int old      = numCmhTables;
+        numCmhTables = t + 16;
+        cmhTables    = realloc(cmhTables, numCmhTables * sizeof(CounterMoveHistoryStat*));
+        while (old < numCmhTables)
+            cmhTables[old++] = NULL;
+    }
+    if (!cmhTables[t])
+    {
+        cmhTables[t] = calloc(sizeof(CounterMoveHistoryStat), 1);
+        for (int c = 0; c < 2; c++)
+            for (int j = 0; j < 16; j++)
+                for (int k = 0; k < 64; k++)
+                    (*cmhTables[t])[c][0][j][k] = CounterMovePruneThreshold - 1;
+    }
 
-  Position *pos = calloc(sizeof(Position), 1);
-  pos->pawnTable = calloc(PAWN_ENTRIES * sizeof(PawnEntry), 1);
-  pos->materialTable = calloc(8192 * sizeof(MaterialEntry), 1);
-  pos->counterMoves = calloc(sizeof(CounterMoveStat), 1);
-  pos->history = calloc(sizeof(ButterflyHistory), 1);
-  pos->captureHistory = calloc(sizeof(CapturePieceToHistory), 1);
-  pos->lowPlyHistory = calloc(sizeof(LowPlyHistory), 1);
-  pos->rootMoves = calloc(sizeof(RootMoves), 1);
-  pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
-  pos->moveList = calloc(10000 * sizeof(ExtMove), 1);
+    Position* pos        = calloc(sizeof(Position), 1);
+    pos->pawnTable       = calloc(PAWN_ENTRIES * sizeof(PawnEntry), 1);
+    pos->materialTable   = calloc(8192 * sizeof(MaterialEntry), 1);
+    pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
+    pos->history         = calloc(sizeof(ButterflyHistory), 1);
+    pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
+    pos->lowPlyHistory   = calloc(sizeof(LowPlyHistory), 1);
+    pos->rootMoves       = calloc(sizeof(RootMoves), 1);
+    pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
+    pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
-  pos->stack = (Stack *)(((uintptr_t)pos->stackAllocation + 0x3f) & ~0x3f);
-  pos->threadIdx = idx;
-  pos->counterMoveHistory = cmhTables[t];
+    pos->stack              = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    pos->threadIdx          = idx;
+    pos->counterMoveHistory = cmhTables[t];
 
-  atomic_store(&pos->resetCalls, false);
+    atomic_store(&pos->resetCalls, false);
 
 #ifndef _WIN32  // linux
 
-  pthread_mutex_init(&pos->mutex, NULL);
-  pthread_cond_init(&pos->sleepCondition, NULL);
+    pthread_mutex_init(&pos->mutex, NULL);
+    pthread_cond_init(&pos->sleepCondition, NULL);
 
-  Threads.pos[idx] = pos;
+    Threads.pos[idx] = pos;
 
-  pthread_mutex_lock(&Threads.mutex);
-  Threads.initializing = false;
-  pthread_cond_signal(&Threads.sleepCondition);
-  pthread_mutex_unlock(&Threads.mutex);
+    pthread_mutex_lock(&Threads.mutex);
+    Threads.initializing = false;
+    pthread_cond_signal(&Threads.sleepCondition);
+    pthread_mutex_unlock(&Threads.mutex);
 
-#else // Windows
+#else  // Windows
 
-  pos->startEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-  pos->stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    pos->startEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    pos->stopEvent  = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-  Threads.pos[idx] = pos;
+    Threads.pos[idx] = pos;
 
-  SetEvent(Threads.event);
+    SetEvent(Threads.event);
 
 #endif
 
-  thread_idle_loop(pos);
+    thread_idle_loop(pos);
 
-  return 0;
+    return 0;
 }
 
 // thread_create() launches a new thread.
 
-static void thread_create(int idx)
-{
+static void thread_create(int idx) {
 #ifndef _WIN32
 
-  pthread_t thread;
+    pthread_t thread;
 
-  Threads.initializing = true;
-  pthread_mutex_lock(&Threads.mutex);
-  pthread_create(&thread, NULL, thread_init, (void *)(intptr_t)idx);
-  while (Threads.initializing)
-    pthread_cond_wait(&Threads.sleepCondition, &Threads.mutex);
-  pthread_mutex_unlock(&Threads.mutex);
+    Threads.initializing = true;
+    pthread_mutex_lock(&Threads.mutex);
+    pthread_create(&thread, NULL, thread_init, (void*) (intptr_t) idx);
+    while (Threads.initializing)
+        pthread_cond_wait(&Threads.sleepCondition, &Threads.mutex);
+    pthread_mutex_unlock(&Threads.mutex);
 
 #else
 
-  HANDLE thread = CreateThread(NULL, 0, thread_init, (void *)(intptr_t)idx,
-      0 , NULL);
-  WaitForSingleObject(Threads.event, INFINITE);
+    HANDLE thread = CreateThread(NULL, 0, thread_init, (void*) (intptr_t) idx, 0, NULL);
+    WaitForSingleObject(Threads.event, INFINITE);
 
 #endif
 
-  Threads.pos[idx]->nativeThread = thread;
+    Threads.pos[idx]->nativeThread = thread;
 }
 
 
 // thread_destroy() waits for thread termination before returning.
 
-static void thread_destroy(Position *pos)
-{
+static void thread_destroy(Position* pos) {
 #ifndef _WIN32
-  pthread_mutex_lock(&pos->mutex);
-  pos->action = THREAD_EXIT;
-  pthread_cond_signal(&pos->sleepCondition);
-  pthread_mutex_unlock(&pos->mutex);
-  pthread_join(pos->nativeThread, NULL);
-  pthread_cond_destroy(&pos->sleepCondition);
-  pthread_mutex_destroy(&pos->mutex);
+    pthread_mutex_lock(&pos->mutex);
+    pos->action = THREAD_EXIT;
+    pthread_cond_signal(&pos->sleepCondition);
+    pthread_mutex_unlock(&pos->mutex);
+    pthread_join(pos->nativeThread, NULL);
+    pthread_cond_destroy(&pos->sleepCondition);
+    pthread_mutex_destroy(&pos->mutex);
 #else
-  pos->action = THREAD_EXIT;
-  SetEvent(pos->startEvent);
-  WaitForSingleObject(pos->nativeThread, INFINITE);
-  CloseHandle(pos->startEvent);
-  CloseHandle(pos->stopEvent);
+    pos->action = THREAD_EXIT;
+    SetEvent(pos->startEvent);
+    WaitForSingleObject(pos->nativeThread, INFINITE);
+    CloseHandle(pos->startEvent);
+    CloseHandle(pos->stopEvent);
 #endif
 
-  free(pos->pawnTable);
-  free(pos->materialTable);
-  free(pos->counterMoves);
-  free(pos->history);
-  free(pos->captureHistory);
-  free(pos->lowPlyHistory);
-  free(pos->rootMoves);
-  free(pos->stackAllocation);
-  free(pos->moveList);
-  free(pos);
+    free(pos->pawnTable);
+    free(pos->materialTable);
+    free(pos->counterMoves);
+    free(pos->history);
+    free(pos->captureHistory);
+    free(pos->lowPlyHistory);
+    free(pos->rootMoves);
+    free(pos->stackAllocation);
+    free(pos->moveList);
+    free(pos);
 }
 
 
 // thread_wait_for_search_finished() waits on sleep condition until
 // not searching.
 
-void thread_wait_until_sleeping(Position *pos)
-{
+void thread_wait_until_sleeping(Position* pos) {
 #ifndef _WIN32
 
-  pthread_mutex_lock(&pos->mutex);
+    pthread_mutex_lock(&pos->mutex);
 
-  while (pos->action != THREAD_SLEEP)
-    pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
+    while (pos->action != THREAD_SLEEP)
+        pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
 
-  pthread_mutex_unlock(&pos->mutex);
+    pthread_mutex_unlock(&pos->mutex);
 
 #else
 
-  WaitForSingleObject(pos->stopEvent, INFINITE);
+    WaitForSingleObject(pos->stopEvent, INFINITE);
 
 #endif
 
-  if (pos->threadIdx == 0)
-    Threads.searching = false;
+    if (pos->threadIdx == 0)
+        Threads.searching = false;
 }
 
 
 // thread_wait() waits on sleep condition until condition is true.
 
-void thread_wait(Position *pos, atomic_bool *condition)
-{
+void thread_wait(Position* pos, atomic_bool* condition) {
 #ifndef _WIN32
 
-  pthread_mutex_lock(&pos->mutex);
+    pthread_mutex_lock(&pos->mutex);
 
-  while (!atomic_load(condition))
-    pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
+    while (!atomic_load(condition))
+        pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
 
-  pthread_mutex_unlock(&pos->mutex);
+    pthread_mutex_unlock(&pos->mutex);
 
 #else
 
-  (void)condition;
-  WaitForSingleObject(pos->startEvent, INFINITE);
+    (void) condition;
+    WaitForSingleObject(pos->startEvent, INFINITE);
 
 #endif
 }
 
 
-void thread_wake_up(Position *pos, int action)
-{
+void thread_wake_up(Position* pos, int action) {
 #ifndef _WIN32
 
-  pthread_mutex_lock(&pos->mutex);
+    pthread_mutex_lock(&pos->mutex);
 
 #endif
 
-  if (action != THREAD_STATE_RESUME)
-    pos->action = action;
+    if (action != THREAD_STATE_RESUME)
+        pos->action = action;
 
 #ifndef _WIN32
 
-  pthread_cond_signal(&pos->sleepCondition);
-  pthread_mutex_unlock(&pos->mutex);
+    pthread_cond_signal(&pos->sleepCondition);
+    pthread_mutex_unlock(&pos->mutex);
 
 #else
 
-  SetEvent(pos->startEvent);
+    SetEvent(pos->startEvent);
 
 #endif
 }
@@ -247,43 +241,45 @@ void thread_wake_up(Position *pos, int action)
 
 // thread_idle_loop() is where the thread is parked when it has no work to do.
 
-static void thread_idle_loop(Position *pos)
-{
-  while (true) {
+static void thread_idle_loop(Position* pos) {
+    while (true)
+    {
 #ifndef _WIN32
 
-    pthread_mutex_lock(&pos->mutex);
+        pthread_mutex_lock(&pos->mutex);
 
-    while (pos->action == THREAD_SLEEP) {
-      pthread_cond_signal(&pos->sleepCondition); // Wake up any waiting thread
-      pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
-    }
+        while (pos->action == THREAD_SLEEP)
+        {
+            pthread_cond_signal(&pos->sleepCondition);  // Wake up any waiting thread
+            pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
+        }
 
-    pthread_mutex_unlock(&pos->mutex);
+        pthread_mutex_unlock(&pos->mutex);
 
 #else
 
-    WaitForSingleObject(pos->startEvent, INFINITE);
+        WaitForSingleObject(pos->startEvent, INFINITE);
 
 #endif
 
-    if (pos->action == THREAD_EXIT) {
-      break;
-    }
+        if (pos->action == THREAD_EXIT)
+        {
+            break;
+        }
 
-    if (pos->threadIdx == 0)
-      mainthread_search();
-    else
-      thread_search(pos);
+        if (pos->threadIdx == 0)
+            mainthread_search();
+        else
+            thread_search(pos);
 
-    pos->action = THREAD_SLEEP;
+        pos->action = THREAD_SLEEP;
 
 #ifdef _WIN32
 
-    SetEvent(pos->stopEvent);
+        SetEvent(pos->stopEvent);
 
 #endif
-  }
+    }
 }
 
 
@@ -292,21 +288,20 @@ static void thread_idle_loop(Position *pos)
 // static object and we need a fully initialized engine at this point due to
 // allocation of Endgames in the Thread constructor.
 
-void threads_init(void)
-{
+void threads_init(void) {
 #ifndef _WIN32
 
-  pthread_mutex_init(&Threads.mutex, NULL);
-  pthread_cond_init(&Threads.sleepCondition, NULL);
+    pthread_mutex_init(&Threads.mutex, NULL);
+    pthread_cond_init(&Threads.sleepCondition, NULL);
 
 #else
 
-  Threads.event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    Threads.event = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 #endif
 
-  Threads.numThreads = 1;
-  thread_create(0);
+    Threads.numThreads = 1;
+    thread_create(0);
 }
 
 
@@ -314,18 +309,17 @@ void threads_init(void)
 // done in destructor because threads must be terminated before deleting
 // any static objects while still in main().
 
-void threads_exit(void)
-{
-  threads_set_number(0);
+void threads_exit(void) {
+    threads_set_number(0);
 
 #ifndef _WIN32
 
-  pthread_cond_destroy(&Threads.sleepCondition);
-  pthread_mutex_destroy(&Threads.mutex);
+    pthread_cond_destroy(&Threads.sleepCondition);
+    pthread_mutex_destroy(&Threads.mutex);
 
 #else
 
-  CloseHandle(Threads.event);
+    CloseHandle(Threads.event);
 
 #endif
 }
@@ -334,26 +328,27 @@ void threads_exit(void)
 // threads_set_number() creates/destroys threads to match the requested
 // number.
 
-void threads_set_number(int num)
-{
-  while (Threads.numThreads < num)
-    thread_create(Threads.numThreads++);
+void threads_set_number(int num) {
+    while (Threads.numThreads < num)
+        thread_create(Threads.numThreads++);
 
-  while (Threads.numThreads > num)
-    thread_destroy(Threads.pos[--Threads.numThreads]);
+    while (Threads.numThreads > num)
+        thread_destroy(Threads.pos[--Threads.numThreads]);
 
-  search_init();
+    search_init();
 
-  if (num == 0 && numCmhTables > 0) {
-    for (int i = 0; i < numCmhTables; i++)
-      if (cmhTables[i]) {
-        free(cmhTables[i]);
-      }
-    free(cmhTables);
-    cmhTables = NULL;
-    numCmhTables = 0;
-  }
+    if (num == 0 && numCmhTables > 0)
+    {
+        for (int i = 0; i < numCmhTables; i++)
+            if (cmhTables[i])
+            {
+                free(cmhTables[i]);
+            }
+        free(cmhTables);
+        cmhTables    = NULL;
+        numCmhTables = 0;
+    }
 
-  if (num == 0)
-    Threads.searching = false;
+    if (num == 0)
+        Threads.searching = false;
 }

@@ -21,7 +21,7 @@
 #ifndef MOVEPICK_H
 #define MOVEPICK_H
 
-#include <string.h>   // For memset
+#include <string.h>  // For memset
 
 #include "movegen.h"
 #include "position.h"
@@ -32,94 +32,96 @@
 
 static const int CounterMovePruneThreshold = 0;
 
-INLINE void cms_update(PieceToHistory cms, Piece pc, Square to, int v)
-{
-  cms[pc][to] += v - cms[pc][to] * abs(v) / 29952;
+INLINE void cms_update(PieceToHistory cms, Piece pc, Square to, int v) {
+    cms[pc][to] += v - cms[pc][to] * abs(v) / 29952;
 }
 
-INLINE void history_update(ButterflyHistory history, Color c, Move m, int v)
-{
-  m &= 4095;
-  history[c][m] += v - history[c][m] * abs(v) / 10692;
+INLINE void history_update(ButterflyHistory history, Color c, Move m, int v) {
+    m &= 4095;
+    history[c][m] += v - history[c][m] * abs(v) / 10692;
 }
 
-INLINE void cpth_update(CapturePieceToHistory history, Piece pc, Square to,
-                        int captured, int v)
-{
-  history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / 10692;
+INLINE void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
+    history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / 10692;
 }
 
-INLINE void lph_update(LowPlyHistory history, int ply, Move m, int v)
-{
-  m &= 4095;
-  history[ply][m] += v - history[ply][m] * abs(v) / 10692;
+INLINE void lph_update(LowPlyHistory history, int ply, Move m, int v) {
+    m &= 4095;
+    history[ply][m] += v - history[ply][m] * abs(v) / 10692;
 }
 
 enum {
-  ST_MAIN_SEARCH, ST_CAPTURES_INIT, ST_GOOD_CAPTURES, ST_KILLERS, ST_KILLERS_2,
-  ST_QUIET_INIT, ST_QUIET, ST_BAD_CAPTURES,
+    ST_MAIN_SEARCH,
+    ST_CAPTURES_INIT,
+    ST_GOOD_CAPTURES,
+    ST_KILLERS,
+    ST_KILLERS_2,
+    ST_QUIET_INIT,
+    ST_QUIET,
+    ST_BAD_CAPTURES,
 
-  ST_EVASION, ST_EVASIONS_INIT, ST_ALL_EVASIONS,
+    ST_EVASION,
+    ST_EVASIONS_INIT,
+    ST_ALL_EVASIONS,
 
-  ST_QSEARCH, ST_QCAPTURES_INIT, ST_QCAPTURES, ST_QCHECKS,
+    ST_QSEARCH,
+    ST_QCAPTURES_INIT,
+    ST_QCAPTURES,
+    ST_QCHECKS,
 
-  ST_PROBCUT, ST_PROBCUT_INIT, ST_PROBCUT_2
+    ST_PROBCUT,
+    ST_PROBCUT_INIT,
+    ST_PROBCUT_2
 };
 
-Move next_move(const Position *pos, bool skipQuiets);
+Move next_move(const Position* pos, bool skipQuiets);
 
 // Initialisation of move picker data.
 
-INLINE void mp_init(const Position *pos, Move ttm, Depth d, int ply)
-{
+INLINE void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
 
-  Stack *st = pos->st;
+    Stack* st = pos->st;
 
-  st->depth = d;
-  st->mp_ply = ply;
+    st->depth  = d;
+    st->mp_ply = ply;
 
-  Square prevSq = to_sq((st-1)->currentMove);
-  st->countermove = (*pos->counterMoves)[piece_on(prevSq)][prevSq];
-  st->mpKillers[0] = st->killers[0];
-  st->mpKillers[1] = st->killers[1];
+    Square prevSq    = to_sq((st - 1)->currentMove);
+    st->countermove  = (*pos->counterMoves)[piece_on(prevSq)][prevSq];
+    st->mpKillers[0] = st->killers[0];
+    st->mpKillers[1] = st->killers[1];
 
-  st->ttMove = ttm;
-  st->stage = checkers() ? ST_EVASION : ST_MAIN_SEARCH;
-  if (!ttm || !is_pseudo_legal(pos, ttm))
-    st->stage++;
+    st->ttMove = ttm;
+    st->stage  = checkers() ? ST_EVASION : ST_MAIN_SEARCH;
+    if (!ttm || !is_pseudo_legal(pos, ttm))
+        st->stage++;
 }
 
-INLINE void mp_init_q(const Position *pos, Move ttm, Depth d, Square s)
-{
+INLINE void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
 
-  Stack *st = pos->st;
+    Stack* st = pos->st;
 
-  st->ttMove = ttm;
-  st->stage = checkers() ? ST_EVASION : ST_QSEARCH;
-  if (   !ttm
-      || !is_pseudo_legal(pos, ttm)
-      || !(d > DEPTH_QS_RECAPTURES || to_sq(ttm) == s))
-    st->stage++;
+    st->ttMove = ttm;
+    st->stage  = checkers() ? ST_EVASION : ST_QSEARCH;
+    if (!ttm || !is_pseudo_legal(pos, ttm) || !(d > DEPTH_QS_RECAPTURES || to_sq(ttm) == s))
+        st->stage++;
 
-  st->depth = d;
-  st->recaptureSquare = s;
+    st->depth           = d;
+    st->recaptureSquare = s;
 }
 
-INLINE void mp_init_pc(const Position *pos, Move ttm, Value th)
-{
+INLINE void mp_init_pc(const Position* pos, Move ttm, Value th) {
 
-  Stack *st = pos->st;
+    Stack* st = pos->st;
 
-  st->threshold = th;
+    st->threshold = th;
 
-  st->ttMove = ttm;
-  st->stage = ST_PROBCUT;
+    st->ttMove = ttm;
+    st->stage  = ST_PROBCUT;
 
-  // In ProbCut we generate captures with SEE higher than the given
-  // threshold.
-  if (!(ttm && is_pseudo_legal(pos, ttm) && is_capture(pos, ttm)
-            && see_test(pos, ttm, th)))
-    st->stage++;
+    // In ProbCut we generate captures with SEE higher than the given
+    // threshold.
+    if (!(ttm && is_pseudo_legal(pos, ttm) && is_capture(pos, ttm) && see_test(pos, ttm, th)))
+        st->stage++;
 }
 
 #endif

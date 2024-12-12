@@ -29,10 +29,10 @@
 // the maximum available time, the game move number and other parameters.
 
 struct TimeManagement {
-  TimePoint startTime;
-  int optimumTime;
-  int maximumTime;
-  int64_t availableNodes;
+    TimePoint startTime;
+    int       optimumTime;
+    int       maximumTime;
+    int64_t   availableNodes;
 };
 
 extern struct TimeManagement Time;
@@ -42,9 +42,6 @@ void time_init(Color us, int ply);
 #define time_optimum() Time.optimumTime
 #define time_maximum() Time.maximumTime
 
-INLINE TimePoint time_elapsed(void)
-{
-  return now() - Time.startTime;
-}
+INLINE TimePoint time_elapsed(void) { return now() - Time.startTime; }
 
 #endif

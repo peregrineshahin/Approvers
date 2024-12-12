@@ -32,7 +32,7 @@
 #include "tt.h"
 #include "uci.h"
 
-static char *Defaults[] = {
+static char* Defaults[] = {
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
   "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 10",
   "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 11",
@@ -70,9 +70,9 @@ static char *Defaults[] = {
   "4k3/3q1r2/1N2r1b1/3ppN2/2nPP3/1B1R2n1/2R1Q3/3K4 w - - 5 1",
 
   // 5-man positions
-  "8/8/8/8/5kp1/P7/8/1K1N4 w - - 0 1",     // Kc2 - mate
-  "8/8/8/5N2/8/p7/8/2NK3k w - - 0 1",      // Na2 - mate
-  "8/3k4/8/8/8/4B3/4KB2/2B5 w - - 0 1",    // draw
+  "8/8/8/8/5kp1/P7/8/1K1N4 w - - 0 1",   // Kc2 - mate
+  "8/8/8/5N2/8/p7/8/2NK3k w - - 0 1",    // Na2 - mate
+  "8/3k4/8/8/8/4B3/4KB2/2B5 w - - 0 1",  // draw
 
   // 6-man positions
   "8/8/1P6/5pr1/8/4R3/7k/2K5 w - - 0 1",   // Re5 - mate
@@ -80,7 +80,7 @@ static char *Defaults[] = {
   "8/8/3P3k/8/1p6/8/1P6/1K3n2 b - - 0 1",  // Nd2 - draw
 
   // 7-man positions
-  "8/R7/2q5/8/6k1/8/1P5p/K6R w - - 0 124", // Draw
+  "8/R7/2q5/8/6k1/8/1P5p/K6R w - - 0 124",  // Draw
 
   // Mate and stalemate positions
   "6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0 1",
@@ -99,115 +99,123 @@ static char *Defaults[] = {
 // - Type of the limit value: depth (default), time (in msecs), nodes.
 // - Evaluation: classical, nnue (hybrid), pure (NNUE only), mixed (default).
 
-void benchmark(Position *current, char *str)
-{
-  char *token;
-  char **fens;
-  int numFens;
+void benchmark(Position* current, char* str) {
+    char*  token;
+    char** fens;
+    int    numFens;
 
-  Limits = (struct LimitsType){ 0 };
+    Limits = (struct LimitsType){0};
 
-  int ttSize      = (token = strtok(str , " ")) ? atoi(token)  : 16;
-  int threads     = (token = strtok(NULL, " ")) ? atoi(token)  : 1;
-  int64_t limit   = (token = strtok(NULL, " ")) ? atoll(token) : 13;
-  char *fenFile   = (token = strtok(NULL, " ")) ? token        : "default";
-  char *limitType = (token = strtok(NULL, " ")) ? token        : "depth";
+    int     ttSize    = (token = strtok(str, " ")) ? atoi(token) : 16;
+    int     threads   = (token = strtok(NULL, " ")) ? atoi(token) : 1;
+    int64_t limit     = (token = strtok(NULL, " ")) ? atoll(token) : 13;
+    char*   fenFile   = (token = strtok(NULL, " ")) ? token : "default";
+    char*   limitType = (token = strtok(NULL, " ")) ? token : "depth";
 
-  delayedSettings.ttSize = ttSize;
-  delayedSettings.numThreads = threads;
-  process_delayed_settings();
-  search_clear();
+    delayedSettings.ttSize     = ttSize;
+    delayedSettings.numThreads = threads;
+    process_delayed_settings();
+    search_clear();
 
-  if (strcmp(limitType, "time") == 0)
-    Limits.movetime = limit; // movetime is in millisecs
-  else if (strcmp(limitType, "nodes") == 0)
-    Limits.nodes = limit;
-  else
-    Limits.depth = limit;
+    if (strcmp(limitType, "time") == 0)
+        Limits.movetime = limit;  // movetime is in millisecs
+    else if (strcmp(limitType, "nodes") == 0)
+        Limits.nodes = limit;
+    else
+        Limits.depth = limit;
 
-  if (strcasecmp(fenFile, "default") == 0) {
-    fens = Defaults;
-    numFens = sizeof(Defaults) / sizeof(char *);
-  }
-  else if (strcasecmp(fenFile, "current") == 0) {
-    fens = malloc(sizeof(*fens));
-    fens[0] = malloc(128);
-    pos_fen(current, fens[0]);
-    numFens = 1;
-  }
-  else {
-    int maxFens = 100;
-    numFens = 0;
-    FILE *F = fopen(fenFile, "r");
-    if (!F) {
-      return;
+    if (strcasecmp(fenFile, "default") == 0)
+    {
+        fens    = Defaults;
+        numFens = sizeof(Defaults) / sizeof(char*);
     }
-    fens = malloc(maxFens * sizeof(*fens));
-    fens[0] = NULL;
-    size_t length = 0;
-    while (getline(&fens[numFens], &length, F) > 0) {
-      numFens++;
-      if (numFens == maxFens) {
-        maxFens += 100;
-        fens = realloc(fens, maxFens * sizeof(*fens));
-      }
-      fens[numFens] = NULL;
-      length = 0;
+    else if (strcasecmp(fenFile, "current") == 0)
+    {
+        fens    = malloc(sizeof(*fens));
+        fens[0] = malloc(128);
+        pos_fen(current, fens[0]);
+        numFens = 1;
     }
-    fclose(F);
-  }
-
-  uint64_t nodes = 0;
-  Position pos;
-  memset(&pos, 0, sizeof(pos));
-  pos.stackAllocation = malloc(63 + 217 * sizeof(*pos.stack));
-  pos.stack = (Stack *)(((uintptr_t)pos.stackAllocation + 0x3f) & ~0x3f);
-  pos.st = pos.stack + 7;
-  pos.moveList = malloc(10000 * sizeof(*pos.moveList));
-  TimePoint elapsed = now();
-
-  int numOpts = 0;
-  for (int i = 0; i < numFens; i++)
-    if (strncmp(fens[i], "setoption ", 9) == 0)
-      numOpts++;
-
-  for (int i = 0, j = 0; i < numFens; i++) {
-    char buf[128];
-
-    if (strncmp(fens[i], "setoption ", 9) == 0) {
-      strncpy(buf, fens[i] + 10, 127 - 10);
-      buf[127] = 0;
-      setoption(buf);
-      continue;
+    else
+    {
+        int maxFens = 100;
+        numFens     = 0;
+        FILE* F     = fopen(fenFile, "r");
+        if (!F)
+        {
+            return;
+        }
+        fens          = malloc(maxFens * sizeof(*fens));
+        fens[0]       = NULL;
+        size_t length = 0;
+        while (getline(&fens[numFens], &length, F) > 0)
+        {
+            numFens++;
+            if (numFens == maxFens)
+            {
+                maxFens += 100;
+                fens = realloc(fens, maxFens * sizeof(*fens));
+            }
+            fens[numFens] = NULL;
+            length        = 0;
+        }
+        fclose(F);
     }
 
-    strcpy(buf, "fen ");
-    strncat(buf, fens[i], 127 - 4);
-    buf[127] = 0;
+    uint64_t nodes = 0;
+    Position pos;
+    memset(&pos, 0, sizeof(pos));
+    pos.stackAllocation = malloc(63 + 217 * sizeof(*pos.stack));
+    pos.stack           = (Stack*) (((uintptr_t) pos.stackAllocation + 0x3f) & ~0x3f);
+    pos.st              = pos.stack + 7;
+    pos.moveList        = malloc(10000 * sizeof(*pos.moveList));
+    TimePoint elapsed   = now();
 
-    position(&pos, buf);
-
-    fprintf(stdout, "\nPosition: %d/%d\n", ++j, numFens - numOpts);
-
-    Limits.startTime = now();
-    start_thinking(&pos, false);
-    thread_wait_until_sleeping(threads_main());
-    nodes += Threads.pos[0]->nodes;
-  }
-
-  elapsed = now() - elapsed + 1; // Ensure positivity to avoid a 'divide by zero'
-
-  fprintf(stderr, "\n==========================="
-                  "\nTotal time (ms) : %" PRIu64
-                  "\nNodes searched  : %" PRIu64
-                  "\nNodes/second    : %" PRIu64 "\n",
-                  elapsed, nodes, 1000 * nodes / elapsed);
-
-  if (fens != Defaults) {
+    int numOpts = 0;
     for (int i = 0; i < numFens; i++)
-      free(fens[i]);
-    free(fens);
-  }
-  free(pos.stackAllocation);
-  free(pos.moveList);
+        if (strncmp(fens[i], "setoption ", 9) == 0)
+            numOpts++;
+
+    for (int i = 0, j = 0; i < numFens; i++)
+    {
+        char buf[128];
+
+        if (strncmp(fens[i], "setoption ", 9) == 0)
+        {
+            strncpy(buf, fens[i] + 10, 127 - 10);
+            buf[127] = 0;
+            setoption(buf);
+            continue;
+        }
+
+        strcpy(buf, "fen ");
+        strncat(buf, fens[i], 127 - 4);
+        buf[127] = 0;
+
+        position(&pos, buf);
+
+        fprintf(stdout, "\nPosition: %d/%d\n", ++j, numFens - numOpts);
+
+        Limits.startTime = now();
+        start_thinking(&pos, false);
+        thread_wait_until_sleeping(threads_main());
+        nodes += Threads.pos[0]->nodes;
+    }
+
+    elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'
+
+    fprintf(stderr,
+            "\n==========================="
+            "\nTotal time (ms) : %" PRIu64 "\nNodes searched  : %" PRIu64
+            "\nNodes/second    : %" PRIu64 "\n",
+            elapsed, nodes, 1000 * nodes / elapsed);
+
+    if (fens != Defaults)
+    {
+        for (int i = 0; i < numFens; i++)
+            free(fens[i]);
+        free(fens);
+    }
+    free(pos.stackAllocation);
+    free(pos.moveList);
 }

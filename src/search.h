@@ -32,20 +32,20 @@
 // moves.
 
 struct RootMove {
-  int pvSize;
-  Value score;
-  Value previousScore;
-  int tbRank;
-  int bestMoveCount;
-  Value tbScore;
-  Move pv[MAX_PLY];
+    int   pvSize;
+    Value score;
+    Value previousScore;
+    int   tbRank;
+    int   bestMoveCount;
+    Value tbScore;
+    Move  pv[MAX_PLY];
 };
 
 typedef struct RootMove RootMove;
 
 struct RootMoves {
-  int size;
-  RootMove move[MAX_MOVES];
+    int      size;
+    RootMove move[MAX_MOVES];
 };
 
 typedef struct RootMoves RootMoves;
@@ -55,28 +55,25 @@ typedef struct RootMoves RootMoves;
 /// if we have to ponder while it's our opponent's turn to move.
 
 struct LimitsType {
-  int time[2];
-  int inc[2];
-  int depth;
-  int movetime;
-  bool infinite;
-  uint64_t nodes;
-  TimePoint startTime;
+    int       time[2];
+    int       inc[2];
+    int       depth;
+    int       movetime;
+    bool      infinite;
+    uint64_t  nodes;
+    TimePoint startTime;
 };
 
 typedef struct LimitsType LimitsType;
 
 extern LimitsType Limits;
 
-INLINE int use_time_management(void)
-{
-  return Limits.time[WHITE] || Limits.time[BLACK];
-}
+INLINE int use_time_management(void) { return Limits.time[WHITE] || Limits.time[BLACK]; }
 
-void search_init(void);
-void search_clear(void);
-uint64_t perft(Position *pos, Depth depth);
-void start_thinking(Position *pos, bool ponderMode);
-void prepare_for_search(Position *root, bool ponderMode);
+void     search_init(void);
+void     search_clear(void);
+uint64_t perft(Position* pos, Depth depth);
+void     start_thinking(Position* pos, bool ponderMode);
+void     prepare_for_search(Position* root, bool ponderMode);
 
 #endif

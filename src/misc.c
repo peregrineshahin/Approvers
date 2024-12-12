@@ -24,9 +24,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #ifdef _WIN32
-#include <windows.h>
+    #include <windows.h>
 #else
-#include <sys/mman.h>
+    #include <sys/mman.h>
 #endif
 
 #include "misc.h"
@@ -57,89 +57,83 @@ HANDLE ioMutex;
 // For further analysis see
 //   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
 
-void prng_init(PRNG *rng, uint64_t seed)
-{
-  rng->s = seed;
+void prng_init(PRNG* rng, uint64_t seed) { rng->s = seed; }
+
+uint64_t prng_rand(PRNG* rng) {
+    uint64_t s = rng->s;
+
+    s ^= s >> 12;
+    s ^= s << 25;
+    s ^= s >> 27;
+    rng->s = s;
+
+    return s * 2685821657736338717LL;
 }
 
-uint64_t prng_rand(PRNG *rng)
-{
-  uint64_t s = rng->s;
-
-  s ^= s >> 12;
-  s ^= s << 25;
-  s ^= s >> 27;
-  rng->s = s;
-
-  return s * 2685821657736338717LL;
+uint64_t prng_sparse_rand(PRNG* rng) {
+    uint64_t r1 = prng_rand(rng);
+    uint64_t r2 = prng_rand(rng);
+    uint64_t r3 = prng_rand(rng);
+    return r1 & r2 & r3;
 }
 
-uint64_t prng_sparse_rand(PRNG *rng)
-{
-  uint64_t r1 = prng_rand(rng);
-  uint64_t r2 = prng_rand(rng);
-  uint64_t r3 = prng_rand(rng);
-  return r1 & r2 & r3;
-}
+ssize_t getline(char** lineptr, size_t* n, FILE* stream) {
+    if (*n == 0)
+        *lineptr = malloc(*n = 100);
 
-ssize_t getline(char **lineptr, size_t *n, FILE *stream)
-{
-  if (*n == 0)
-    *lineptr = malloc(*n = 100);
-
-  int c = 0;
-  size_t i = 0;
-  while ((c = getc(stream)) != EOF) {
-    (*lineptr)[i++] = c;
-    if (i == *n)
-      *lineptr = realloc(*lineptr, *n += 100);
-    if (c == '\n') break;
-  }
-  (*lineptr)[i] = 0;
-  return i;
+    int    c = 0;
+    size_t i = 0;
+    while ((c = getc(stream)) != EOF)
+    {
+        (*lineptr)[i++] = c;
+        if (i == *n)
+            *lineptr = realloc(*lineptr, *n += 100);
+        if (c == '\n')
+            break;
+    }
+    (*lineptr)[i] = 0;
+    return i;
 }
 
 #ifdef _WIN32
-typedef SIZE_T (WINAPI *GLPM)(void);
+typedef SIZE_T(WINAPI* GLPM)(void);
 size_t largePageMinimum;
 
-bool large_pages_supported(void)
-{
-  GLPM impGetLargePageMinimum =
-    (GLPM)(void (*)(void))GetProcAddress(GetModuleHandle("kernel32.dll"),
-        "GetLargePageMinimum");
-  if (!impGetLargePageMinimum)
-    return 0;
+bool large_pages_supported(void) {
+    GLPM impGetLargePageMinimum = (GLPM) (void (*)(void)) GetProcAddress(
+      GetModuleHandle("kernel32.dll"), "GetLargePageMinimum");
+    if (!impGetLargePageMinimum)
+        return 0;
 
-  if ((largePageMinimum = impGetLargePageMinimum()) == 0)
-    return 0;
+    if ((largePageMinimum = impGetLargePageMinimum()) == 0)
+        return 0;
 
-  LUID privLuid;
-  if (!LookupPrivilegeValue(NULL, SE_LOCK_MEMORY_NAME, &privLuid))
-    return 0;
+    LUID privLuid;
+    if (!LookupPrivilegeValue(NULL, SE_LOCK_MEMORY_NAME, &privLuid))
+        return 0;
 
-  HANDLE token;
-  if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
-    return 0;
+    HANDLE token;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+        return 0;
 
-  TOKEN_PRIVILEGES tokenPrivs;
-  tokenPrivs.PrivilegeCount = 1;
-  tokenPrivs.Privileges[0].Luid = privLuid;
-  tokenPrivs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-  if (!AdjustTokenPrivileges(token, FALSE, &tokenPrivs, 0, NULL, NULL))
-    return 0;
+    TOKEN_PRIVILEGES tokenPrivs;
+    tokenPrivs.PrivilegeCount           = 1;
+    tokenPrivs.Privileges[0].Luid       = privLuid;
+    tokenPrivs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    if (!AdjustTokenPrivileges(token, FALSE, &tokenPrivs, 0, NULL, NULL))
+        return 0;
 
-  return 1;
+    return 1;
 }
 
 // The following two functions were taken from mingw_lock.c
 
 void __cdecl _lock(int locknum);
 void __cdecl _unlock(int locknum);
-#define _STREAM_LOCKS 16
-#define _IOLOCKED 0x8000
+    #define _STREAM_LOCKS 16
+    #define _IOLOCKED 0x8000
 typedef struct {
-  FILE f;
-  CRITICAL_SECTION lock;
+    FILE             f;
+    CRITICAL_SECTION lock;
 } _FILEX;
 #endif

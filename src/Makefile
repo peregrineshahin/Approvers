@@ -102,6 +102,12 @@ native = no
 embed = no
 STRIP = strip
 
+ifneq ($(shell which clang-format-18 2> /dev/null),)
+	CLANG-FORMAT = clang-format-18
+else
+	CLANG-FORMAT = clang-format
+endif
+
 ### 2.2 Architecture specific
 
 ifeq ($(ARCH),auto)
@@ -751,6 +757,9 @@ profileclean:
 	@rm -rf profdir
 	@rm -f bench.txt *.gcda *.gcno
 	@rm -f cfish.profdata *.profraw
+
+format:
+	find . -name "*.c" -o -name "*.h" | xargs $(CLANG-FORMAT) -i -style=file
 
 default:
 	$(MAKE) CFLAGS="-fcommon -Os -s -ffunction-sections -fdata-sections -flto" LDFLAGS="-Wl,--gc-sections -lm" ARCH=$(ARCH)

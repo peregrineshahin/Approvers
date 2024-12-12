@@ -25,41 +25,41 @@
 #include "timeman.h"
 #include "uci.h"
 
-struct TimeManagement Time; // Our global time management struct
+struct TimeManagement Time;  // Our global time management struct
 
 // tm_init() is called at the beginning of the search and calculates the
 // time bounds allowed for the current game ply. We currently support:
 // 1) x basetime (+z increment)
 // 2) x moves in y seconds (+z increment)
 
-void time_init(Color us, int ply)
-{
-  int moveOverhead    = option_value(OPT_MOVE_OVERHEAD);
+void time_init(Color us, int ply) {
+    int moveOverhead = option_value(OPT_MOVE_OVERHEAD);
 
-  // opt_scale is a percentage of available time to use for the current move.
-  // max_scale is a multiplier applied to optimumTime.
-  double opt_scale, max_scale;
+    // opt_scale is a percentage of available time to use for the current move.
+    // max_scale is a multiplier applied to optimumTime.
+    double opt_scale, max_scale;
 
-  Time.startTime = Limits.startTime;
+    Time.startTime = Limits.startTime;
 
-  // Maximum move horizon of 50 moves
-  int mtg = 50;
+    // Maximum move horizon of 50 moves
+    int mtg = 50;
 
-  // Make sure that timeLeft > 0 since we may use it as a divisor
-  TimePoint timeLeft = max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
+    // Make sure that timeLeft > 0 since we may use it as a divisor
+    TimePoint timeLeft =
+      max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
 
-  timeLeft = 100 * timeLeft / 100;
+    timeLeft = 100 * timeLeft / 100;
 
-  // x basetime (+z increment)
-  // If there is a healthy increment, timeLeft can exceed actual available
-  // game time for the current move, so also cap to 20% of available game time.
-  opt_scale = min(0.008 + pow(ply + 3.0, 0.5) / 250.0, 0.2 * Limits.time[us] / (double)timeLeft);
-  max_scale = min(7.0, 4.0 + ply / 12.0);
+    // x basetime (+z increment)
+    // If there is a healthy increment, timeLeft can exceed actual available
+    // game time for the current move, so also cap to 20% of available game time.
+    opt_scale = min(0.008 + pow(ply + 3.0, 0.5) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
+    max_scale = min(7.0, 4.0 + ply / 12.0);
 
-  // Never use more than 80% of the available time for this move
-  Time.optimumTime = opt_scale * timeLeft;
-  Time.maximumTime = min(0.8 * Limits.time[us] - moveOverhead, max_scale * Time.optimumTime);
+    // Never use more than 80% of the available time for this move
+    Time.optimumTime = opt_scale * timeLeft;
+    Time.maximumTime = min(0.8 * Limits.time[us] - moveOverhead, max_scale * Time.optimumTime);
 
-  if (option_value(OPT_PONDER))
-    Time.optimumTime += Time.optimumTime / 4;
+    if (option_value(OPT_PONDER))
+        Time.optimumTime += Time.optimumTime / 4;
 }

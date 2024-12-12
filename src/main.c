@@ -30,21 +30,20 @@
 #include "uci.h"
 
 
-int main(int argc, char **argv)
-{
-  psqt_init();
-  bitboards_init();
-  zob_init();
-  bitbases_init();
-  endgames_init();
-  threads_init();
-  options_init();
-  search_clear();
+int main(int argc, char** argv) {
+    psqt_init();
+    bitboards_init();
+    zob_init();
+    bitbases_init();
+    endgames_init();
+    threads_init();
+    options_init();
+    search_clear();
 
-  uci_loop(argc, argv);
+    uci_loop(argc, argv);
 
-  threads_exit();
-  tt_free();
+    threads_exit();
+    tt_free();
 
-  return 0;
+    return 0;
 }

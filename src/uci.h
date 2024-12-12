@@ -28,49 +28,51 @@
 struct Option;
 typedef struct Option Option;
 
-typedef void (*OnChange)(Option *);
+typedef void (*OnChange)(Option*);
 
 enum {
-  OPT_TYPE_CHECK, OPT_TYPE_SPIN, OPT_TYPE_BUTTON,
-  OPT_TYPE_DISABLED
+    OPT_TYPE_CHECK,
+    OPT_TYPE_SPIN,
+    OPT_TYPE_BUTTON,
+    OPT_TYPE_DISABLED
 };
 
 enum {
-  OPT_CONTEMPT,
-  OPT_THREADS,
-  OPT_HASH,
-  OPT_CLEAR_HASH,
-  OPT_PONDER,
-  OPT_MOVE_OVERHEAD,
-  OPT_LARGE_PAGES
+    OPT_CONTEMPT,
+    OPT_THREADS,
+    OPT_HASH,
+    OPT_CLEAR_HASH,
+    OPT_PONDER,
+    OPT_MOVE_OVERHEAD,
+    OPT_LARGE_PAGES
 };
 
 struct Option {
-  char *name;
-  int type;
-  int def, minVal, maxVal;
-  char *defString;
-  OnChange onChange;
-  int value;
-  char *valString;
+    char*    name;
+    int      type;
+    int      def, minVal, maxVal;
+    char*    defString;
+    OnChange onChange;
+    int      value;
+    char*    valString;
 };
 
-void options_init(void);
-void print_options(void);
-int option_value(int opt);
-const char *option_string_value(int opt);
-const char *option_default_string_value(int opt);
-void option_set_value(int opt, int value);
-bool option_set_by_name(char *name, char *value);
+void        options_init(void);
+void        print_options(void);
+int         option_value(int opt);
+const char* option_string_value(int opt);
+const char* option_default_string_value(int opt);
+void        option_set_value(int opt, int value);
+bool        option_set_by_name(char* name, char* value);
 
-void setoption(char *str);
-void position(Position *pos, char *str);
+void setoption(char* str);
+void position(Position* pos, char* str);
 
-void uci_loop(int argc, char* argv[]);
-char *uci_value(char *str, Value v);
-char *uci_square(char *str, Square s);
-char *uci_move(char *str, Move m);
-void print_pv(Position *pos, Depth depth, Value alpha, Value beta);
-Move uci_to_move(const Position *pos, char *str);
+void  uci_loop(int argc, char* argv[]);
+char* uci_value(char* str, Value v);
+char* uci_square(char* str, Square s);
+char* uci_move(char* str, Move m);
+void  print_pv(Position* pos, Depth depth, Value alpha, Value beta);
+Move  uci_to_move(const Position* pos, char* str);
 
 #endif

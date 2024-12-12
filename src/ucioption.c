@@ -24,7 +24,7 @@
 #include <string.h>
 #include <strings.h>
 #ifndef _WIN32
-#include <sys/mman.h>
+    #include <sys/mman.h>
 #endif
 
 #include "evaluate.h"
@@ -36,153 +36,135 @@
 #include "uci.h"
 
 // 'On change' actions, triggered by an option's value change
-static void on_clear_hash(Option *opt)
-{
-  (void)opt;
+static void on_clear_hash(Option* opt) {
+    (void) opt;
 
-  if (settings.ttSize)
-    search_clear();
+    if (settings.ttSize)
+        search_clear();
 }
 
-static void on_hash_size(Option *opt)
-{
-  delayedSettings.ttSize = opt->value;
-}
+static void on_hash_size(Option* opt) { delayedSettings.ttSize = opt->value; }
 
-static void on_threads(Option *opt)
-{
-  delayedSettings.numThreads = opt->value;
-}
+static void on_threads(Option* opt) { delayedSettings.numThreads = opt->value; }
 
-static void on_large_pages(Option *opt)
-{
-  delayedSettings.largePages = opt->value;
-}
+static void on_large_pages(Option* opt) { delayedSettings.largePages = opt->value; }
 
 #ifdef IS_64BIT
-#define MAXHASHMB 33554432
+    #define MAXHASHMB 33554432
 #else
-#define MAXHASHMB 2048
+    #define MAXHASHMB 2048
 #endif
 
 static Option optionsMap[] = {
-  { "Contempt", OPT_TYPE_SPIN, 24, -100, 100, NULL, NULL, 0, NULL },
-  { "Threads", OPT_TYPE_SPIN, 1, 1, MAX_THREADS, NULL, on_threads, 0, NULL },
-  { "Hash", OPT_TYPE_SPIN, 1, 1, MAXHASHMB, NULL, on_hash_size, 0, NULL },
-  { "Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL },
-  { "Ponder", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },
-  { "Move Overhead", OPT_TYPE_SPIN, 10, 0, 5000, NULL, NULL, 0, NULL },
-  { "LargePages", OPT_TYPE_CHECK, 1, 0, 0, NULL, on_large_pages, 0, NULL },
-  { 0 }
-};
+  {"Contempt", OPT_TYPE_SPIN, 24, -100, 100, NULL, NULL, 0, NULL},
+  {"Threads", OPT_TYPE_SPIN, 1, 1, MAX_THREADS, NULL, on_threads, 0, NULL},
+  {"Hash", OPT_TYPE_SPIN, 1, 1, MAXHASHMB, NULL, on_hash_size, 0, NULL},
+  {"Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL},
+  {"Ponder", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL},
+  {"Move Overhead", OPT_TYPE_SPIN, 10, 0, 5000, NULL, NULL, 0, NULL},
+  {"LargePages", OPT_TYPE_CHECK, 1, 0, 0, NULL, on_large_pages, 0, NULL},
+  {0}};
 
 // options_init() initializes the UCI options to their hard-coded default
 // values.
 
-void options_init()
-{
+void options_init() {
 #ifdef _WIN32
-  // Disable the LargePages option if the machine does not support it.
-  if (!large_pages_supported())
-    optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
+    // Disable the LargePages option if the machine does not support it.
+    if (!large_pages_supported())
+        optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
 #endif
 #if defined(__linux__) && !defined(MADV_HUGEPAGE)
-  optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
+    optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
 #endif
-  for (Option *opt = optionsMap; opt->name != NULL; opt++) {
-    if (opt->type == OPT_TYPE_DISABLED)
-      continue;
-    switch (opt->type) {
-    case OPT_TYPE_CHECK:
-    case OPT_TYPE_SPIN:
-      opt->value = opt->def;
-    case OPT_TYPE_BUTTON:
-      break;
+    for (Option* opt = optionsMap; opt->name != NULL; opt++)
+    {
+        if (opt->type == OPT_TYPE_DISABLED)
+            continue;
+        switch (opt->type)
+        {
+        case OPT_TYPE_CHECK :
+        case OPT_TYPE_SPIN :
+            opt->value = opt->def;
+        case OPT_TYPE_BUTTON :
+            break;
+        }
+        if (opt->onChange)
+            opt->onChange(opt);
     }
-    if (opt->onChange)
-      opt->onChange(opt);
-  }
 }
 
-static const char *optTypeStr[] = {
-  "check", "spin", "button"
-};
+static const char* optTypeStr[] = {"check", "spin", "button"};
 
 // print_options() prints all options in the format required by the
 // UCI protocol.
 
 void print_options(void) {
-  for (Option *opt = optionsMap; opt->name != NULL; opt++) {
-    if (opt->type == OPT_TYPE_DISABLED)
-      continue;
-    printf("option name %s type %s", opt->name, optTypeStr[opt->type]);
-    switch (opt->type) {
-    case OPT_TYPE_CHECK:
-      printf(" default %s", opt->def ? "true" : "false");
-      break;
-    case OPT_TYPE_SPIN:
-      printf(" default %d min %d max %d", opt->def, opt->minVal, opt->maxVal);
-    case OPT_TYPE_BUTTON:
-      break;
+    for (Option* opt = optionsMap; opt->name != NULL; opt++)
+    {
+        if (opt->type == OPT_TYPE_DISABLED)
+            continue;
+        printf("option name %s type %s", opt->name, optTypeStr[opt->type]);
+        switch (opt->type)
+        {
+        case OPT_TYPE_CHECK :
+            printf(" default %s", opt->def ? "true" : "false");
+            break;
+        case OPT_TYPE_SPIN :
+            printf(" default %d min %d max %d", opt->def, opt->minVal, opt->maxVal);
+        case OPT_TYPE_BUTTON :
+            break;
+        }
+        printf("\n");
     }
-    printf("\n");
-  }
-  fflush(stdout);
+    fflush(stdout);
 }
 
-int option_value(int optIdx)
-{
-  return optionsMap[optIdx].value;
-}
+int option_value(int optIdx) { return optionsMap[optIdx].value; }
 
-const char *option_string_value(int optIdx)
-{
-  return optionsMap[optIdx].valString;
-}
+const char* option_string_value(int optIdx) { return optionsMap[optIdx].valString; }
 
-const char *option_default_string_value(int optIdx)
-{
-  return optionsMap[optIdx].defString;
-}
+const char* option_default_string_value(int optIdx) { return optionsMap[optIdx].defString; }
 
-void option_set_value(int optIdx, int value)
-{
-  Option *opt = &optionsMap[optIdx];
+void option_set_value(int optIdx, int value) {
+    Option* opt = &optionsMap[optIdx];
 
-  opt->value = value;
-  if (opt->onChange)
-    opt->onChange(opt);
-}
-
-bool option_set_by_name(char *name, char *value)
-{
-  for (Option *opt = optionsMap; opt->name != NULL; opt++) {
-    if (opt->type == OPT_TYPE_DISABLED)
-      continue;
-    if (strcasecmp(opt->name, name) == 0) {
-      int val;
-      switch (opt->type) {
-      case OPT_TYPE_CHECK:
-        if (strcmp(value, "true") == 0)
-          opt->value = 1;
-        else if (strcmp(value, "false") == 0)
-          opt->value = 0;
-        else
-          return true;
-        break;
-      case OPT_TYPE_SPIN:
-        val = atoi(value);
-        if (val < opt->minVal || val > opt->maxVal)
-          return true;
-        opt->value = val;
-      case OPT_TYPE_BUTTON:
-        break;
-      }
-      if (opt->onChange)
+    opt->value = value;
+    if (opt->onChange)
         opt->onChange(opt);
-      return true;
-    }
-  }
+}
 
-  return false;
+bool option_set_by_name(char* name, char* value) {
+    for (Option* opt = optionsMap; opt->name != NULL; opt++)
+    {
+        if (opt->type == OPT_TYPE_DISABLED)
+            continue;
+        if (strcasecmp(opt->name, name) == 0)
+        {
+            int val;
+            switch (opt->type)
+            {
+            case OPT_TYPE_CHECK :
+                if (strcmp(value, "true") == 0)
+                    opt->value = 1;
+                else if (strcmp(value, "false") == 0)
+                    opt->value = 0;
+                else
+                    return true;
+                break;
+            case OPT_TYPE_SPIN :
+                val = atoi(value);
+                if (val < opt->minVal || val > opt->maxVal)
+                    return true;
+                opt->value = val;
+            case OPT_TYPE_BUTTON :
+                break;
+            }
+            if (opt->onChange)
+                opt->onChange(opt);
+            return true;
+        }
+    }
+
+    return false;
 }

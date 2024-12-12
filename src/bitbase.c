@@ -23,7 +23,9 @@
 #include "types.h"
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
-enum { MAX_INDEX = 2*24*64*64 };
+enum {
+    MAX_INDEX = 2 * 24 * 64 * 64
+};
 
 // Each uint32_t stores results of 32 positions, one per bit
 static uint32_t KPKBitbase[MAX_INDEX / 32];
@@ -38,110 +40,107 @@ static uint32_t KPKBitbase[MAX_INDEX / 32];
 // bit 13-14: white pawn file (from FILE_A to FILE_D)
 // bit 15-17: white pawn RANK_7 - rank
 //            (from RANK_7 - RANK_7 to RANK_7 - RANK_2)
-static unsigned bb_index(unsigned us, Square bksq, Square wksq, Square psq)
-{
-  return wksq | (bksq << 6) | (us << 12) | (file_of(psq) << 13) | ((RANK_7 - rank_of(psq)) << 15);
+static unsigned bb_index(unsigned us, Square bksq, Square wksq, Square psq) {
+    return wksq | (bksq << 6) | (us << 12) | (file_of(psq) << 13) | ((RANK_7 - rank_of(psq)) << 15);
 }
 
-enum { RES_INVALID = 0, RES_UNKNOWN = 1, RES_DRAW = 2, RES_WIN = 4 };
+enum {
+    RES_INVALID = 0,
+    RES_UNKNOWN = 1,
+    RES_DRAW    = 2,
+    RES_WIN     = 4
+};
 
-bool bitbases_probe(Square wksq, Square wpsq, Square bksq, Color us)
-{
+bool bitbases_probe(Square wksq, Square wpsq, Square bksq, Color us) {
 
-  unsigned idx = bb_index(us, bksq, wksq, wpsq);
-  return KPKBitbase[idx / 32] & (1U << (idx & 0x1F));
+    unsigned idx = bb_index(us, bksq, wksq, wpsq);
+    return KPKBitbase[idx / 32] & (1U << (idx & 0x1F));
 }
 
-static uint8_t initial(unsigned idx)
-{
-  int ksq[2] = { (idx >> 0) & 0x3f, (idx >> 6) & 0x3f };
-  Color us   = (idx >> 12) & 0x01;
-  int psq    = make_square((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
+static uint8_t initial(unsigned idx) {
+    int   ksq[2] = {(idx >> 0) & 0x3f, (idx >> 6) & 0x3f};
+    Color us     = (idx >> 12) & 0x01;
+    int   psq    = make_square((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
 
-  // Check if two pieces are on the same square or if a king can be captured
-  if (   distance(ksq[WHITE], ksq[BLACK]) <= 1
-      || ksq[WHITE] == psq
-      || ksq[BLACK] == psq
-      || (us == WHITE && (PawnAttacks[WHITE][psq] & sq_bb(ksq[BLACK]))))
-    return RES_INVALID;
+    // Check if two pieces are on the same square or if a king can be captured
+    if (distance(ksq[WHITE], ksq[BLACK]) <= 1 || ksq[WHITE] == psq || ksq[BLACK] == psq
+        || (us == WHITE && (PawnAttacks[WHITE][psq] & sq_bb(ksq[BLACK]))))
+        return RES_INVALID;
 
-  // Immediate win if a pawn can be promoted without getting captured
-  if (   us == WHITE
-      && rank_of(psq) == RANK_7
-      && ksq[us] != psq + NORTH
-      && (    distance(ksq[!us], psq + NORTH) > 1
-          || (PseudoAttacks[KING][ksq[us]] & sq_bb((psq + NORTH)))))
-    return RES_WIN;
+    // Immediate win if a pawn can be promoted without getting captured
+    if (us == WHITE && rank_of(psq) == RANK_7 && ksq[us] != psq + NORTH
+        && (distance(ksq[!us], psq + NORTH) > 1
+            || (PseudoAttacks[KING][ksq[us]] & sq_bb((psq + NORTH)))))
+        return RES_WIN;
 
-  // Immediate draw if it is a stalemate or a king captures undefended pawn
-  if (   us == BLACK
-      && (  !(PseudoAttacks[KING][ksq[us]] & ~(PseudoAttacks[KING][ksq[!us]] | PawnAttacks[!us][psq]))
-          || (PseudoAttacks[KING][ksq[us]] & sq_bb(psq) & ~PseudoAttacks[KING][ksq[!us]])))
-    return RES_DRAW;
+    // Immediate draw if it is a stalemate or a king captures undefended pawn
+    if (us == BLACK
+        && (!(PseudoAttacks[KING][ksq[us]]
+              & ~(PseudoAttacks[KING][ksq[!us]] | PawnAttacks[!us][psq]))
+            || (PseudoAttacks[KING][ksq[us]] & sq_bb(psq) & ~PseudoAttacks[KING][ksq[!us]])))
+        return RES_DRAW;
 
-  // Position will be classified later
-  return RES_UNKNOWN;
+    // Position will be classified later
+    return RES_UNKNOWN;
 }
 
-static uint8_t classify(uint8_t *db, unsigned idx)
-{
-  int ksq[2] = { (idx >> 0) & 0x3f, (idx >> 6) & 0x3f };
-  Color us   = (idx >> 12) & 0x01;
-  int psq    = make_square((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
+static uint8_t classify(uint8_t* db, unsigned idx) {
+    int   ksq[2] = {(idx >> 0) & 0x3f, (idx >> 6) & 0x3f};
+    Color us     = (idx >> 12) & 0x01;
+    int   psq    = make_square((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
 
-  // White to move: If one move leads to a position classified as WIN, the
-  // result of the current position is WIN. If all moves lead to positions
-  // classified as DRAW, the current position is classified as DRAW,
-  // otherwise the current position is classified as UNKNOWN.
-  //
-  // Black to move: If one move leads to a position classified as DRAW, the
-  // result of the current position is DRAW. If all moves lead to positions
-  // classified as WIN, the position is classified as WIN, otherwise the
-  // current position is classified as UNKNOWN.
+    // White to move: If one move leads to a position classified as WIN, the
+    // result of the current position is WIN. If all moves lead to positions
+    // classified as DRAW, the current position is classified as DRAW,
+    // otherwise the current position is classified as UNKNOWN.
+    //
+    // Black to move: If one move leads to a position classified as DRAW, the
+    // result of the current position is DRAW. If all moves lead to positions
+    // classified as WIN, the position is classified as WIN, otherwise the
+    // current position is classified as UNKNOWN.
 
-  Color them = !us;
-  int good = (us == WHITE ? RES_WIN : RES_DRAW);
-  int bad  = (us == WHITE ? RES_DRAW : RES_WIN);
+    Color them = !us;
+    int   good = (us == WHITE ? RES_WIN : RES_DRAW);
+    int   bad  = (us == WHITE ? RES_DRAW : RES_WIN);
 
-  uint8_t r = RES_INVALID;
-  Bitboard b = PseudoAttacks[KING][ksq[us]];
+    uint8_t  r = RES_INVALID;
+    Bitboard b = PseudoAttacks[KING][ksq[us]];
 
-  while (b)
-    r |= us == WHITE ? db[bb_index(them, ksq[them]  , pop_lsb(&b), psq)]
-                     : db[bb_index(them, pop_lsb(&b), ksq[them]  , psq)];
+    while (b)
+        r |= us == WHITE ? db[bb_index(them, ksq[them], pop_lsb(&b), psq)]
+                         : db[bb_index(them, pop_lsb(&b), ksq[them], psq)];
 
-  if (us == WHITE) {
-    if (rank_of(psq) < RANK_7)      // Single push
-      r |= db[bb_index(them, ksq[them], ksq[us], psq + NORTH)];
+    if (us == WHITE)
+    {
+        if (rank_of(psq) < RANK_7)  // Single push
+            r |= db[bb_index(them, ksq[them], ksq[us], psq + NORTH)];
 
-    if (   rank_of(psq) == RANK_2   // Double push
-        && psq + NORTH != ksq[us]
-        && psq + NORTH != ksq[them])
-      r |= db[bb_index(them, ksq[them], ksq[us], psq + NORTH + NORTH)];
-  }
+        if (rank_of(psq) == RANK_2  // Double push
+            && psq + NORTH != ksq[us] && psq + NORTH != ksq[them])
+            r |= db[bb_index(them, ksq[them], ksq[us], psq + NORTH + NORTH)];
+    }
 
-  return db[idx] = r & good  ? good  : r & RES_UNKNOWN ? RES_UNKNOWN : bad;
+    return db[idx] = r & good ? good : r & RES_UNKNOWN ? RES_UNKNOWN : bad;
 }
 
-void bitbases_init()
-{
-  uint8_t *db = malloc(MAX_INDEX);
-  unsigned idx, repeat = 1;
+void bitbases_init() {
+    uint8_t* db = malloc(MAX_INDEX);
+    unsigned idx, repeat = 1;
 
-  // Initialize db with known win / draw positions
-  for (idx = 0; idx < MAX_INDEX; idx++)
-    db[idx] = initial(idx);
+    // Initialize db with known win / draw positions
+    for (idx = 0; idx < MAX_INDEX; idx++)
+        db[idx] = initial(idx);
 
-  // Iterate through the positions until none of the unknown positions can be
-  // changed to either wins or draws (15 cycles needed).
-  while (repeat)
-    for (repeat = idx = 0; idx < MAX_INDEX; idx++)
-      repeat |= (db[idx] == RES_UNKNOWN && classify(db, idx) != RES_UNKNOWN);
+    // Iterate through the positions until none of the unknown positions can be
+    // changed to either wins or draws (15 cycles needed).
+    while (repeat)
+        for (repeat = idx = 0; idx < MAX_INDEX; idx++)
+            repeat |= (db[idx] == RES_UNKNOWN && classify(db, idx) != RES_UNKNOWN);
 
-  // Map 32 results into one KPKBitbase[] entry
-  for (idx = 0; idx < MAX_INDEX; ++idx)
-      if (db[idx] == RES_WIN)
-          KPKBitbase[idx / 32] |= 1UL << (idx & 0x1F);
+    // Map 32 results into one KPKBitbase[] entry
+    for (idx = 0; idx < MAX_INDEX; ++idx)
+        if (db[idx] == RES_WIN)
+            KPKBitbase[idx / 32] |= 1UL << (idx & 0x1F);
 
-  free(db);
+    free(db);
 }

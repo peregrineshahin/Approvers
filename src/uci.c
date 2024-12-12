@@ -31,92 +31,99 @@
 #include "uci.h"
 
 #ifndef KAGGLE
-extern void benchmark(Position *pos, char *str);
+extern void benchmark(Position* pos, char* str);
 #endif
 
 char lastFen[256];
 
 // FEN string of the initial position, normal chess
-static const char StartFEN[] =
-  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // position() is called when the engine receives the "position" UCI
 // command. The function sets up the position described in the given FEN
 // string ("fen") or the starting position ("startpos") and then makes
 // the moves given in the following move list ("moves").
 
-void position(Position *pos, char *str)
-{
-  char fen[128];
-  char *moves;
+void position(Position* pos, char* str) {
+    char  fen[128];
+    char* moves;
 
-  moves = strstr(str, "moves");
-  if (moves) {
-    if (moves > str) moves[-1] = 0;
-    moves += 5;
-  }
-
-  if (strncmp(str, "fen", 3) == 0) {
-    strncpy(fen, str + 4, 127);
-    fen[127] = 0;
-  } else if (strncmp(str, "startpos", 8) == 0)
-    strcpy(fen, StartFEN);
-  else
-    return;
-
-  pos->st = pos->stack + 100; // Start of circular buffer of 100 slots.
-  pos_set(pos, fen);
-
-  // Parse move list (if any).
-  if (moves) {
-    int ply = 0;
-
-    for (moves = strtok(moves, " \t"); moves; moves = strtok(NULL, " \t")) {
-      Move m = uci_to_move(pos, moves);
-      if (!m) break;
-      do_move(pos, m, gives_check(pos, pos->st, m));
-      pos->gamePly++;
-      // Roll over if we reach 100 plies.
-      if (++ply == 100) {
-        memcpy(pos->st - 100, pos->st, StateSize);
-        pos->st -= 100;
-        pos_set_check_info(pos);
-        ply -= 100;
-      }
+    moves = strstr(str, "moves");
+    if (moves)
+    {
+        if (moves > str)
+            moves[-1] = 0;
+        moves += 5;
     }
 
-    // Make sure that is_draw() never tries to look back more than 99 ply.
-    // This is enough, since 100 ply history means draw by 50-move rule.
-    if (pos->st->pliesFromNull > 99)
-      pos->st->pliesFromNull = 99;
-
-    // Now move some of the game history at the end of the circular buffer
-    // in front of that buffer.
-    int k = (pos->st - (pos->stack + 100)) - max(7, pos->st->pliesFromNull);
-    for (; k < 0; k++)
-      memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
-  }
-
-  pos->rootKeyFlip = pos->st->key;
-  (pos->st-1)->endMoves = pos->moveList;
-
-  // Clear history position keys that have not yet repeated. This ensures
-  // that is_draw() does not flag as a draw the first repetition of a
-  // position coming before the root position. In addition, we set
-  // pos->hasRepeated to indicate whether a position has repeated since
-  // the last irreversible move.
-  for (int k = 0; k <= pos->st->pliesFromNull; k++) {
-    int l;
-    for (l = k + 4; l <= pos->st->pliesFromNull; l += 2)
-      if ((pos->st - k)->key == (pos->st - l)->key)
-        break;
-    if (l <= pos->st->pliesFromNull)
-      pos->hasRepeated = true;
+    if (strncmp(str, "fen", 3) == 0)
+    {
+        strncpy(fen, str + 4, 127);
+        fen[127] = 0;
+    }
+    else if (strncmp(str, "startpos", 8) == 0)
+        strcpy(fen, StartFEN);
     else
-      (pos->st - k)->key = 0;
-  }
-  pos->rootKeyFlip ^= pos->st->key;
-  pos->st->key ^= pos->rootKeyFlip;
+        return;
+
+    pos->st = pos->stack + 100;  // Start of circular buffer of 100 slots.
+    pos_set(pos, fen);
+
+    // Parse move list (if any).
+    if (moves)
+    {
+        int ply = 0;
+
+        for (moves = strtok(moves, " \t"); moves; moves = strtok(NULL, " \t"))
+        {
+            Move m = uci_to_move(pos, moves);
+            if (!m)
+                break;
+            do_move(pos, m, gives_check(pos, pos->st, m));
+            pos->gamePly++;
+            // Roll over if we reach 100 plies.
+            if (++ply == 100)
+            {
+                memcpy(pos->st - 100, pos->st, StateSize);
+                pos->st -= 100;
+                pos_set_check_info(pos);
+                ply -= 100;
+            }
+        }
+
+        // Make sure that is_draw() never tries to look back more than 99 ply.
+        // This is enough, since 100 ply history means draw by 50-move rule.
+        if (pos->st->pliesFromNull > 99)
+            pos->st->pliesFromNull = 99;
+
+        // Now move some of the game history at the end of the circular buffer
+        // in front of that buffer.
+        int k = (pos->st - (pos->stack + 100)) - max(7, pos->st->pliesFromNull);
+        for (; k < 0; k++)
+            memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
+    }
+
+    pos->rootKeyFlip        = pos->st->key;
+    (pos->st - 1)->endMoves = pos->moveList;
+
+    // Clear history position keys that have not yet repeated. This ensures
+    // that is_draw() does not flag as a draw the first repetition of a
+    // position coming before the root position. In addition, we set
+    // pos->hasRepeated to indicate whether a position has repeated since
+    // the last irreversible move.
+    for (int k = 0; k <= pos->st->pliesFromNull; k++)
+    {
+        int l;
+        for (l = k + 4; l <= pos->st->pliesFromNull; l += 2)
+            if ((pos->st - k)->key == (pos->st - l)->key)
+                break;
+        if (l <= pos->st->pliesFromNull)
+            pos->hasRepeated = true;
+        else
+            (pos->st - k)->key = 0;
+    }
+    pos->rootKeyFlip ^= pos->st->key;
+    pos->st->key ^= pos->rootKeyFlip;
 }
 
 
@@ -124,38 +131,39 @@ void position(Position *pos, char *str)
 // command. The function updates the UCI option ("name") to the given
 // value ("value").
 
-void setoption(char *str)
-{
-  char *name, *value;
+void setoption(char* str) {
+    char *name, *value;
 
-  name = strstr(str, "name");
-  if (!name) {
-    name = "";
-    goto error;
-  }
+    name = strstr(str, "name");
+    if (!name)
+    {
+        name = "";
+        goto error;
+    }
 
-  name += 4;
-  while (isblank(*name))
-    name++;
+    name += 4;
+    while (isblank(*name))
+        name++;
 
-  value = strstr(name, "value");
-  if (value) {
-    char *p = value - 1;
-    while (isblank(*p))
-      p--;
-    p[1] = 0;
-    value += 5;
-    while (isblank(*value))
-      value++;
-  }
-  if (!value || strlen(value) == 0)
-    value = "<empty>";
+    value = strstr(name, "value");
+    if (value)
+    {
+        char* p = value - 1;
+        while (isblank(*p))
+            p--;
+        p[1] = 0;
+        value += 5;
+        while (isblank(*value))
+            value++;
+    }
+    if (!value || strlen(value) == 0)
+        value = "<empty>";
 
-  if (option_set_by_name(name, value))
-    return;
+    if (option_set_by_name(name, value))
+        return;
 
 error:
-  fprintf(stderr, "No such option: %s\n", name);
+    fprintf(stderr, "No such option: %s\n", name);
 }
 
 
@@ -163,38 +171,38 @@ error:
 // the thinking time and other parameters from the input string, then starts
 // the search.
 
-static void go(Position *pos, char *str)
-{
-  char *token;
-  bool ponderMode = false;
+static void go(Position* pos, char* str) {
+    char* token;
+    bool  ponderMode = false;
 
-  process_delayed_settings();
+    process_delayed_settings();
 
-  Limits = (struct LimitsType){ 0 };
-  Limits.startTime = now(); // As early as possible!
+    Limits           = (struct LimitsType){0};
+    Limits.startTime = now();  // As early as possible!
 
-  for (token = strtok(str, " \t"); token; token = strtok(NULL, " \t")) {
-    if (strcmp(token, "wtime") == 0)
-      Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "btime") == 0)
-      Limits.time[BLACK] = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "winc") == 0)
-      Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "binc") == 0)
-      Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "depth") == 0)
-      Limits.depth = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "nodes") == 0)
-      Limits.nodes = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "movetime") == 0)
-      Limits.movetime = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "infinite") == 0)
-      Limits.infinite = true;
-    else if (strcmp(token, "ponder") == 0)
-      ponderMode = true;
-  }
+    for (token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
+    {
+        if (strcmp(token, "wtime") == 0)
+            Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "btime") == 0)
+            Limits.time[BLACK] = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "winc") == 0)
+            Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "binc") == 0)
+            Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "depth") == 0)
+            Limits.depth = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "nodes") == 0)
+            Limits.nodes = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "movetime") == 0)
+            Limits.movetime = atoi(strtok(NULL, " \t"));
+        else if (strcmp(token, "infinite") == 0)
+            Limits.infinite = true;
+        else if (strcmp(token, "ponder") == 0)
+            ponderMode = true;
+    }
 
-  start_thinking(pos, ponderMode);
+    start_thinking(pos, ponderMode);
 }
 
 
@@ -205,158 +213,175 @@ static void go(Position *pos, char *str)
 // executed the function returns immediately. In addition to the UCI ones,
 // also some additional debug commands are supported.
 
-void uci_loop(int argc, char **argv)
-{
-  Position pos;
-  char fen[strlen(StartFEN) + 1];
-  char *token;
+void uci_loop(int argc, char** argv) {
+    Position pos;
+    char     fen[strlen(StartFEN) + 1];
+    char*    token;
 
-  LOCK_INIT(Threads.lock);
+    LOCK_INIT(Threads.lock);
 
-  // Threads.searching is only read and set by the UI thread.
-  // The UI thread uses it to know whether it must still call
-  // thread_wait_until_sleeping() on the main search thread.
-  // (This is important for our native Windows threading implementation.)
-  Threads.searching = false;
+    // Threads.searching is only read and set by the UI thread.
+    // The UI thread uses it to know whether it must still call
+    // thread_wait_until_sleeping() on the main search thread.
+    // (This is important for our native Windows threading implementation.)
+    Threads.searching = false;
 
-  // Threads.sleeping is set by the main search thread if it has run
-  // out of work but must wait for a "stop" or "ponderhit" command from
-  // the GUI to arrive before being allowed to output "bestmove". The main
-  // thread will then go to sleep and has to be waken up by the UI thread.
-  // This variable must be accessed only after acquiring Threads.lock.
-  Threads.sleeping = false;
+    // Threads.sleeping is set by the main search thread if it has run
+    // out of work but must wait for a "stop" or "ponderhit" command from
+    // the GUI to arrive before being allowed to output "bestmove". The main
+    // thread will then go to sleep and has to be waken up by the UI thread.
+    // This variable must be accessed only after acquiring Threads.lock.
+    Threads.sleeping = false;
 
-  // Allocate 215 Stack slots.
-  // Slots 100-200 form a circular buffer to be filled with game moves.
-  // Slots 0-99 make room for prepending the part of game history relevant
-  // for repetition detection.
-  // Slots 201-214 may be used by TB root probing.
-  pos.stackAllocation = malloc(63 + 215 * sizeof(Stack));
-  pos.stack = (Stack *)(((uintptr_t)pos.stackAllocation + 0x3f) & ~0x3f);
-  pos.moveList = malloc(1000 * sizeof(ExtMove));
-  pos.st = pos.stack + 100;
-  pos.st[-1].endMoves = pos.moveList;
+    // Allocate 215 Stack slots.
+    // Slots 100-200 form a circular buffer to be filled with game moves.
+    // Slots 0-99 make room for prepending the part of game history relevant
+    // for repetition detection.
+    // Slots 201-214 may be used by TB root probing.
+    pos.stackAllocation = malloc(63 + 215 * sizeof(Stack));
+    pos.stack           = (Stack*) (((uintptr_t) pos.stackAllocation + 0x3f) & ~0x3f);
+    pos.moveList        = malloc(1000 * sizeof(ExtMove));
+    pos.st              = pos.stack + 100;
+    pos.st[-1].endMoves = pos.moveList;
 
-  size_t buf_size = 1;
-  for (int i = 1; i < argc; i++)
-    buf_size += strlen(argv[i]) + 1;
+    size_t buf_size = 1;
+    for (int i = 1; i < argc; i++)
+        buf_size += strlen(argv[i]) + 1;
 
-  if (buf_size < 1024) buf_size = 1024;
+    if (buf_size < 1024)
+        buf_size = 1024;
 
-  char *cmd = malloc(buf_size);
+    char* cmd = malloc(buf_size);
 
-  cmd[0] = 0;
-  for (int i = 1; i < argc; i++) {
-    strcat(cmd, argv[i]);
-    strcat(cmd, " ");
-  }
-
-  strcpy(fen, StartFEN);
-  pos_set(&pos, fen);
-  pos.rootKeyFlip = pos.st->key;
-
-  do {
-    if (argc == 1 && !getline(&cmd, &buf_size, stdin))
-      strcpy(cmd, "quit");
-
-    if (cmd[strlen(cmd) - 1] == '\n')
-      cmd[strlen(cmd) - 1] = 0;
-
-    token = cmd;
-    while (isblank(*token))
-      token++;
-
-    char *str = token;
-    while (*str && !isblank(*str))
-      str++;
-
-    if (*str) {
-      *str++ = 0;
-      while (isblank(*str))
-        str++;
+    cmd[0] = 0;
+    for (int i = 1; i < argc; i++)
+    {
+        strcat(cmd, argv[i]);
+        strcat(cmd, " ");
     }
 
-    // At this point we have received a command, so stop pondering
-    Threads.ponder = false;
-    Threads.stop = true;
+    strcpy(fen, StartFEN);
+    pos_set(&pos, fen);
+    pos.rootKeyFlip = pos.st->key;
 
-    LOCK(Threads.lock);
-    if (Threads.searching) {
-      Threads.stop = true;
-      Threads.sleeping = false;
-      thread_wait_until_sleeping(threads_main());
-    }
-    UNLOCK(Threads.lock);
+    do
+    {
+        if (argc == 1 && !getline(&cmd, &buf_size, stdin))
+            strcpy(cmd, "quit");
 
-    Threads.stop = false;
+        if (cmd[strlen(cmd) - 1] == '\n')
+            cmd[strlen(cmd) - 1] = 0;
 
-    // The GUI sends 'ponderhit' to tell us the player has played the
-    // expected move. In case Threads.stopOnPonderhit is set we are waiting
-    // for 'ponderhit' to stop the search (for instance because we have
-    // already searched long enough), otherwise we should continue searching
-    // but switch from pondering to normal search.
-    if (strcmp(token, "quit") == 0 || strcmp(token, "stop") == 0) {
-      if (Threads.searching) {
-        Threads.stop = true;
+        token = cmd;
+        while (isblank(*token))
+            token++;
+
+        char* str = token;
+        while (*str && !isblank(*str))
+            str++;
+
+        if (*str)
+        {
+            *str++ = 0;
+            while (isblank(*str))
+                str++;
+        }
+
+        // At this point we have received a command, so stop pondering
+        Threads.ponder = false;
+        Threads.stop   = true;
+
         LOCK(Threads.lock);
-        if (Threads.sleeping)
-          thread_wake_up(threads_main(), THREAD_STATE_RESUME);
-        Threads.sleeping = false;
+        if (Threads.searching)
+        {
+            Threads.stop     = true;
+            Threads.sleeping = false;
+            thread_wait_until_sleeping(threads_main());
+        }
         UNLOCK(Threads.lock);
-      }
-    }
-    else if (strcmp(token, "ponderhit") == 0) {
-      Threads.ponder = false; // Switch to normal search
-      if (Threads.stopOnPonderhit)
-        Threads.stop = true;
-      LOCK(Threads.lock);
-      if (Threads.sleeping) {
-        Threads.stop = true;
-        thread_wake_up(threads_main(), THREAD_STATE_RESUME);
-        Threads.sleeping = false;
-      }
-      UNLOCK(Threads.lock);
-    }
-    else if (strcmp(token, "uci") == 0) {
-      printf("id name ");
-      printf("\n");
-      print_options();
-      printf("uciok\n");
-      fflush(stdout);
-    }
-    else if (strcmp(token, "ucinewgame") == 0) {
-      process_delayed_settings();
-      search_clear();
-    } else if (strcmp(token, "isready") == 0) {
-      process_delayed_settings();
-      printf("readyok\n");
-      fflush(stdout);
-    }
-    else if (strcmp(token, "go") == 0)        go(&pos, str);
-    else if (strcmp(token, "position") == 0) {
-      position(&pos, str);
-      pos_fen(&pos, lastFen);
-    }
-    else if (strcmp(token, "setoption") == 0) setoption(str);
 
-    // Additional custom non-UCI commands, useful for debugging
+        Threads.stop = false;
+
+        // The GUI sends 'ponderhit' to tell us the player has played the
+        // expected move. In case Threads.stopOnPonderhit is set we are waiting
+        // for 'ponderhit' to stop the search (for instance because we have
+        // already searched long enough), otherwise we should continue searching
+        // but switch from pondering to normal search.
+        if (strcmp(token, "quit") == 0 || strcmp(token, "stop") == 0)
+        {
+            if (Threads.searching)
+            {
+                Threads.stop = true;
+                LOCK(Threads.lock);
+                if (Threads.sleeping)
+                    thread_wake_up(threads_main(), THREAD_STATE_RESUME);
+                Threads.sleeping = false;
+                UNLOCK(Threads.lock);
+            }
+        }
+        else if (strcmp(token, "ponderhit") == 0)
+        {
+            Threads.ponder = false;  // Switch to normal search
+            if (Threads.stopOnPonderhit)
+                Threads.stop = true;
+            LOCK(Threads.lock);
+            if (Threads.sleeping)
+            {
+                Threads.stop = true;
+                thread_wake_up(threads_main(), THREAD_STATE_RESUME);
+                Threads.sleeping = false;
+            }
+            UNLOCK(Threads.lock);
+        }
+        else if (strcmp(token, "uci") == 0)
+        {
+            printf("id name ");
+            printf("\n");
+            print_options();
+            printf("uciok\n");
+            fflush(stdout);
+        }
+        else if (strcmp(token, "ucinewgame") == 0)
+        {
+            process_delayed_settings();
+            search_clear();
+        }
+        else if (strcmp(token, "isready") == 0)
+        {
+            process_delayed_settings();
+            printf("readyok\n");
+            fflush(stdout);
+        }
+        else if (strcmp(token, "go") == 0)
+            go(&pos, str);
+        else if (strcmp(token, "position") == 0)
+        {
+            position(&pos, str);
+            pos_fen(&pos, lastFen);
+        }
+        else if (strcmp(token, "setoption") == 0)
+            setoption(str);
+
+            // Additional custom non-UCI commands, useful for debugging
 #ifndef KAGGLE
-    else if (strcmp(token, "bench") == 0)     benchmark(&pos, str);
+        else if (strcmp(token, "bench") == 0)
+            benchmark(&pos, str);
 #endif
-    else {
-      printf("Unknown command: %s %s\n", token, str);
-      fflush(stdout);
-    }
-  } while (argc == 1 && strcmp(token, "quit") != 0);
+        else
+        {
+            printf("Unknown command: %s %s\n", token, str);
+            fflush(stdout);
+        }
+    } while (argc == 1 && strcmp(token, "quit") != 0);
 
-  if (Threads.searching)
-    thread_wait_until_sleeping(threads_main());
+    if (Threads.searching)
+        thread_wait_until_sleeping(threads_main());
 
-  free(cmd);
-  free(pos.stackAllocation);
-  free(pos.moveList);
+    free(cmd);
+    free(pos.stackAllocation);
+    free(pos.moveList);
 
-  LOCK_DESTROY(Threads.lock);
+    LOCK_DESTROY(Threads.lock);
 }
 
 
@@ -367,76 +392,72 @@ void uci_loop(int argc, char **argv)
 // mate <y>  Mate in y moves, not plies. If the engine is getting mated
 //           use negative values for y.
 
-char *uci_value(char *str, Value v)
-{
-  if (abs(v) < VALUE_MATE_IN_MAX_PLY)
-    sprintf(str, "cp %d", v * 100 / PawnValueEg);
-  else
-    sprintf(str, "mate %d",
-                 (v > 0 ? VALUE_MATE - v + 1 : -VALUE_MATE - v) / 2);
+char* uci_value(char* str, Value v) {
+    if (abs(v) < VALUE_MATE_IN_MAX_PLY)
+        sprintf(str, "cp %d", v * 100 / PawnValueEg);
+    else
+        sprintf(str, "mate %d", (v > 0 ? VALUE_MATE - v + 1 : -VALUE_MATE - v) / 2);
 
-  return str;
+    return str;
 }
 
 
 // uci_square() converts a Square to a string in algebraic notation
 // (g1, a7, etc.)
 
-char *uci_square(char *str, Square s)
-{
-  str[0] = 'a' + file_of(s);
-  str[1] = '1' + rank_of(s);
-  str[2] = 0;
+char* uci_square(char* str, Square s) {
+    str[0] = 'a' + file_of(s);
+    str[1] = '1' + rank_of(s);
+    str[2] = 0;
 
-  return str;
+    return str;
 }
 
 
 // uci_move() converts a Move to a string in coordinate notation (g1f3, a7a8q).
 // Internally all castling moves are always encoded as 'king captures rook'.
 
-char *uci_move(char *str, Move m)
-{
-  char buf1[8], buf2[8];
-  Square from = from_sq(m);
-  Square to = to_sq(m);
+char* uci_move(char* str, Move m) {
+    char   buf1[8], buf2[8];
+    Square from = from_sq(m);
+    Square to   = to_sq(m);
 
-  if (m == 0)
-    return "(none)";
+    if (m == 0)
+        return "(none)";
 
-  if (m == MOVE_NULL)
-    return "0000";
+    if (m == MOVE_NULL)
+        return "0000";
 
-  if (type_of_m(m) == CASTLING)
-    to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
+    if (type_of_m(m) == CASTLING)
+        to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
 
-  strcat(strcpy(str, uci_square(buf1, from)), uci_square(buf2, to));
+    strcat(strcpy(str, uci_square(buf1, from)), uci_square(buf2, to));
 
-  if (type_of_m(m) == PROMOTION) {
-    str[strlen(str) + 1] = 0;
-    str[strlen(str)] = " pnbrqk"[promotion_type(m)];
-  }
+    if (type_of_m(m) == PROMOTION)
+    {
+        str[strlen(str) + 1] = 0;
+        str[strlen(str)]     = " pnbrqk"[promotion_type(m)];
+    }
 
-  return str;
+    return str;
 }
 
 
 // uci_to_move() converts a string representing a move in coordinate
 // notation (g1f3, a7a8q) to the corresponding legal Move, if any.
 
-Move uci_to_move(const Position *pos, char *str)
-{
-  if (strlen(str) == 5) // Junior could send promotion piece in uppercase
-    str[4] = tolower(str[4]);
+Move uci_to_move(const Position* pos, char* str) {
+    if (strlen(str) == 5)  // Junior could send promotion piece in uppercase
+        str[4] = tolower(str[4]);
 
-  ExtMove list[MAX_MOVES];
-  ExtMove *last = generate_legal(pos, list);
+    ExtMove  list[MAX_MOVES];
+    ExtMove* last = generate_legal(pos, list);
 
-  char buf[16];
+    char buf[16];
 
-  for (ExtMove *m = list; m < last; m++)
-    if (strcmp(str, uci_move(buf, m->move)) == 0)
-      return m->move;
+    for (ExtMove* m = list; m < last; m++)
+        if (strcmp(str, uci_move(buf, m->move)) == 0)
+            return m->move;
 
-  return 0;
+    return 0;
 }

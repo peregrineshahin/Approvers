@@ -38,45 +38,39 @@
 // one pawn.
 
 struct MaterialEntry {
-  Key key;
-  int gamePhase;
-  int16_t value;
-  uint8_t eval_func;
-  uint8_t eval_func_side;
-  uint8_t scal_func[2];
-  uint8_t factor[2];
+    Key     key;
+    int     gamePhase;
+    int16_t value;
+    uint8_t eval_func;
+    uint8_t eval_func_side;
+    uint8_t scal_func[2];
+    uint8_t factor[2];
 };
 
 typedef struct MaterialEntry MaterialEntry;
 
 typedef MaterialEntry MaterialTable[8192];
 
-void material_entry_fill(const Position *pos, MaterialEntry *e, Key key);
+void material_entry_fill(const Position* pos, MaterialEntry* e, Key key);
 
-INLINE MaterialEntry *material_probe(const Position *pos)
-{
-  Key key = material_key();
-  MaterialEntry *e = &pos->materialTable[key >> (64-13)];
+INLINE MaterialEntry* material_probe(const Position* pos) {
+    Key            key = material_key();
+    MaterialEntry* e   = &pos->materialTable[key >> (64 - 13)];
 
-  if (unlikely(e->key != key))
-    material_entry_fill(pos, e, key);
+    if (unlikely(e->key != key))
+        material_entry_fill(pos, e, key);
 
-  return e;
+    return e;
 }
 
-INLINE Score material_imbalance(MaterialEntry *me)
-{
-  return make_score((unsigned)me->value, me->value);
+INLINE Score material_imbalance(MaterialEntry* me) {
+    return make_score((unsigned) me->value, me->value);
 }
 
-INLINE bool material_specialized_eval_exists(MaterialEntry *me)
-{
-  return me->eval_func != 0;
-}
+INLINE bool material_specialized_eval_exists(MaterialEntry* me) { return me->eval_func != 0; }
 
-INLINE Value material_evaluate(MaterialEntry *me, const Position *pos)
-{
-  return endgame_funcs[me->eval_func](pos, me->eval_func_side);
+INLINE Value material_evaluate(MaterialEntry* me, const Position* pos) {
+    return endgame_funcs[me->eval_func](pos, me->eval_func_side);
 }
 
 // scale_factor takes a position and a color as input and returns a scale factor
@@ -84,13 +78,11 @@ INLINE Value material_evaluate(MaterialEntry *me, const Position *pos)
 // because the scale factor may also be a function which should be applied to
 // the position. For instance, in KBP vs K endgames, the scaling function looks
 // for rook pawns and wrong-colored bishops.
-INLINE int material_scale_factor(MaterialEntry *me, const Position *pos,
-    Color c)
-{
-  int sf = SCALE_FACTOR_NONE;
-  if (me->scal_func[c])
-    sf = endgame_funcs[me->scal_func[c]](pos, c);
-  return sf != SCALE_FACTOR_NONE ? sf : me->factor[c];
+INLINE int material_scale_factor(MaterialEntry* me, const Position* pos, Color c) {
+    int sf = SCALE_FACTOR_NONE;
+    if (me->scal_func[c])
+        sf = endgame_funcs[me->scal_func[c]](pos, c);
+    return sf != SCALE_FACTOR_NONE ? sf : me->factor[c];
 }
 
 #endif
