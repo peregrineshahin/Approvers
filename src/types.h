@@ -174,19 +174,8 @@ INLINE int make_castling_right(int c, int s) {
 }
 
 enum {
-    PHASE_ENDGAME = 0,
-    PHASE_MIDGAME = 128
-};
-enum {
     MG,
     EG
-};
-
-enum {
-    SCALE_FACTOR_DRAW   = 0,
-    SCALE_FACTOR_NORMAL = 64,
-    SCALE_FACTOR_MAX    = 128,
-    SCALE_FACTOR_NONE   = 255
 };
 
 enum {
