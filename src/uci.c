@@ -65,7 +65,7 @@ void position(Position *pos, char *str)
     return;
 
   pos->st = pos->stack + 100; // Start of circular buffer of 100 slots.
-  pos_set(pos, fen, option_value(OPT_CHESS960));
+  pos_set(pos, fen);
 
   // Parse move list (if any).
   if (moves) {
@@ -255,7 +255,7 @@ void uci_loop(int argc, char **argv)
   }
 
   strcpy(fen, StartFEN);
-  pos_set(&pos, fen, 0);
+  pos_set(&pos, fen);
   pos.rootKeyFlip = pos.st->key;
 
   do {
@@ -395,12 +395,10 @@ char *uci_square(char *str, Square s)
 }
 
 
-// uci_move() converts a Move to a string in coordinate notation (g1f3,
-// a7a8q). The only special case is castling, where we print in the e1g1
-// notation in normal chess mode, and in e1h1 notation in chess960 mode.
+// uci_move() converts a Move to a string in coordinate notation (g1f3, a7a8q).
 // Internally all castling moves are always encoded as 'king captures rook'.
 
-char *uci_move(char *str, Move m, int chess960)
+char *uci_move(char *str, Move m)
 {
   char buf1[8], buf2[8];
   Square from = from_sq(m);
@@ -412,7 +410,7 @@ char *uci_move(char *str, Move m, int chess960)
   if (m == MOVE_NULL)
     return "0000";
 
-  if (type_of_m(m) == CASTLING && !chess960)
+  if (type_of_m(m) == CASTLING)
     to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
 
   strcat(strcpy(str, uci_square(buf1, from)), uci_square(buf2, to));
@@ -440,7 +438,7 @@ Move uci_to_move(const Position *pos, char *str)
   char buf[16];
 
   for (ExtMove *m = list; m < last; m++)
-    if (strcmp(str, uci_move(buf, m->move, pos->chess960)) == 0)
+    if (strcmp(str, uci_move(buf, m->move)) == 0)
       return m->move;
 
   return 0;

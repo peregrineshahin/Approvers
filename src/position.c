@@ -147,7 +147,7 @@ void zob_init(void) {
 // This function is not very robust - make sure that input FENs are correct,
 // this is assumed to be the responsibility of the GUI.
 
-void pos_set(Position *pos, char *fen, int isChess960)
+void pos_set(Position *pos, char *fen)
 {
   unsigned char col, row, token;
   Square sq = SQ_A8;
@@ -198,8 +198,6 @@ void pos_set(Position *pos, char *fen, int isChess960)
       for (rsq = relative_square(c, SQ_H1); piece_on(rsq) != rook; --rsq);
     else if (token == 'Q')
       for (rsq = relative_square(c, SQ_A1); piece_on(rsq) != rook; ++rsq);
-    else if (token >= 'A' && token <= 'H')
-      rsq = make_square(token - 'A', relative_rank(c, RANK_1));
     else
       continue;
 
@@ -226,9 +224,7 @@ void pos_set(Position *pos, char *fen, int isChess960)
   // handle also common incorrect FEN with fullmove = 0.
   pos->gamePly = max(2 * (pos->gamePly - 1), 0) + (stm() == BLACK);
 
-  pos->chess960 = isChess960;
   set_state(pos, st);
-
 }
 
 
@@ -331,19 +327,11 @@ void pos_fen(const Position *pos, char *str)
 
   int cr = pos->st->castlingRights;
 
-  if (!is_chess960()) {
-    if (cr & WHITE_OO) *str++ = 'K';
-    if (cr & WHITE_OOO) *str++ = 'Q';
-    if (cr & BLACK_OO) *str++ = 'k';
-    if (cr & BLACK_OOO) *str++ = 'q';
-  } else {
-    if (cr & WHITE_OO) *str++ = 'A' + file_of(castling_rook_square(make_castling_right(WHITE, KING_SIDE)));
-    if (cr & WHITE_OOO) *str++ = 'A' + file_of(castling_rook_square(make_castling_right(WHITE, QUEEN_SIDE)));
-    if (cr & BLACK_OO) *str++ = 'A' + file_of(castling_rook_square(make_castling_right(BLACK, KING_SIDE)));
-    if (cr & BLACK_OOO) *str++ = 'A' + file_of(castling_rook_square(make_castling_right(BLACK, QUEEN_SIDE)));
-  }
-  if (!cr)
-      *str++ = '-';
+  if (cr & WHITE_OO) *str++ = 'K';
+  if (cr & WHITE_OOO) *str++ = 'Q';
+  if (cr & BLACK_OO) *str++ = 'k';
+  if (cr & BLACK_OOO) *str++ = 'q';
+  if (!cr) *str++ = '-';
 
   *str++ = ' ';
   if (ep_square() != 0) {
@@ -440,11 +428,7 @@ bool is_legal(const Position *pos, Move m)
       if (attackers_to(s) & pieces_c(!us))
         return false;
 
-    // For Chess960, verify that moving the castling rook does not discover
-    // some hidden checker, e.g. on SQ_A1 when castling rook is on SQ_B1.
-    return   !is_chess960()
-          || !(attacks_bb_rook(to, pieces() ^ sq_bb(to_sq(m)))
-               & pieces_cpp(!us, ROOK, QUEEN));
+    return true;
   }
 
   // If the moving piece is a king, check whether the destination
