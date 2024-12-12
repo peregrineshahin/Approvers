@@ -89,8 +89,6 @@ void options_init() {
     }
 }
 
-static const char* optTypeStr[] = {"check", "spin", "button"};
-
 // print_options() prints all options in the format required by the
 // UCI protocol.
 

@@ -64,7 +64,6 @@ struct Stack {
                 uint32_t nonPawn;
             };
         };
-        uint64_t psqnpm;
     };
     union {
         struct {
