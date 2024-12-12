@@ -23,8 +23,16 @@
 #include "nnue.h"
 #include "position.h"
 
+#define MAX_PHASE 62
+
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
+
+    const int phase = 9 * popcount(pieces_p(QUEEN)) + 5 * popcount(pieces_p(ROOK))
+                    + 3 * popcount(pieces_p(BISHOP) | popcount(pieces_p(KNIGHT)));
+
+
+    v -= v * (MAX_PHASE - phase) / (5 * MAX_PHASE);
 
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
