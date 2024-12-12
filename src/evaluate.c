@@ -27,7 +27,7 @@ Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
 
     // Damp down the evaluation linearly when shuffling
-    v = v * (100 - rule50_count()) / 100;
+    v -= v * rule50_count() / 212;
 
     // v = (v / 16) * 16;
     // v = (stm() == WHITE ? v : -v) + Tempo
