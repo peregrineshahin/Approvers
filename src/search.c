@@ -248,78 +248,30 @@ void mainthread_search(void)
     fflush(stdout);
   }
 
-  // Check if there are threads with a better score than main thread
-  Position *bestThread = pos;
-  if (    option_value(OPT_MULTI_PV) == 1
-      && !Limits.depth
-      &&  pos->rootMoves->move[0].pv[0] != 0)
-  {
-    int i, num = 0, maxNum = min(pos->rootMoves->size, Threads.numThreads);
-    Move mvs[maxNum];
-    int64_t votes[maxNum];
-    Value minScore = pos->rootMoves->move[0].score;
-    for (int idx = 1; idx < Threads.numThreads; idx++)
-      minScore = min(minScore, Threads.pos[idx]->rootMoves->move[0].score);
-    for (int idx = 0; idx < Threads.numThreads; idx++) {
-      Position *p = Threads.pos[idx];
-      Move m = p->rootMoves->move[0].pv[0];
-      for (i = 0; i < num; i++)
-        if (mvs[i] == m) break;
-      if (i == num) {
-        num++;
-        mvs[i] = m;
-        votes[i] = 0;
-      }
-      votes[i] += (p->rootMoves->move[0].score - minScore + 14) * p->completedDepth;
-    }
-    int64_t bestVote = votes[0];
-    for (int idx = 1; idx < Threads.numThreads; idx++) {
-      Position *p = Threads.pos[idx];
-      for (i = 0; mvs[i] != p->rootMoves->move[0].pv[0]; i++);
-      if (abs(bestThread->rootMoves->move[0].score) >= VALUE_TB_WIN_IN_MAX_PLY) {
-        // Make sure we pick the shortest mate
-        if (p->rootMoves->move[0].score > bestThread->rootMoves->move[0].score)
-          bestThread = p;
-      } else if (p->rootMoves->move[0].score >= VALUE_TB_WIN_IN_MAX_PLY
-          || (   p->rootMoves->move[0].score > VALUE_TB_LOSS_IN_MAX_PLY
-              && votes[i] > bestVote))
-      {
-        bestVote = votes[i];
-        bestThread = p;
-      }
-    }
-  }
+  mainThread.previousScore = pos->rootMoves->move[0].score;
 
-  mainThread.previousScore = bestThread->rootMoves->move[0].score;
+  printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
 
-  // Send new PV when needed
-  if (bestThread != pos)
-    uci_print_pv(bestThread, bestThread->completedDepth,
-                 -VALUE_INFINITE, VALUE_INFINITE);
-
-  printf("bestmove %s", uci_move(buf, bestThread->rootMoves->move[0].pv[0]));
-
-  if (bestThread->rootMoves->move[0].pvSize > 1 || extract_ponder_from_tt(&bestThread->rootMoves->move[0], pos))
-    printf(" ponder %s", uci_move(buf, bestThread->rootMoves->move[0].pv[1]));
+  if (pos->rootMoves->move[0].pvSize > 1 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
+    printf(" ponder %s", uci_move(buf, pos->rootMoves->move[0].pv[1]));
 
   printf("\n");
   fflush(stdout);
 
 #ifdef KAGGLE
   // Start pondering right after the best move has been printed if we can
-  if (bestThread->rootMoves->move[0].pvSize >= 2) {
+  if (pos->rootMoves->move[0].pvSize >= 2) {
     Threads.ponder = true;
     Threads.stop = false;
 
-    const Move bestMove = bestThread->rootMoves->move[0].pv[0];
-    const Move ponder = bestThread->rootMoves->move[0].pv[1];
+    const Move bestMove = pos->rootMoves->move[0].pv[0];
+    const Move ponder = pos->rootMoves->move[0].pv[1];
 
     char command[2048];
     snprintf(command, 2048, "%s moves %s %s",
       lastFen,
       uci_move(buf, bestMove, is_chess960()),
       uci_move(buf, ponder, is_chess960()));
-
     position(pos, command);
 
     prepare_for_search(pos, true);
@@ -376,10 +328,7 @@ void thread_search(Position *pos)
       (MAX_LPH - 2) * sizeof((*pos->lowPlyHistory)[0]));
   memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
-  int multiPV = option_value(OPT_MULTI_PV);
-
   RootMoves *rm = pos->rootMoves;
-  multiPV = min(multiPV, rm->size);
   pos->ttHitAverage = ttHitAverageWindow * ttHitAverageResolution / 2;
   int searchAgainCounter = 0;
 
@@ -408,79 +357,76 @@ void thread_search(Position *pos)
     if (!Threads.increaseDepth)
       searchAgainCounter++;
 
-    // MultiPV loop. We perform a full root search for each PV line
-    for (int pvIdx = 0; pvIdx < multiPV && !Threads.stop; pvIdx++) {
-      pos->pvIdx = pvIdx;
-      if (pvIdx == pvLast) {
-        pvFirst = pvLast;
-        for (pvLast++; pvLast < rm->size; pvLast++)
-          if (rm->move[pvLast].tbRank != rm->move[pvFirst].tbRank)
-            break;
-        pos->pvLast = pvLast;
-      }
+    int pvIdx = 0;
 
-      // Reset aspiration window starting size
-      if (pos->rootDepth >= 4) {
-        Value previousScore = rm->move[pvIdx].previousScore;
-        delta = 17;
-        alpha = max(previousScore - delta, -VALUE_INFINITE);
-        beta  = min(previousScore + delta,  VALUE_INFINITE);
-
-        // Adjust contempt based on root move's previousScore
-        int ct = base_ct + (105 - base_ct / 2) * previousScore / (abs(previousScore) + 149);
-        pos->contempt = stm() == WHITE ?  make_score(ct, ct / 2)
-                                       : -make_score(ct, ct / 2);
-      }
-
-      // Start with a small aspiration window and, in the case of a fail
-      // high/low, re-search with a bigger window until we're not failing
-      // high/low anymore.
-      int failedHighCnt = 0;
-      while (true) {
-        Depth adjustedDepth = max(1, pos->rootDepth - failedHighCnt - searchAgainCounter);
-        bestValue = search_PV(pos, ss, alpha, beta, adjustedDepth);
-
-        // Bring the best move to the front. It is critical that sorting
-        // is done with a stable algorithm because all the values but the
-        // first and eventually the new best one are set to -VALUE_INFINITE
-        // and we want to keep the same order for all the moves except the
-        // new PV that goes to the front. Note that in case of MultiPV
-        // search the already searched PV lines are preserved.
-        stable_sort(&rm->move[pvIdx], pvLast - pvIdx);
-
-        // If search has been stopped, we break immediately. Sorting and
-        // writing PV back to TT is safe because RootMoves is still
-        // valid, although it refers to the previous iteration.
-        if (Threads.stop)
+    pos->pvIdx = pvIdx;
+    if (pvIdx == pvLast) {
+      pvFirst = pvLast;
+      for (pvLast++; pvLast < rm->size; pvLast++)
+        if (rm->move[pvLast].tbRank != rm->move[pvFirst].tbRank)
           break;
+      pos->pvLast = pvLast;
+    }
 
-        // In case of failing low/high increase aspiration window and
-        // re-search, otherwise exit the loop.
-        if (bestValue <= alpha) {
-          beta = (alpha + beta) / 2;
-          alpha = max(bestValue - delta, -VALUE_INFINITE);
+    // Reset aspiration window starting size
+    if (pos->rootDepth >= 4) {
+      Value previousScore = rm->move[pvIdx].previousScore;
+      delta = 17;
+      alpha = max(previousScore - delta, -VALUE_INFINITE);
+      beta  = min(previousScore + delta,  VALUE_INFINITE);
 
-          failedHighCnt = 0;
-          if (pos->threadIdx == 0)
-            Threads.stopOnPonderhit = false;
-        } else {
-          rm->move[pvIdx].bestMoveCount++;
-          break;
-        }
+      // Adjust contempt based on root move's previousScore
+      int ct = base_ct + (105 - base_ct / 2) * previousScore / (abs(previousScore) + 149);
+      pos->contempt = stm() == WHITE ?  make_score(ct, ct / 2)
+                                     : -make_score(ct, ct / 2);
+    }
 
-        delta += delta / 4 + 5;
+    // Start with a small aspiration window and, in the case of a fail
+    // high/low, re-search with a bigger window until we're not failing
+    // high/low anymore.
+    int failedHighCnt = 0;
+    while (true) {
+      Depth adjustedDepth = max(1, pos->rootDepth - failedHighCnt - searchAgainCounter);
+      bestValue = search_PV(pos, ss, alpha, beta, adjustedDepth);
 
+      // Bring the best move to the front. It is critical that sorting
+      // is done with a stable algorithm because all the values but the
+      // first and eventually the new best one are set to -VALUE_INFINITE
+      // and we want to keep the same order for all the moves except the
+      // new PV that goes to the front. Note that in case of MultiPV
+      // search the already searched PV lines are preserved.
+      stable_sort(&rm->move[pvIdx], pvLast - pvIdx);
+
+      // If search has been stopped, we break immediately. Sorting and
+      // writing PV back to TT is safe because RootMoves is still
+      // valid, although it refers to the previous iteration.
+      if (Threads.stop)
+        break;
+
+      // In case of failing low/high increase aspiration window and
+      // re-search, otherwise exit the loop.
+      if (bestValue <= alpha) {
+        beta = (alpha + beta) / 2;
+        alpha = max(bestValue - delta, -VALUE_INFINITE);
+
+        failedHighCnt = 0;
+        if (pos->threadIdx == 0)
+          Threads.stopOnPonderhit = false;
+      } else {
+        rm->move[pvIdx].bestMoveCount++;
+        break;
       }
 
-      // Sort the PV lines searched so far and update the GUI
-      stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
+      delta += delta / 4 + 5;
+
+    }
+
+    // Sort the PV lines searched so far and update the GUI
+    stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 #ifndef KAGGLE
-      if (    pos->threadIdx == 0
-          && (Threads.stop || pvIdx + 1 == multiPV || time_elapsed() > 3000))
-        uci_print_pv(pos, pos->rootDepth, alpha, beta);
+    uci_print_pv(pos, pos->rootDepth, alpha, beta);
 #endif
-    }
 
     if (!Threads.stop)
       pos->completedDepth = pos->rootDepth;
@@ -1777,38 +1723,33 @@ static void uci_print_pv(Position *pos, Depth depth, Value alpha, Value beta)
   TimePoint elapsed = time_elapsed() + 1;
   RootMoves *rm = pos->rootMoves;
   int pvIdx = pos->pvIdx;
-  int multiPV = min(option_value(OPT_MULTI_PV), rm->size);
   uint64_t nodes_searched = threads_nodes_searched();
   char buf[16];
 
-  for (int i = 0; i < multiPV; i++) {
-    bool updated = rm->move[i].score != -VALUE_INFINITE;
+  int i = 0;
 
-    if (depth == 1 && !updated && i > 0)
-      continue;
+  bool updated = rm->move[i].score != -VALUE_INFINITE;
 
-    Depth d = updated ? depth : max(1, depth - 1);
-    Value v = updated ? rm->move[i].score : rm->move[i].previousScore;
+  Depth d = updated ? depth : max(1, depth - 1);
+  Value v = updated ? rm->move[i].score : rm->move[i].previousScore;
 
-    if (v == -VALUE_INFINITE)
-      v = VALUE_ZERO;
+  if (v == -VALUE_INFINITE)
+    v = VALUE_ZERO;
 
-    printf("info depth %d seldepth %d multipv %d score %s",
-           d, 1, i + 1,
-           uci_value(buf, v));
+  printf("info depth %d score %s", d, uci_value(buf, v));
 
-    if (i == pvIdx)
-      printf("%s", v >= beta ? " lowerbound" : v <= alpha ? " upperbound" : "");
+  if (i == pvIdx)
+    printf("%s", v >= beta ? " lowerbound" : v <= alpha ? " upperbound" : "");
 
-    printf(" nodes %"PRIu64" nps %"PRIu64, nodes_searched,
-                              nodes_searched * 1000 / elapsed);
+  printf(" nodes %"PRIu64" nps %"PRIu64, nodes_searched,
+                            nodes_searched * 1000 / elapsed);
 
-    printf(" tbhits %"PRIu64" time %"PRIi64" pv", 0, elapsed);
+  printf(" time %"PRIi64" pv", elapsed);
 
-    for (int idx = 0; idx < rm->move[i].pvSize; idx++)
-      printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
-    printf("\n");
-  }
+  for (int idx = 0; idx < rm->move[i].pvSize; idx++)
+    printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
+  printf("\n");
+
   fflush(stdout);
 }
 
