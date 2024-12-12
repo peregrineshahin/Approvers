@@ -3,6 +3,7 @@
         "misc.h": "c",
         "numa.h": "c",
         "settings.h": "c",
-        "material.h": "c"
+        "material.h": "c",
+        "list": "c"
     }
 }

@@ -21,8 +21,6 @@
 #ifndef UCI_H
 #define UCI_H
 
-#include <string.h>
-
 #include "types.h"
 
 struct Option;
@@ -38,13 +36,11 @@ enum {
 };
 
 enum {
-    OPT_CONTEMPT,
     OPT_THREADS,
     OPT_HASH,
     OPT_CLEAR_HASH,
     OPT_PONDER,
-    OPT_MOVE_OVERHEAD,
-    OPT_LARGE_PAGES
+    OPT_MOVE_OVERHEAD
 };
 
 struct Option {

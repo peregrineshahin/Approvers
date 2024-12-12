@@ -54,7 +54,6 @@ static void on_threads(Option* opt) { delayedSettings.numThreads = opt->value; }
 #endif
 
 static Option optionsMap[] = {
-  {"Contempt", OPT_TYPE_SPIN, 24, -100, 100, NULL, NULL, 0, NULL},
   {"Threads", OPT_TYPE_SPIN, 1, 1, MAX_THREADS, NULL, on_threads, 0, NULL},
   {"Hash", OPT_TYPE_SPIN, 1, 1, MAXHASHMB, NULL, on_hash_size, 0, NULL},
   {"Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL},
@@ -66,12 +65,6 @@ static Option optionsMap[] = {
 // values.
 
 void options_init() {
-#ifdef _WIN32
-    optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
-#endif
-#if defined(__linux__) && !defined(MADV_HUGEPAGE)
-    optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
-#endif
     for (Option* opt = optionsMap; opt->name != NULL; opt++)
     {
         if (opt->type == OPT_TYPE_DISABLED)

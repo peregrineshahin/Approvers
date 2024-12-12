@@ -30,11 +30,18 @@
 #define GEN_NON_EVASIONS 4
 #define GEN_LEGAL 5
 
-ExtMove* generate_captures(const Position* pos, ExtMove* list);
-ExtMove* generate_quiets(const Position* pos, ExtMove* list);
+enum {
+    CAPTURES,
+    QUIETS,
+    QUIET_CHECKS,
+    EVASIONS,
+    NON_EVASIONS,
+    LEGAL
+};
+
+ExtMove* generate(const Position* pos, ExtMove* list, const int Type);
 ExtMove* generate_quiet_checks(const Position* pos, ExtMove* list);
 ExtMove* generate_evasions(const Position* pos, ExtMove* list);
-ExtMove* generate_non_evasions(const Position* pos, ExtMove* list);
 ExtMove* generate_legal(const Position* pos, ExtMove* list);
 
 #endif

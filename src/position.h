@@ -163,7 +163,6 @@ struct Position {
     Color      nmpColor;
     Depth      rootDepth;
     Depth      completedDepth;
-    Score      contempt;
 
     // Pointers to thread-specific tables.
     CounterMoveStat*        counterMoves;

@@ -539,7 +539,7 @@ bool is_pseudo_legal(const Position* pos, Move m) {
         if (checkers())
             return false;
         ExtMove  list[MAX_MOVES];
-        ExtMove* end = generate_quiets(pos, list);
+        ExtMove* end = generate(pos, list, QUIETS);
         for (ExtMove* p = list; p < end; p++)
             if (p->move == m)
                 return is_legal(pos, m);

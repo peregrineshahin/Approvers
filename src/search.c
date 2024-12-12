@@ -163,8 +163,6 @@ void mainthread_search(void) {
     tt_new_search();
     char buf[16];
 
-    base_ct = option_value(OPT_CONTEMPT) * PawnValueEg / 100;
-
     if (pos->rootMoves->size > 0)
     {
         Move bookMove = 0;
@@ -293,9 +291,6 @@ void thread_search(Position* pos) {
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
 
-        pos->contempt =
-          stm() == WHITE ? make_score(base_ct, base_ct / 2) : -make_score(base_ct, base_ct / 2);
-
         int pvFirst = 0, pvLast = 0;
 
         if (!Threads.increaseDepth)
@@ -320,10 +315,6 @@ void thread_search(Position* pos) {
             delta               = 17;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
-
-            // Adjust contempt based on root move's previousScore
-            int ct = base_ct + (105 - base_ct / 2) * previousScore / (abs(previousScore) + 149);
-            pos->contempt = stm() == WHITE ? make_score(ct, ct / 2) : -make_score(ct, ct / 2);
         }
 
         // Start with a small aspiration window and, in the case of a fail

@@ -23,15 +23,6 @@
 #include "position.h"
 #include "types.h"
 
-enum {
-    CAPTURES,
-    QUIETS,
-    QUIET_CHECKS,
-    EVASIONS,
-    NON_EVASIONS,
-    LEGAL
-};
-
 
 INLINE ExtMove* make_promotions(ExtMove* list, Square to, Square ksq, const int Type, const int D) {
     if (Type == CAPTURES || Type == EVASIONS || Type == NON_EVASIONS)
@@ -260,7 +251,7 @@ generate_all(const Position* pos, ExtMove* list, Bitboard target, const Color Us
 // generate_non_evasions() generates all pseudo-legal captures and
 // non-captures.
 
-INLINE ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
+ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
 
     Color us = stm();
 
@@ -269,22 +260,7 @@ INLINE ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
                     : Type == NON_EVASIONS ? ~pieces_c(us)
                                            : 0;
 
-    return us == WHITE ? generate_all(pos, list, target, WHITE, Type)
-                       : generate_all(pos, list, target, BLACK, Type);
-}
-
-// "template" instantiations
-
-NOINLINE ExtMove* generate_captures(const Position* pos, ExtMove* list) {
-    return generate(pos, list, CAPTURES);
-}
-
-NOINLINE ExtMove* generate_quiets(const Position* pos, ExtMove* list) {
-    return generate(pos, list, QUIETS);
-}
-
-NOINLINE ExtMove* generate_non_evasions(const Position* pos, ExtMove* list) {
-    return generate(pos, list, NON_EVASIONS);
+    return generate_all(pos, list, target, us, Type);
 }
 
 
@@ -359,7 +335,7 @@ NOINLINE ExtMove* generate_legal(const Position* pos, ExtMove* list) {
     Square   ksq    = square_of(us, KING);
     ExtMove* cur    = list;
 
-    list = checkers() ? generate_evasions(pos, list) : generate_non_evasions(pos, list);
+    list = checkers() ? generate_evasions(pos, list) : generate(pos, list, NON_EVASIONS);
     while (cur != list)
         if ((pinned || from_sq(cur->move) == ksq || type_of_m(cur->move) == ENPASSANT)
             && !is_legal(pos, cur->move))

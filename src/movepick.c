@@ -134,7 +134,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
 
     case ST_CAPTURES_INIT :
         st->endBadCaptures = st->cur = (st - 1)->endMoves;
-        st->endMoves                 = generate_captures(pos, st->cur);
+        st->endMoves                 = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
         st->stage++;
         /* fallthrough */
@@ -179,7 +179,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         if (!skipQuiets)
         {
             st->cur      = st->endBadCaptures;
-            st->endMoves = generate_quiets(pos, st->cur);
+            st->endMoves = generate(pos, st->cur, QUIETS);
             score_quiets(pos);
             partial_insertion_sort(st->cur, st->endMoves, -3000 * st->depth);
         }
@@ -221,7 +221,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
 
     case ST_QCAPTURES_INIT :
         st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate_captures(pos, st->cur);
+        st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
         st->stage++;
 
@@ -251,7 +251,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
 
     case ST_PROBCUT_INIT :
         st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate_captures(pos, st->cur);
+        st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
         st->stage++;
         /* fallthrough */
