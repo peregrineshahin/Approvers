@@ -72,6 +72,8 @@ static void score_captures(const Position* pos) {
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
+Bitboard square_bb(Square s) { return (1ULL << s); }
+
 SMALL
 static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
@@ -83,17 +85,41 @@ static void score_quiets(const Position* pos) {
     PieceToHistory* fmh2 = (st - 4)->history;
     PieceToHistory* fmh3 = (st - 6)->history;
 
-    Color c = stm();
+    Color us   = stm();
+    Color them = !us;
+
+    // Calculate threatened bitboards
+    Bitboard threatenedByPawn = attacks_by(pos, them, PAWN);
+    Bitboard threatenedByMinor =
+      attacks_by(pos, them, KNIGHT) | attacks_by(pos, them, BISHOP) | threatenedByPawn;
+    Bitboard threatenedByRook = attacks_by(pos, them, ROOK) | threatenedByMinor;
+
+    // Pieces threatened by pieces of lesser material value
+    Bitboard threatenedPieces = (pieces_cp(us, QUEEN) & threatenedByRook)
+                              | (pieces_cp(us, ROOK) & threatenedByMinor)
+                              | (pieces_cp(us, KNIGHT) | pieces_cp(us, BISHOP)) & threatenedByPawn;
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
     {
-        uint32_t move = m->move & 4095;
-        Square   to   = move & 63;
-        Square   from = move >> 6;
-        m->value      = (*history)[c][move] + 2 * (*cmh)[piece_on(from)][to]
-                 + 2 * (*fmh)[piece_on(from)][to] + 2 * (*fmh2)[piece_on(from)][to]
-                 + (*fmh3)[piece_on(from)][to]
+        uint32_t  move = m->move & 4095;
+        Square    to   = move & 63;
+        Square    from = move >> 6;
+        Piece     pc   = piece_on(from);
+        PieceType pt   = type_of_p(pc);
+
+        m->value = (*history)[us][move] + 2 * (*cmh)[pc][to] + 2 * (*fmh)[pc][to]
+                 + 2 * (*fmh2)[pc][to] + (*fmh3)[pc][to] + (*fmh3)[piece_on(from)][to]
                  + (st->mp_ply < MAX_LPH ? min(4, st->depth / 3) * (*lph)[st->mp_ply][move] : 0);
+
+        // Malus for putting piece en prise
+        if (pt == QUEEN)
+        {
+            m->value -= ((bool) (square_bb(to) & threatenedByRook)) * 40000;
+        }
+        else if (pt == ROOK)
+        {
+            m->value -= ((bool) (square_bb(to) & threatenedByMinor)) * 20000;
+        }
     }
 }
 

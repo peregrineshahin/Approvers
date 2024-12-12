@@ -263,6 +263,14 @@ static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
 }
 
+static Bitboard attacks_by(const Position* pos, Color c, PieceType pt) {
+    Bitboard threats   = 0;
+    Bitboard attackers = pieces_cp(c, pt);
+    while (attackers)
+        threats |= attacks_bb(pt, pop_lsb(&attackers), pieces());
+    return threats;
+}
+
 static bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
     return pos->st->blockersForKing[c] & sq_bb(from_sq(m));
 }
