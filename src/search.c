@@ -91,7 +91,7 @@ static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
 static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-static int32_t get_correction(const correction_history_t hist, Color side, Key materialKey);
+static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
 static void    add_correction_history(
      correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth);
@@ -489,7 +489,7 @@ INLINE Value search_node(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, maxValue, probCutBeta;
     bool     ttHit, formerPv, givesCheck, improving;
-    bool     captureOrPromotion, inCheck, doFullDepthSearch, moveCountPruning;
+    bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
     int      moveCount, captureCount, quietCount;
@@ -1344,7 +1344,7 @@ INLINE Value qsearch_node(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue = ss->staticEval =
+            ss->staticEval = bestValue =
               rawEval + get_correction(pos->corrHistory, stm(), material_key());
 
 
@@ -1358,7 +1358,7 @@ INLINE Value qsearch_node(Position*  pos,
             rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos)
                                                          : -(ss - 1)->staticEval + 2 * Tempo;
 
-            ss->staticEval = bestValue = ss->staticEval =
+            ss->staticEval = bestValue =
               rawEval + get_correction(pos->corrHistory, stm(), material_key());
         }
 
@@ -1582,7 +1582,7 @@ static void add_correction_history(
 }
 
 // Get the correction history differential for the given side and materialKey.
-static int32_t get_correction(const correction_history_t hist, Color side, Key materialKey) {
+static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
     return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
 }
 
