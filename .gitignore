@@ -2,7 +2,6 @@
 *.gcda
 *.profraw
 *.s
-*.nnue
 *.swp
 cfish*
 TODO
