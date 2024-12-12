@@ -22,8 +22,6 @@
 #define BITBOARD_H
 
 #include "types.h"
-void bitbases_init(void);
-bool bitbases_probe(Square wksq, Square wpsq, Square bksq, Color us);
 void bitboards_init(void);
 
 #define AllSquares (~0ULL)

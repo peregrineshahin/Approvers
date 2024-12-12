@@ -92,7 +92,7 @@ struct ThreadPool {
 #else
     HANDLE event;
 #endif
-    bool        searching, sleeping, stopOnPonderhit;
+    bool        searching, sleeping;
     atomic_bool ponder, stop, increaseDepth;
     LOCK_T      lock;
 };

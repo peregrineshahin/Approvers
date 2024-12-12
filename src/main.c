@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
     psqt_init();
     bitboards_init();
     zob_init();
-    bitbases_init();
     threads_init();
     options_init();
     search_clear();

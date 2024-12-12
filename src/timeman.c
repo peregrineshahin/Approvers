@@ -19,13 +19,20 @@
 */
 
 #include <float.h>
-#include <math.h>
-
 #include "search.h"
 #include "timeman.h"
 #include "uci.h"
 
 struct TimeManagement Time;  // Our global time management struct
+
+double my_sqrt(double x) {
+    if (x <= 0)
+        return 0;
+    double guess = x / 2.0;
+    for (int i = 0; i < 10; ++i)
+        guess = (guess + x / guess) / 2.0;
+    return guess;
+}
 
 // tm_init() is called at the beginning of the search and calculates the
 // time bounds allowed for the current game ply. We currently support:
@@ -53,7 +60,7 @@ void time_init(Color us, int ply) {
     // x basetime (+z increment)
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(0.008 + pow(ply + 3.0, 0.5) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
+    opt_scale = min(0.008 + my_sqrt(ply + 3.0) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
     max_scale = min(7.0, 4.0 + ply / 12.0);
 
     // Never use more than 80% of the available time for this move

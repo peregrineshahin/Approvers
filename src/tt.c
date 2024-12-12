@@ -18,7 +18,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef DKAGGLE
 #include <inttypes.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>  // For memset
 #ifndef _WIN32
@@ -63,18 +66,23 @@ void tt_allocate(size_t mbSize) {
         size_t lpSize   = (size + pageSize - 1) & ~(pageSize - 1);
         TT.mem =
           VirtualAlloc(NULL, lpSize, MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
+        #ifndef DKAGGLE
         if (!TT.mem)
             printf("info string Unable to allocate large pages for the "
                    "transposition table.\n");
         else
             printf("info string Transposition table allocated using large pages.\n");
+        #endif
         fflush(stdout);
     }
 
     if (!TT.mem)
         TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    #ifndef DKAGGLE
     if (!TT.mem)
         goto failed;
+    #endif
+
     TT.table = (Cluster*) TT.mem;
 
 #else /* Unix */
@@ -88,12 +96,14 @@ void tt_allocate(size_t mbSize) {
     {
         TT.mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
                       VM_FLAGS_SUPERPAGE_SIZE_2MB, 0);
+        #ifndef DKAGGLE
         if (!TT.mem)
             printf("info string Unable to allocate large pages for the "
                    "transposition table.\n");
         else
             printf("info string Transposition table allocated using large pages.\n");
         fflush(stdout);
+        #endif
     }
     if (!TT.mem)
         TT.mem = mmap(NULL, allocSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -106,8 +116,10 @@ void tt_allocate(size_t mbSize) {
 
     TT.allocSize = allocSize;
     TT.table     = (Cluster*) ((((uintptr_t) TT.mem) + alignment - 1) & ~(alignment - 1));
+    #ifndef DKAGGLE
     if (!TT.mem)
         goto failed;
+    #endif
 
     #if defined(__linux__) && defined(MADV_HUGEPAGE)
 
@@ -123,12 +135,14 @@ void tt_allocate(size_t mbSize) {
     tt_clear();
     return;
 
+#ifndef DKAGGLE
 failed:
     fprintf(stderr,
             "Failed to allocate %" PRIu64 "MB for "
             "transposition table.\n",
             (uint64_t) mbSize);
     exit(EXIT_FAILURE);
+#endif
 }
 
 
@@ -176,19 +190,4 @@ TTEntry* tt_probe(Key key, bool* found) {
 
     *found = false;
     return replace;
-}
-
-
-// Returns an approximation of the hashtable occupation during a search. The
-// hash is x permill full, as per UCI protocol.
-
-int tt_hashfull(void) {
-    int cnt = 0;
-    for (int i = 0; i < 1000 / ClusterSize; i++)
-    {
-        const TTEntry* tte = &TT.table[i].entry[0];
-        for (int j = 0; j < ClusterSize; j++)
-            cnt += tte[j].depth8 && (tte[j].genBound8 & 0xf8) == TT.generation8;
-    }
-    return cnt * 1000 / (ClusterSize * (1000 / ClusterSize));
 }

@@ -18,7 +18,6 @@
 
 
 #include <inttypes.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -95,9 +94,28 @@ static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
 // search_init() is called during startup to initialize various lookup tables
 
+double my_log(double x) {
+    if (x <= 0)
+        return -1e9;  // Handle log(0) or negative input
+    double result = 0.0;
+    while (x >= 2.0)
+    {
+        x /= 2.718281828459045;  // Divide by e
+        result += 1.0;
+    }
+    x -= 1.0;
+    double term = x, sum = 0.0;
+    for (int n = 1; n < 10; n++)
+    {
+        sum += (n % 2 ? 1 : -1) * term / n;  // Alternating series
+        term *= x;
+    }
+    return result + sum;
+}
+
 void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
-        Reductions[i] = 22.0 * log(i);
+        Reductions[i] = 22.0 * my_log(i);
 }
 
 
@@ -339,8 +357,6 @@ void thread_search(Position* pos) {
                 alpha = max(bestValue - delta, -VALUE_INFINITE);
 
                 failedHighCnt = 0;
-                if (pos->threadIdx == 0)
-                    Threads.stopOnPonderhit = false;
             }
             else
             {
@@ -371,7 +387,7 @@ void thread_search(Position* pos) {
             continue;
 
         // Do we have time for the next iteration? Can we stop searching now?
-        if (use_time_management() && !Threads.stop && !Threads.stopOnPonderhit)
+        if (use_time_management() && !Threads.stop)
         {
             double fallingEval = (318 + 6 * (mainThread.previousScore - bestValue)
                                   + 6 * (mainThread.iterValue[iterIdx] - bestValue))
@@ -396,9 +412,9 @@ void thread_search(Position* pos) {
             if (time_elapsed() > totalTime)
             {
                 // If we are allowed to ponder do not stop the search now but
-                // keep pondering until the GUI sends "ponderhit" or "stop".
+                // keep pondering until the GUI sends "stop".
                 if (Threads.ponder)
-                    Threads.stopOnPonderhit = true;
+                {}
                 else
                     Threads.stop = true;
             }
@@ -1664,7 +1680,6 @@ void start_thinking(Position* root, bool ponderMode) {
 }
 
 void prepare_for_search(Position* root, bool ponderMode) {
-    Threads.stopOnPonderhit = false;
     Threads.stop            = false;
     Threads.increaseDepth   = true;
     Threads.ponder          = ponderMode;

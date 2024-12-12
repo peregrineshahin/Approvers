@@ -58,7 +58,6 @@ struct Option {
 };
 
 void        options_init(void);
-void        print_options(void);
 int         option_value(int opt);
 const char* option_string_value(int opt);
 const char* option_default_string_value(int opt);

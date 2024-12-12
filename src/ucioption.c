@@ -50,9 +50,9 @@ static void on_threads(Option* opt) { delayedSettings.numThreads = opt->value; }
 static void on_large_pages(Option* opt) { delayedSettings.largePages = opt->value; }
 
 #ifdef IS_64BIT
-    #define MAXHASHMB 33554432
+    #define MAXHASHMB 1
 #else
-    #define MAXHASHMB 2048
+    #define MAXHASHMB 1
 #endif
 
 static Option optionsMap[] = {
@@ -98,27 +98,6 @@ static const char* optTypeStr[] = {"check", "spin", "button"};
 
 // print_options() prints all options in the format required by the
 // UCI protocol.
-
-void print_options(void) {
-    for (Option* opt = optionsMap; opt->name != NULL; opt++)
-    {
-        if (opt->type == OPT_TYPE_DISABLED)
-            continue;
-        printf("option name %s type %s", opt->name, optTypeStr[opt->type]);
-        switch (opt->type)
-        {
-        case OPT_TYPE_CHECK :
-            printf(" default %s", opt->def ? "true" : "false");
-            break;
-        case OPT_TYPE_SPIN :
-            printf(" default %d min %d max %d", opt->def, opt->minVal, opt->maxVal);
-        case OPT_TYPE_BUTTON :
-            break;
-        }
-        printf("\n");
-    }
-    fflush(stdout);
-}
 
 int option_value(int optIdx) { return optionsMap[optIdx].value; }
 

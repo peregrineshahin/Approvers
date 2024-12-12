@@ -38,9 +38,15 @@ BINDIR = $(PREFIX)/bin
 PGOBENCH = ./$(EXE) bench 16 1 13
 
 ### Object files
-OBJS = benchmark.o bitbase.o bitboard.o evaluate.o main.o \
-	misc.o movegen.o movepick.o position.o psqt.o \
-	search.o thread.o timeman.o tt.o uci.o ucioption.o settings.o nnue.o
+ifeq ($(findstring DKAGGLE, $(CFLAGS)),)
+    OBJS = benchmark.o bitboard.o evaluate.o main.o \
+           misc.o movegen.o movepick.o position.o psqt.o \
+           search.o thread.o timeman.o tt.o uci.o ucioption.o settings.o nnue.o
+else
+    OBJS = bitboard.o evaluate.o main.o \
+           misc.o movegen.o movepick.o position.o psqt.o \
+           search.o thread.o timeman.o tt.o uci.o ucioption.o settings.o nnue.o
+endif
 
 ### ==========================================================================
 ### Section 2. High-level Configuration
@@ -371,7 +377,7 @@ endif
 
 CFLAGS += -Wall -std=c11 $(EXTRACFLAGS)
 DEPENDFLAGS += -std=c11
-LDFLAGS += $(EXTRALDFLAGS) -lm
+LDFLAGS += $(EXTRALDFLAGS)
 
 ifeq ($(COMP),)
 	COMP=gcc
@@ -762,7 +768,7 @@ format:
 	find . -name "*.c" -o -name "*.h" | xargs $(CLANG-FORMAT) -i -style=file
 
 default:
-	$(MAKE) CFLAGS="-fcommon -Os -s -ffunction-sections -fdata-sections -flto" LDFLAGS="-Wl,--gc-sections -lm" ARCH=$(ARCH)
+	$(MAKE) CFLAGS="-fcommon -Os -s -ffunction-sections -fdata-sections -flto" LDFLAGS="-Wl,--gc-sections" ARCH=$(ARCH)
 
 ### ==========================================================================
 ### Section 5. Private targets

@@ -227,7 +227,7 @@ void uci_loop(int argc, char** argv) {
     Threads.searching = false;
 
     // Threads.sleeping is set by the main search thread if it has run
-    // out of work but must wait for a "stop" or "ponderhit" command from
+    // out of work but must wait for a "stop" command from
     // the GUI to arrive before being allowed to output "bestmove". The main
     // thread will then go to sleep and has to be waken up by the UI thread.
     // This variable must be accessed only after acquiring Threads.lock.
@@ -302,11 +302,6 @@ void uci_loop(int argc, char** argv) {
 
         Threads.stop = false;
 
-        // The GUI sends 'ponderhit' to tell us the player has played the
-        // expected move. In case Threads.stopOnPonderhit is set we are waiting
-        // for 'ponderhit' to stop the search (for instance because we have
-        // already searched long enough), otherwise we should continue searching
-        // but switch from pondering to normal search.
         if (strcmp(token, "quit") == 0 || strcmp(token, "stop") == 0)
         {
             if (Threads.searching)
@@ -319,25 +314,10 @@ void uci_loop(int argc, char** argv) {
                 UNLOCK(Threads.lock);
             }
         }
-        else if (strcmp(token, "ponderhit") == 0)
-        {
-            Threads.ponder = false;  // Switch to normal search
-            if (Threads.stopOnPonderhit)
-                Threads.stop = true;
-            LOCK(Threads.lock);
-            if (Threads.sleeping)
-            {
-                Threads.stop = true;
-                thread_wake_up(threads_main(), THREAD_STATE_RESUME);
-                Threads.sleeping = false;
-            }
-            UNLOCK(Threads.lock);
-        }
         else if (strcmp(token, "uci") == 0)
         {
             printf("id name ");
             printf("\n");
-            print_options();
             printf("uciok\n");
             fflush(stdout);
         }
@@ -364,7 +344,8 @@ void uci_loop(int argc, char** argv) {
 
             // Additional custom non-UCI commands, useful for debugging
 #ifndef KAGGLE
-        else if (strcmp(token, "eval") == 0) {
+        else if (strcmp(token, "eval") == 0)
+        {
             printf("Evaluation: %d\n", evaluate(&pos));
             fflush(stdout);
         }
