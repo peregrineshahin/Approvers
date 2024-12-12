@@ -424,12 +424,6 @@ void thread_search(Position *pos)
       lastBestMoveDepth = pos->rootDepth;
     }
 
-    // Have we found a "mate in x"?
-    if (   Limits.mate
-        && bestValue >= VALUE_MATE_IN_MAX_PLY
-        && VALUE_MATE - bestValue <= 2 * Limits.mate)
-      Threads.stop = true;
-
     if (pos->threadIdx != 0)
       continue;
 

@@ -122,8 +122,6 @@ void benchmark(Position *current, char *str)
     Limits.movetime = limit; // movetime is in millisecs
   else if (strcmp(limitType, "nodes") == 0)
     Limits.nodes = limit;
-  else if (strcmp(limitType, "mate") == 0)
-    Limits.mate = limit;
   else
     Limits.depth = limit;
 

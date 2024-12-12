@@ -188,8 +188,6 @@ static void go(Position *pos, char *str)
       Limits.nodes = atoi(strtok(NULL, " \t"));
     else if (strcmp(token, "movetime") == 0)
       Limits.movetime = atoi(strtok(NULL, " \t"));
-    else if (strcmp(token, "mate") == 0)
-      Limits.mate = atoi(strtok(NULL, " \t"));
     else if (strcmp(token, "infinite") == 0)
       Limits.infinite = true;
     else if (strcmp(token, "ponder") == 0)

@@ -59,7 +59,6 @@ struct LimitsType {
   int inc[2];
   int depth;
   int movetime;
-  int mate;
   bool infinite;
   uint64_t nodes;
   TimePoint startTime;
