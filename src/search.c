@@ -82,11 +82,6 @@ static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1
 static Value search_PV(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth);
 static Value search_NonPV(Position* pos, Stack* ss, Value alpha, Depth depth, bool cutNode);
 
-static Value qsearch_PV_true(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth);
-static Value qsearch_PV_false(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth);
-static Value qsearch_NonPV_true(Position* pos, Stack* ss, Value alpha, Depth depth);
-static Value qsearch_NonPV_false(Position* pos, Stack* ss, Value alpha, Depth depth);
-
 static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
@@ -478,11 +473,7 @@ INLINE Value search_node(
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
-        return PvNode     ? checkers() ? qsearch_PV_true(pos, ss, alpha, beta, 0)
-                                       : qsearch_PV_false(pos, ss, alpha, beta, 0)
-                 : checkers() ? qsearch_NonPV_true(pos, ss, alpha, 0)
-                          : qsearch_NonPV_false(pos, ss, alpha, 0);
-
+        return qsearch_node(pos, ss, alpha, beta, 0, PvNode, checkers());
 
     Move     pv[MAX_PLY + 1], capturesSearched[32], quietsSearched[64];
     TTEntry* tte;
@@ -647,8 +638,8 @@ INLINE Value search_node(
 
     // Step 7. Razoring
     if (!rootNode && depth == 1 && eval <= alpha - RazorMargin)
-        return PvNode ? qsearch_PV_false(pos, ss, alpha, beta, 0)
-                      : qsearch_NonPV_false(pos, ss, alpha, 0);
+        return qsearch_node(pos, ss, alpha, beta, 0, PvNode, false);
+
 
     improving = (ss - 2)->staticEval == VALUE_NONE
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
@@ -738,8 +729,8 @@ INLINE Value search_node(
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
-                value = givesCheck ? -qsearch_NonPV_true(pos, ss + 1, -probCutBeta, 0)
-                                   : -qsearch_NonPV_false(pos, ss + 1, -probCutBeta, 0);
+                value =
+                  -qsearch_node(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false, givesCheck);
 
                 // If the qsearch held, perform the regular search
                 if (value >= probCutBeta)
@@ -1281,13 +1272,13 @@ search_NonPV(Position* pos, Stack* ss, Value alpha, Depth depth, bool cutNode) {
 // qsearch_node() is the quiescence search function template, which is
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
-INLINE Value qsearch_node(Position*  pos,
-                          Stack*     ss,
-                          Value      alpha,
-                          Value      beta,
-                          Depth      depth,
-                          const int  NT,
-                          const bool InCheck) {
+Value qsearch_node(Position*  pos,
+                   Stack*     ss,
+                   Value      alpha,
+                   Value      beta,
+                   Depth      depth,
+                   const int  NT,
+                   const bool InCheck) {
     const bool PvNode = NT == PV;
 
     Move     pv[MAX_PLY + 1];
@@ -1444,10 +1435,8 @@ INLINE Value qsearch_node(Position*  pos,
 
         // Make and search the move
         do_move(pos, move, givesCheck);
-        value = PvNode     ? givesCheck ? -qsearch_PV_true(pos, ss + 1, -beta, -alpha, depth - 1)
-                                        : -qsearch_PV_false(pos, ss + 1, -beta, -alpha, depth - 1)
-                  : givesCheck ? -qsearch_NonPV_true(pos, ss + 1, -beta, depth - 1)
-                           : -qsearch_NonPV_false(pos, ss + 1, -beta, depth - 1);
+
+        value = -qsearch_node(pos, ss + 1, -beta, -alpha, depth - 1, PvNode, givesCheck);
         undo_move(pos, move);
 
 
@@ -1486,24 +1475,6 @@ INLINE Value qsearch_node(Position*  pos,
              ttDepth, bestMove, rawEval);
 
     return bestValue;
-}
-
-static NOINLINE Value
-qsearch_PV_true(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
-    return qsearch_node(pos, ss, alpha, beta, depth, PV, true);
-}
-
-static NOINLINE Value
-qsearch_PV_false(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
-    return qsearch_node(pos, ss, alpha, beta, depth, PV, false);
-}
-
-static NOINLINE Value qsearch_NonPV_true(Position* pos, Stack* ss, Value alpha, Depth depth) {
-    return qsearch_node(pos, ss, alpha, alpha + 1, depth, NonPV, true);
-}
-
-static NOINLINE Value qsearch_NonPV_false(Position* pos, Stack* ss, Value alpha, Depth depth) {
-    return qsearch_node(pos, ss, alpha, alpha + 1, depth, NonPV, false);
 }
 
 #define rm_lt(m1, m2) \

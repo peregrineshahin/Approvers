@@ -75,5 +75,7 @@ void     search_clear(void);
 uint64_t perft(Position* pos, Depth depth);
 void     start_thinking(Position* pos, bool ponderMode);
 void     prepare_for_search(Position* root, bool ponderMode);
+Value    qsearch_node(
+     Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT, const bool InCheck);
 
 #endif
