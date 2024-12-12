@@ -94,6 +94,9 @@ static void score_quiets(const Position* pos) {
                  + 2 * (*fmh)[piece_on(from)][to] + 2 * (*fmh2)[piece_on(from)][to]
                  + (*fmh3)[piece_on(from)][to]
                  + (st->mp_ply < MAX_LPH ? min(4, st->depth / 3) * (*lph)[st->mp_ply][move] : 0);
+
+        // Bonus for checks
+        m->value += ((bool)(st->checkSquares[type_of_p(piece_on(from))] & to)) * 16384;
     }
 }
 
