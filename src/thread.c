@@ -18,7 +18,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "material.h"
 #include "movegen.h"
 #include "movepick.h"
 #include "pawns.h"
@@ -71,7 +70,6 @@ static THREAD_FUNC thread_init(void* arg) {
 
     Position* pos        = calloc(sizeof(Position), 1);
     pos->pawnTable       = calloc(PAWN_ENTRIES * sizeof(PawnEntry), 1);
-    pos->materialTable   = calloc(8192 * sizeof(MaterialEntry), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
@@ -159,7 +157,6 @@ static void thread_destroy(Position* pos) {
 #endif
 
     free(pos->pawnTable);
-    free(pos->materialTable);
     free(pos->counterMoves);
     free(pos->history);
     free(pos->captureHistory);

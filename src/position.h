@@ -173,7 +173,6 @@ struct Position {
     CapturePieceToHistory*  captureHistory;
     correction_history_t    corrHistory;
     PawnEntry*              pawnTable;
-    MaterialEntry*          materialTable;
     CounterMoveHistoryStat* counterMoveHistory;
 
     // Thread-control data.

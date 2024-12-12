@@ -19,8 +19,6 @@ add_executable(Peregrine
         src/evaluate.c
         src/evaluate.h
         src/main.c
-        src/material.c
-        src/material.h
         src/misc.c
         src/misc.h
         src/movegen.c

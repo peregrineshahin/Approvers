@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "bitboard.h"
-#include "material.h"
 #include "misc.h"
 #include "movegen.h"
 #include "pawns.h"
@@ -764,10 +763,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
 
-        // Update material hash key and prefetch access to materialTable
+        // Update material hash key
         key ^= zob.psq[captured][capsq];
         st->materialKey -= matKey[captured];
-        prefetch(&pos->materialTable[st->materialKey >> (64 - 13)]);
 
         // Update incremental scores
         st->psq -= psqt.psq[captured][capsq];
