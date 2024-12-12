@@ -70,9 +70,6 @@ INLINE TimePoint now(void) {
 }
 
 #ifdef _WIN32
-bool          large_pages_supported(void);
-extern size_t largePageMinimum;
-
 typedef HANDLE FD;
     #define FD_ERR INVALID_HANDLE_VALUE
 typedef HANDLE map_t;

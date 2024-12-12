@@ -47,8 +47,6 @@ static void on_hash_size(Option* opt) { delayedSettings.ttSize = opt->value; }
 
 static void on_threads(Option* opt) { delayedSettings.numThreads = opt->value; }
 
-static void on_large_pages(Option* opt) { delayedSettings.largePages = opt->value; }
-
 #ifdef IS_64BIT
     #define MAXHASHMB 1
 #else
@@ -62,7 +60,6 @@ static Option optionsMap[] = {
   {"Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL},
   {"Ponder", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL},
   {"Move Overhead", OPT_TYPE_SPIN, 10, 0, 5000, NULL, NULL, 0, NULL},
-  {"LargePages", OPT_TYPE_CHECK, 1, 0, 0, NULL, on_large_pages, 0, NULL},
   {0}};
 
 // options_init() initializes the UCI options to their hard-coded default
@@ -70,9 +67,7 @@ static Option optionsMap[] = {
 
 void options_init() {
 #ifdef _WIN32
-    // Disable the LargePages option if the machine does not support it.
-    if (!large_pages_supported())
-        optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
+    optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;
 #endif
 #if defined(__linux__) && !defined(MADV_HUGEPAGE)
     optionsMap[OPT_LARGE_PAGES].type = OPT_TYPE_DISABLED;

@@ -60,22 +60,6 @@ void tt_allocate(size_t mbSize) {
 #ifdef _WIN32
 
     TT.mem = NULL;
-    if (settings.largePages)
-    {
-        size_t pageSize = largePageMinimum;
-        size_t lpSize   = (size + pageSize - 1) & ~(pageSize - 1);
-        TT.mem =
-          VirtualAlloc(NULL, lpSize, MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
-        #ifndef DKAGGLE
-        if (!TT.mem)
-            printf("info string Unable to allocate large pages for the "
-                   "transposition table.\n");
-        else
-            printf("info string Transposition table allocated using large pages.\n");
-        #endif
-        fflush(stdout);
-    }
-
     if (!TT.mem)
         TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     #ifndef DKAGGLE
@@ -87,24 +71,11 @@ void tt_allocate(size_t mbSize) {
 
 #else /* Unix */
 
-    size_t alignment = settings.largePages ? (1ULL << 21) : 1;
+    size_t alignment = 1;
     size_t allocSize = size + alignment - 1;
 
     #if defined(__APPLE__) && defined(VM_FLAGS_SUPERPAGE_SIZE_2MB)
 
-    if (settings.largePages)
-    {
-        TT.mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-                      VM_FLAGS_SUPERPAGE_SIZE_2MB, 0);
-        #ifndef DKAGGLE
-        if (!TT.mem)
-            printf("info string Unable to allocate large pages for the "
-                   "transposition table.\n");
-        else
-            printf("info string Transposition table allocated using large pages.\n");
-        fflush(stdout);
-        #endif
-    }
     if (!TT.mem)
         TT.mem = mmap(NULL, allocSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
@@ -122,10 +93,6 @@ void tt_allocate(size_t mbSize) {
     #endif
 
     #if defined(__linux__) && defined(MADV_HUGEPAGE)
-
-    // Advise the kernel to allocate large pages.
-    if (settings.largePages)
-        madvise(TT.table, size, MADV_HUGEPAGE);
 
     #endif
 #endif
