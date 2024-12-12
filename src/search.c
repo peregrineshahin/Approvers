@@ -119,7 +119,7 @@ static int extract_ponder_from_tt(RootMove *rm, Position *pos);
 void search_init(void)
 {
   for (int i = 1; i < MAX_MOVES; i++)
-    Reductions[i] = (22.0 + log(Threads.numThreads)) * log(i);
+    Reductions[i] = 22.0 * log(i);
 }
 
 
@@ -145,14 +145,12 @@ void search_clear(void)
     
     }
 
-  for (int idx = 0; idx < Threads.numThreads; idx++) {
-    Position *pos = Threads.pos[idx];
-    stats_clear(pos->counterMoves);
-    stats_clear(pos->history);
-    stats_clear(pos->captureHistory);
-    stats_clear(pos->lowPlyHistory);
-    stats_clear(pos->corrHistory);
-  }
+  Position *pos = Threads.pos[0];
+  stats_clear(pos->counterMoves);
+  stats_clear(pos->history);
+  stats_clear(pos->captureHistory);
+  stats_clear(pos->lowPlyHistory);
+  stats_clear(pos->corrHistory);
 
   mainThread.previousScore = VALUE_INFINITE;
   mainThread.previousTimeReduction = 1;
@@ -226,20 +224,11 @@ void mainthread_search(void)
         break;
       }
 
-      Threads.pos[0]->bestMoveChanges = 0;
-      for (int idx = 1; idx < Threads.numThreads; idx++) {
-        Threads.pos[idx]->bestMoveChanges = 0;
-        thread_wake_up(Threads.pos[idx], THREAD_SEARCH);
-      }
-
-      thread_search(pos); // Let's start searching!
+    Threads.pos[0]->bestMoveChanges = 0;
+    thread_search(pos); // Let's start searching!
   }
 
-  // Wait until all threads have finished
-  if (pos->rootMoves->size > 0) {
-      for (int idx = 1; idx < Threads.numThreads; idx++)
-        thread_wait_until_sleeping(Threads.pos[idx]);
-  } else {
+  if (pos->rootMoves->size == 0) {
     pos->rootMoves->move[0].pv[0] = 0;
     pos->rootMoves->move[0].pvSize = 1;
     pos->rootMoves->size++;
@@ -460,12 +449,10 @@ void thread_search(Position *pos)
       double reduction = (1.47 + mainThread.previousTimeReduction) / (2.32 * timeReduction);
 
       // Use part of the gained time from a previous stable move for this move
-      for (int i = 0; i < Threads.numThreads; i++) {
-        totBestMoveChanges += Threads.pos[i]->bestMoveChanges;
-        Threads.pos[i]->bestMoveChanges = 0;
-      }
+      totBestMoveChanges += Threads.pos[0]->bestMoveChanges;
+      Threads.pos[0]->bestMoveChanges = 0;
 
-      double bestMoveInstability = 1 + totBestMoveChanges / Threads.numThreads;
+      double bestMoveInstability = 1 + totBestMoveChanges;
 
       double totalTime = rm->size == 1 ? 0 : time_optimum() * fallingEval * reduction * bestMoveInstability;
 
@@ -540,9 +527,7 @@ INLINE Value search_node(Position *pos, Stack *ss, Value alpha, Value beta,
     pos->callsCnt = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
   }
   if (--pos->callsCnt <= 0) {
-    for (int idx = 0; idx < Threads.numThreads; idx++)
-      store_rlx(Threads.pos[idx]->resetCalls, true);
-
+    store_rlx(Threads.pos[0]->resetCalls, true);
     check_time();
   }
 
@@ -1710,7 +1695,7 @@ static void check_time(void)
 
   if (   (use_time_management() && elapsed > time_maximum() - 10)
       || (Limits.movetime && elapsed >= Limits.movetime)
-      || (Limits.nodes && threads_nodes_searched() >= Limits.nodes))
+      || (Limits.nodes && Threads.pos[0]->nodes >= Limits.nodes))
         Threads.stop = 1;
 }
 
@@ -1723,7 +1708,7 @@ static void uci_print_pv(Position *pos, Depth depth, Value alpha, Value beta)
   TimePoint elapsed = time_elapsed() + 1;
   RootMoves *rm = pos->rootMoves;
   int pvIdx = pos->pvIdx;
-  uint64_t nodes_searched = threads_nodes_searched();
+  uint64_t nodes_searched = Threads.pos[0]->nodes;
   char buf[16];
 
   int i = 0;
@@ -1811,30 +1796,28 @@ void prepare_for_search(Position *root, bool ponderMode) {
   for (int i = 0; i < moves->size; i++)
     moves->move[i].pv[0] = list[i].move;
 
-  for (int idx = 0; idx < Threads.numThreads; idx++) {
-    Position *pos = Threads.pos[idx];
-    pos->nmpMinPly = 0;
-    pos->rootDepth = 0;
-    pos->nodes = pos->tbHits = 0;
-    RootMoves *rm = pos->rootMoves;
-    rm->size = end - list;
-    for (int i = 0; i < rm->size; i++) {
-      rm->move[i].pvSize = 1;
-      rm->move[i].pv[0] = moves->move[i].pv[0];
-      rm->move[i].score = -VALUE_INFINITE;
-      rm->move[i].previousScore = -VALUE_INFINITE;
-      rm->move[i].bestMoveCount = 0;
-      rm->move[i].tbRank = moves->move[i].tbRank;
-    }
-    memcpy(pos, root, offsetof(Position, moveList));
-    // Copy enough of the root State buffer.
-    int n = max(7, root->st->pliesFromNull);
-    for (int i = 0; i <= n; i++)
-      memcpy(&pos->stack[i], &root->st[i - n], StateSize);
-    pos->st = pos->stack + n;
-    (pos->st-1)->endMoves = pos->moveList;
-    pos_set_check_info(pos);
+  Position *pos = Threads.pos[0];
+  pos->nmpMinPly = 0;
+  pos->rootDepth = 0;
+  pos->nodes = pos->tbHits = 0;
+  RootMoves *rm = pos->rootMoves;
+  rm->size = end - list;
+  for (int i = 0; i < rm->size; i++) {
+    rm->move[i].pvSize = 1;
+    rm->move[i].pv[0] = moves->move[i].pv[0];
+    rm->move[i].score = -VALUE_INFINITE;
+    rm->move[i].previousScore = -VALUE_INFINITE;
+    rm->move[i].bestMoveCount = 0;
+    rm->move[i].tbRank = moves->move[i].tbRank;
   }
+  memcpy(pos, root, offsetof(Position, moveList));
+  // Copy enough of the root State buffer.
+  int n = max(7, root->st->pliesFromNull);
+  for (int i = 0; i <= n; i++)
+    memcpy(&pos->stack[i], &root->st[i - n], StateSize);
+  pos->st = pos->stack + n;
+  (pos->st-1)->endMoves = pos->moveList;
+  pos_set_check_info(pos);
 
   Threads.searching = true;
 }

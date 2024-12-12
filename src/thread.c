@@ -269,21 +269,13 @@ static void thread_idle_loop(Position *pos)
 #endif
 
     if (pos->action == THREAD_EXIT) {
-
       break;
-
-    } else if (pos->action == THREAD_TT_CLEAR) {
-
-      tt_clear_worker(pos->threadIdx);
-
-    } else {
-
-      if (pos->threadIdx == 0)
-        mainthread_search();
-      else
-        thread_search(pos);
-
     }
+
+    if (pos->threadIdx == 0)
+      mainthread_search();
+    else
+      thread_search(pos);
 
     pos->action = THREAD_SLEEP;
 
@@ -365,15 +357,4 @@ void threads_set_number(int num)
 
   if (num == 0)
     Threads.searching = false;
-}
-
-
-// threads_nodes_searched() returns the number of nodes searched.
-
-uint64_t threads_nodes_searched(void)
-{
-  uint64_t nodes = 0;
-  for (int idx = 0; idx < Threads.numThreads; idx++)
-    nodes += Threads.pos[idx]->nodes;
-  return nodes;
 }

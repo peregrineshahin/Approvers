@@ -30,7 +30,7 @@
 
 #include "types.h"
 
-#define MAX_THREADS 512
+#define MAX_THREADS 1
 
 #ifndef _WIN32
 #define LOCK_T pthread_mutex_t
@@ -47,7 +47,7 @@
 #endif
 
 enum {
-  THREAD_SLEEP, THREAD_SEARCH, THREAD_TT_CLEAR, THREAD_EXIT, THREAD_STATE_RESUME
+  THREAD_SLEEP, THREAD_SEARCH, THREAD_EXIT, THREAD_STATE_RESUME
 };
 
 void thread_search(Position *pos);
@@ -96,7 +96,6 @@ void threads_init(void);
 void threads_exit(void);
 void threads_start_thinking(Position *pos, LimitsType *);
 void threads_set_number(int num);
-uint64_t threads_nodes_searched(void);
 
 extern ThreadPool Threads;
 
