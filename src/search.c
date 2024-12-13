@@ -1125,10 +1125,6 @@ moves_loop:  // When in check search starts from here.
     // to the search tree
     if (bestValue <= alpha)
         ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 3);
-    // Otherwise, a countermove has been found and if the position is in the
-    // last leaf in the search tree, remove the position from the search tree.
-    else if (depth > 3)
-        ss->ttPv = ss->ttPv && (ss + 1)->ttPv;
 
     if (!excludedMove && !(rootNode && pos->pvIdx))
         tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), ss->ttPv,
