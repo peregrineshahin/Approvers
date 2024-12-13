@@ -257,17 +257,14 @@ PURE bool is_draw(const Position* pos);
 // Accessing hash keys
 #define key() (pos->st->key)
 #define material_key() (pos->st->materialKey)
-#define pawn_key() (pos->st->pawnKey)
 
 // Other properties of the position
 #define stm() (pos->sideToMove)
 #define game_ply() (pos->gamePly)
 #define nodes_searched() (pos->nodes)
 #define rule50_count() (pos->st->rule50)
-#define psq_score() (pos->st->psq)
 #define non_pawn_material_c(c) (pos->st->nonPawnMaterial[c])
 #define non_pawn_material() (non_pawn_material_c(WHITE) + non_pawn_material_c(BLACK))
-#define pawns_only() (!pos->st->nonPawn)
 
 INLINE Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];

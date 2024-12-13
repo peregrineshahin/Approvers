@@ -47,9 +47,6 @@ enum {
     PV
 };
 
-static const uint64_t ttHitAverageWindow     = 4096;
-static const uint64_t ttHitAverageResolution = 1024;
-
 static const int RazorMargin = 510;
 
 INLINE int futility_margin(Depth d, bool improving) { return 223 * (d - improving); }
@@ -90,7 +87,6 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 static void check_time(void);
 static void stable_sort(RootMove* rm, int num);
 static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta);
-static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
 // search_init() is called during startup to initialize various lookup tables
 
@@ -193,10 +189,6 @@ void mainthread_search(void) {
     mainThread.previousScore = pos->rootMoves->move[0].score;
 
     printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
-
-    if (pos->rootMoves->move[0].pvSize > 1 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
-        printf(" ponder %s", uci_move(buf, pos->rootMoves->move[0].pv[1]));
-
     printf("\n");
     fflush(stdout);
 
@@ -274,7 +266,6 @@ void thread_search(Position* pos) {
     memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
     RootMoves* rm          = pos->rootMoves;
-    pos->ttHitAverage      = ttHitAverageWindow * ttHitAverageResolution / 2;
     int searchAgainCounter = 0;
 
     // Iterative deepening loop until requested to stop or the target depth
@@ -471,28 +462,6 @@ Value search(
         // Step 2. Check for aborted search and immediate draw
         if (load_rlx(Threads.stop) || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
-
-        // Step 3. Mate distance pruning. Even if we mate at the next move our
-        // score would be at best mate_in(ss->ply+1), but if alpha is already
-        // bigger because a shorter mate was found upward in the tree then
-        // there is no need to search because we will never beat the current
-        // alpha. Same logic but with reversed signs applies also in the
-        // opposite condition of being mated instead of giving mate. In this
-        // case return a fail-high score.
-        if (PvNode)
-        {
-            alpha = max(mated_in(ss->ply), alpha);
-            beta  = min(mate_in(ss->ply + 1), beta);
-            if (alpha >= beta)
-                return alpha;
-        }
-        else
-        {  // avoid assignment to beta (== alpha+1)
-            if (alpha < mated_in(ss->ply))
-                return mated_in(ss->ply);
-            if (alpha >= mate_in(ss->ply + 1))
-                return alpha;
-        }
     }
 
 
@@ -527,10 +496,6 @@ Value search(
     if (ss->ttPv && depth > 12 && ss->ply - 1 < MAX_LPH && !captured_piece()
         && move_is_ok((ss - 1)->currentMove))
         lph_update(*pos->lowPlyHistory, ss->ply - 1, (ss - 1)->currentMove, stat_bonus(depth - 5));
-
-    // pos->ttHitAverage can be used to approximate the running average of ttHit
-    pos->ttHitAverage = (ttHitAverageWindow - 1) * pos->ttHitAverage / ttHitAverageWindow
-                      + ttHitAverageResolution * ttHit;
 
     // At non-PV nodes we check for an early TT cutoff.
     if (!PvNode && ttHit && tte_depth(tte) >= depth
@@ -912,18 +877,13 @@ moves_loop:  // When in check search starts from here.
         // re-searched at full depth.
         if (depth >= 3 && moveCount > 1 + 2 * rootNode + 2 * (PvNode && abs(bestValue) < 2)
             && (!captureOrPromotion || moveCountPruning
-                || ss->staticEval + PieceValue[EG][captured_piece()] <= alpha || cutNode
-                || pos->ttHitAverage < 427 * ttHitAverageResolution * ttHitAverageWindow / 1024))
+                || ss->staticEval + PieceValue[EG][captured_piece()] <= alpha || cutNode))
         {
             Depth r = reduction(improving, depth, moveCount);
 
             // Decrease reduction at non-check cut nodes for second move at low
             // depths
             if (cutNode && depth <= 10 && moveCount <= 2 && !inCheck)
-                r--;
-
-            // Decrease reduction if the ttHit runing average is large
-            if (pos->ttHitAverage > 509 * ttHitAverageResolution * ttHitAverageWindow / 1024)
                 r--;
 
             // Decrease reduction if position is or has been on the PV
@@ -1598,39 +1558,6 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     printf("\n");
 
     fflush(stdout);
-}
-
-
-// extract_ponder_from_tt() is called in case we have no ponder move
-// before exiting the search, for instance, in case we stop the search
-// during a fail high at root. We try hard to have a ponder move to
-// return to the GUI, otherwise in case of 'ponder on' we have nothing
-// to think on.
-
-static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
-    bool ttHit;
-
-    if (!rm->pv[0])
-        return 0;
-
-    do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
-    TTEntry* tte = tt_probe(key(), &ttHit);
-
-    if (ttHit)
-    {
-        Move     m = tte_move(tte);  // Local copy to be SMP safe
-        ExtMove  list[MAX_MOVES];
-        ExtMove* last = generate_legal(pos, list);
-        for (ExtMove* p = list; p < last; p++)
-            if (p->move == m)
-            {
-                rm->pv[rm->pvSize++] = m;
-                break;
-            }
-    }
-
-    undo_move(pos, rm->pv[0]);
-    return rm->pvSize > 1;
 }
 
 // start_thinking() wakes up the main thread to start a new search,

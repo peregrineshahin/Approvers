@@ -56,11 +56,6 @@ INLINE void prefetch(void* addr) {
 #endif
 }
 
-INLINE void prefetch2(void* addr) {
-    prefetch(addr);
-    prefetch((uint8_t*) addr + 64);
-}
-
 typedef int64_t TimePoint;  // A value in milliseconds
 
 INLINE TimePoint now(void) {
