@@ -49,17 +49,17 @@ enum {
 
 static const int RazorMargin = 510;
 
-INLINE int futility_margin(Depth d, bool improving) { return 223 * (d - improving); }
+static int futility_margin(Depth d, bool improving) { return 223 * (d - improving); }
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
-INLINE Depth reduction(int i, Depth d, int mn) {
+static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
     return (r + 509) / 1024 + (!i && r > 894);
 }
 
-INLINE int futility_move_count(bool improving, Depth depth) {
+static int futility_move_count(bool improving, Depth depth) {
     //  return (3 + depth * depth) / (2 - improving);
     return improving ? 3 + depth * depth : (3 + depth * depth) / 2;
 }
@@ -265,8 +265,8 @@ void thread_search(Position* pos) {
             (MAX_LPH - 2) * sizeof((*pos->lowPlyHistory)[0]));
     memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
-    RootMoves* rm          = pos->rootMoves;
-    int searchAgainCounter = 0;
+    RootMoves* rm                 = pos->rootMoves;
+    int        searchAgainCounter = 0;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
@@ -400,10 +400,8 @@ void thread_search(Position* pos) {
                 else
                     Threads.stop = true;
             }
-            else if (Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58)
-                Threads.increaseDepth = false;
             else
-                Threads.increaseDepth = true;
+                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -587,8 +585,7 @@ Value search(
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < 22977 && eval >= beta
         && eval >= ss->staticEval
         && ss->staticEval >= beta - 30 * depth - 28 * improving + 84 * ss->ttPv + 182
-        && !excludedMove && non_pawn_material_c(stm())
-        && (ss->ply >= pos->nmpMinPly || stm() != pos->nmpColor))
+        && !excludedMove && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
         Depth R = (817 + 71 * depth) / 213 + min((eval - beta) / 192, 3);
@@ -1568,9 +1565,9 @@ void start_thinking(Position* root, bool ponderMode) {
 }
 
 void prepare_for_search(Position* root, bool ponderMode) {
-    Threads.stop            = false;
-    Threads.increaseDepth   = true;
-    Threads.ponder          = ponderMode;
+    Threads.stop          = false;
+    Threads.increaseDepth = true;
+    Threads.ponder        = ponderMode;
 
     // Generate all legal moves.
     ExtMove    list[MAX_MOVES];
@@ -1581,9 +1578,8 @@ void prepare_for_search(Position* root, bool ponderMode) {
         moves->move[i].pv[0] = list[i].move;
 
     Position* pos  = Threads.pos[0];
-    pos->nmpMinPly = 0;
     pos->rootDepth = 0;
-    pos->nodes = pos->tbHits = 0;
+    pos->nodes = 0;
     RootMoves* rm            = pos->rootMoves;
     rm->size                 = end - list;
     for (int i = 0; i < rm->size; i++)

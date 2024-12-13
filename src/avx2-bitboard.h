@@ -10,17 +10,17 @@ extern uint8_t rook_attacks_EW[64 * 8];
 // magic_index() looks up the index using the 'magic bitboards' approach.
 
 // avx2/sse2 versions of BLSMSK (https://www.chessprogramming.org/BMI1#BLSMSK)
-INLINE __m256i blsmsk64x4(__m256i y) {
+static __m256i blsmsk64x4(__m256i y) {
     return _mm256_xor_si256(_mm256_add_epi64(y, _mm256_set1_epi64x(-1)), y);
 }
 
-INLINE __m128i blsmsk64x2(__m128i x) {
+static __m128i blsmsk64x2(__m128i x) {
     return _mm_xor_si128(_mm_add_epi64(x, _mm_set1_epi64x(-1)), x);
 }
 
 #undef attacks_bb_queen
 
-INLINE Bitboard attacks_bb_queen(Square s, Bitboard occupied) {
+static Bitboard attacks_bb_queen(Square s, Bitboard occupied) {
     const __m256i occupied4 = _mm256_set1_epi64x(occupied);
     const __m256i lmask     = queen_mask_v4[s][0];
     const __m256i rmask     = queen_mask_v4[s][1];
@@ -58,7 +58,7 @@ INLINE Bitboard attacks_bb_queen(Square s, Bitboard occupied) {
     return _mm_cvtsi128_si64(_mm_or_si128(slide2, _mm_unpackhi_epi64(slide2, slide2)));
 }
 
-INLINE Bitboard attacks_bb_rook(Square s, Bitboard occupied) {
+static Bitboard attacks_bb_rook(Square s, Bitboard occupied) {
 #if defined(__AVX512CD__) && defined(__AVX512VL__)
     const __m128i occupied2 = _mm_set1_epi64x(occupied);
     const __m128i lmask     = _mm256_castsi256_si128(queen_mask_v4[s][0]);
@@ -96,7 +96,7 @@ INLINE Bitboard attacks_bb_rook(Square s, Bitboard occupied) {
 #endif
 }
 
-INLINE Bitboard attacks_bb_bishop(Square s, Bitboard occupied) {
+static Bitboard attacks_bb_bishop(Square s, Bitboard occupied) {
     // flip vertical to simulate MS1B by LS1B
     const __m128i swapl2h   = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 2, 1, 0);
     __m128i       occupied2 = _mm_shuffle_epi8(_mm_cvtsi64_si128(occupied), swapl2h);

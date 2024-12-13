@@ -61,8 +61,10 @@ void position(Position* pos, char* str) {
         strncpy(fen, str + 4, 127);
         fen[127] = 0;
     }
+    #ifndef DKAGGLE
     else if (strncmp(str, "startpos", 8) == 0)
         strcpy(fen, StartFEN);
+    #endif
     else
         return;
 
@@ -138,7 +140,9 @@ void setoption(char* str) {
     if (!name)
     {
         name = "";
+        #ifndef DKAGGLE
         goto error;
+        #endif
     }
 
     name += 4;
@@ -161,9 +165,10 @@ void setoption(char* str) {
 
     if (option_set_by_name(name, value))
         return;
-
+#ifndef DKAGGLE
 error:
     fprintf(stderr, "No such option: %s\n", name);
+#endif
 }
 
 
@@ -190,6 +195,7 @@ static void go(Position* pos, char* str) {
             Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "binc") == 0)
             Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
+        #ifndef DKAGGLE
         else if (strcmp(token, "depth") == 0)
             Limits.depth = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "nodes") == 0)
@@ -200,6 +206,7 @@ static void go(Position* pos, char* str) {
             Limits.infinite = true;
         else if (strcmp(token, "ponder") == 0)
             ponderMode = true;
+        #endif
     }
 
     start_thinking(pos, ponderMode);

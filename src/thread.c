@@ -188,28 +188,6 @@ void thread_wait_until_sleeping(Position* pos) {
         Threads.searching = false;
 }
 
-
-// thread_wait() waits on sleep condition until condition is true.
-
-void thread_wait(Position* pos, atomic_bool* condition) {
-#ifndef _WIN32
-
-    pthread_mutex_lock(&pos->mutex);
-
-    while (!atomic_load(condition))
-        pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
-
-    pthread_mutex_unlock(&pos->mutex);
-
-#else
-
-    (void) condition;
-    WaitForSingleObject(pos->startEvent, INFINITE);
-
-#endif
-}
-
-
 void thread_wake_up(Position* pos, int action) {
 #ifndef _WIN32
 

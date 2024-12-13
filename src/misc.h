@@ -37,7 +37,7 @@
 // a non-blocking function that doesn't stall the CPU waiting for data
 // to be loaded from memory, which can be quite slow.
 
-INLINE void prefetch(void* addr) {
+static void prefetch(void* addr) {
 #ifndef NO_PREFETCH
 
     #if defined(__INTEL_COMPILER)
@@ -58,7 +58,7 @@ INLINE void prefetch(void* addr) {
 
 typedef int64_t TimePoint;  // A value in milliseconds
 
-INLINE TimePoint now(void) {
+static TimePoint now(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return 1000 * (uint64_t) tv.tv_sec + (uint64_t) tv.tv_usec / 1000;
@@ -89,7 +89,7 @@ void     prng_init(PRNG* rng, uint64_t seed);
 uint64_t prng_rand(PRNG* rng);
 uint64_t prng_sparse_rand(PRNG* rng);
 
-INLINE uint64_t mul_hi64(uint64_t a, uint64_t b) {
+static uint64_t mul_hi64(uint64_t a, uint64_t b) {
 #if defined(__GNUC__) && defined(IS_64BIT)
     __extension__ typedef unsigned __int128 uint128;
     return ((uint128) a * (uint128) b) >> 64;
@@ -103,31 +103,31 @@ INLINE uint64_t mul_hi64(uint64_t a, uint64_t b) {
 #endif
 }
 
-INLINE bool is_little_endian(void) {
+static bool is_little_endian(void) {
     int num = 1;
     return *(uint8_t*) &num == 1;
 }
 
-INLINE uint32_t from_le_u32(uint32_t v) { return is_little_endian() ? v : __builtin_bswap32(v); }
+static uint32_t from_le_u32(uint32_t v) { return is_little_endian() ? v : __builtin_bswap32(v); }
 
-INLINE uint16_t from_le_u16(uint16_t v) { return is_little_endian() ? v : __builtin_bswap16(v); }
+static uint16_t from_le_u16(uint16_t v) { return is_little_endian() ? v : __builtin_bswap16(v); }
 
-INLINE uint64_t from_be_u64(uint64_t v) { return is_little_endian() ? __builtin_bswap64(v) : v; }
+static uint64_t from_be_u64(uint64_t v) { return is_little_endian() ? __builtin_bswap64(v) : v; }
 
-INLINE uint32_t from_be_u32(uint32_t v) { return is_little_endian() ? __builtin_bswap32(v) : v; }
+static uint32_t from_be_u32(uint32_t v) { return is_little_endian() ? __builtin_bswap32(v) : v; }
 
-INLINE uint16_t from_be_u16(uint16_t v) { return is_little_endian() ? __builtin_bswap16(v) : v; }
+static uint16_t from_be_u16(uint16_t v) { return is_little_endian() ? __builtin_bswap16(v) : v; }
 
-INLINE uint32_t read_le_u32(void* p) { return from_le_u32(*(uint32_t*) p); }
+static uint32_t read_le_u32(void* p) { return from_le_u32(*(uint32_t*) p); }
 
-INLINE uint16_t read_le_u16(void* p) { return from_le_u16(*(uint16_t*) p); }
+static uint16_t read_le_u16(void* p) { return from_le_u16(*(uint16_t*) p); }
 
-INLINE uint32_t readu_le_u32(const void* p) {
+static uint32_t readu_le_u32(const void* p) {
     const uint8_t* q = p;
     return q[0] | (q[1] << 8) | (q[2] << 16) | (q[3] << 24);
 }
 
-INLINE uint16_t readu_le_u16(const void* p) {
+static uint16_t readu_le_u16(const void* p) {
     const uint8_t* q = p;
     return q[0] | (q[1] << 8);
 }

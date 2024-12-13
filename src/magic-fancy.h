@@ -11,7 +11,7 @@ extern Bitboard* BishopAttacks[64];
 // by a // piece of type Pt (bishop or rook) placed on 's'. The helper
 // magic_index() looks up the index using the 'magic bitboards' approach.
 
-INLINE unsigned magic_index_bishop(Square s, Bitboard occupied) {
+static unsigned magic_index_bishop(Square s, Bitboard occupied) {
     if (Is64Bit)
         return (unsigned) (((occupied & BishopMasks[s]) * BishopMagics[s]) >> BishopShifts[s]);
 
@@ -21,7 +21,7 @@ INLINE unsigned magic_index_bishop(Square s, Bitboard occupied) {
         >> BishopShifts[s];
 }
 
-INLINE unsigned magic_index_rook(Square s, Bitboard occupied) {
+static unsigned magic_index_rook(Square s, Bitboard occupied) {
     if (Is64Bit)
         return (unsigned) (((occupied & RookMasks[s]) * RookMagics[s]) >> RookShifts[s]);
 
@@ -31,10 +31,10 @@ INLINE unsigned magic_index_rook(Square s, Bitboard occupied) {
         >> RookShifts[s];
 }
 
-INLINE Bitboard attacks_bb_bishop(Square s, Bitboard occupied) {
+static Bitboard attacks_bb_bishop(Square s, Bitboard occupied) {
     return BishopAttacks[s][magic_index_bishop(s, occupied)];
 }
 
-INLINE Bitboard attacks_bb_rook(Square s, Bitboard occupied) {
+static Bitboard attacks_bb_rook(Square s, Bitboard occupied) {
     return RookAttacks[s][magic_index_rook(s, occupied)];
 }

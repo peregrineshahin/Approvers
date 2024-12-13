@@ -48,7 +48,7 @@ const char PieceToChar[] = " PNBRQK  pnbrqk";
 
 int failed_step;
 
-INLINE void put_piece(Position* pos, Color c, Piece piece, Square s) {
+static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->board[s] = piece;
     pos->byTypeBB[0] |= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] |= sq_bb(s);
@@ -57,7 +57,7 @@ INLINE void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->index[s]] = s;
 }
 
-INLINE void remove_piece(Position* pos, Color c, Piece piece, Square s) {
+static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     // WARNING: This is not a reversible operation.
     pos->byTypeBB[0] ^= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
@@ -69,7 +69,7 @@ INLINE void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->pieceCount[piece]] = SQ_NONE;
 }
 
-INLINE void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
+static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
     // index[from] is not updated and becomes stale. This works as long as
     // index[] is accessed just by known occupied squares.
     Bitboard fromToBB = sq_bb(from) ^ sq_bb(to);
@@ -85,7 +85,7 @@ INLINE void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
 
 // Calculate CheckInfo data.
 
-INLINE void set_check_info(Position* pos) {
+static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
     st->blockersForKing[WHITE] =
@@ -104,9 +104,9 @@ INLINE void set_check_info(Position* pos) {
     st->checkSquares[KING]   = 0;
 }
 
-INLINE Key H1(Key h) { return h & 0x1fff; }
+static Key H1(Key h) { return h & 0x1fff; }
 
-INLINE Key H2(Key h) { return (h >> 16) & 0x1fff; }
+static Key H2(Key h) { return (h >> 16) & 0x1fff; }
 
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
@@ -351,7 +351,7 @@ void pos_fen(const Position* pos, char* str) {
 }
 
 
-// Turning slider_blockers() into an inline function was slower, even
+// Turning slider_blockers() into an static function was slower, even
 // though it should only add a single slightly optimised copy to evaluate().
 #if 1
 // slider_blockers() returns a bitboard of all pieces that are blocking
@@ -791,7 +791,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     }
 
     // Move the piece. The tricky Chess960 castling is handled earlier.
-    if (likely(type_of_m(m) != CASTLING)) {
+    if (likely(type_of_m(m) != CASTLING))
+    {
         move_piece(pos, us, piece, from, to);
 
         nnue_remove_piece(acc, piece, from);

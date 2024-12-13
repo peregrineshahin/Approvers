@@ -42,6 +42,6 @@ void time_init(Color us, int ply);
 #define time_optimum() Time.optimumTime
 #define time_maximum() Time.maximumTime
 
-INLINE TimePoint time_elapsed(void) { return now() - Time.startTime; }
+static TimePoint time_elapsed(void) { return now() - Time.startTime; }
 
 #endif

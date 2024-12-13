@@ -60,8 +60,6 @@ enum {
 void thread_search(Position* pos);
 void thread_wake_up(Position* pos, int action);
 void thread_wait_until_sleeping(Position* pos);
-void thread_wait(Position* pos, atomic_bool* b);
-
 
 // MainThread struct seems to exist mostly for easy move.
 
@@ -106,7 +104,7 @@ void threads_set_number(int num);
 
 extern ThreadPool Threads;
 
-INLINE Position* threads_main(void) { return Threads.pos[0]; }
+static Position* threads_main(void) { return Threads.pos[0]; }
 
 extern CounterMoveHistoryStat** cmhTables;
 extern int                      numCmhTables;

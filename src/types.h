@@ -53,9 +53,6 @@
     #include <windows.h>
 #endif
 
-#define INLINE static inline
-#define NOINLINE
-
 // Declaring pure functions as pure seems not to help. (Investigate later.)
 //#define PURE __attribute__((pure))
 #define PURE
@@ -167,7 +164,7 @@ enum {
     ANY_CASTLING = 15
 };
 
-INLINE int make_castling_right(int c, int s) {
+static int make_castling_right(int c, int s) {
     return c == WHITE      ? s == QUEEN_SIDE ? WHITE_OOO : WHITE_OO
          : s == QUEEN_SIDE ? BLACK_OOO
                            : BLACK_OO;
@@ -222,9 +219,6 @@ enum {
     RookValueEg   = 1380,
     QueenValueMg  = 2538,
     QueenValueEg  = 2682,
-
-    MidgameLimit = 15258,
-    EndgameLimit = 3915
 };
 
 enum {
@@ -381,17 +375,6 @@ enum {
     SCORE_ZERO
 };
 
-#define make_score(mg, eg) ((((unsigned) (eg)) << 16) + (mg))
-
-// Casting an out-of-range value to int16_t is implementation-defined, but
-// we assume the implementation does the right thing.
-INLINE Value eg_value(Score s) { return (int16_t) ((s + 0x8000) >> 16); }
-
-INLINE Value mg_value(Score s) { return (int16_t) s; }
-
-/// Division of a Score must be handled separately for each tEerm
-INLINE Score score_divide(Score s, int i) { return make_score(mg_value(s) / i, eg_value(s) / i); }
-
 extern Value PieceValue[2][16];
 
 extern uint32_t NonPawnPieceValue[16];
@@ -425,12 +408,12 @@ extern uint32_t NonPawnPieceValue[16];
 #define make_castling(from, to) ((Move) ((to) | ((from) << 6) | (CASTLING << 14)))
 #define move_is_ok(m) (from_sq(m) != to_sq(m))
 
-INLINE bool opposite_colors(Square s1, Square s2) {
+static bool opposite_colors(Square s1, Square s2) {
     Square s = s1 ^ s2;
     return ((s >> 3) ^ s) & 1;
 }
 
-INLINE Key make_key(uint64_t seed) {
+static Key make_key(uint64_t seed) {
     return seed * 6364136223846793005ULL + 1442695040888963407ULL;
 }
 
@@ -476,7 +459,7 @@ extern struct PSQT psqt;
 #undef min
 
 #define MAX(T) \
-    INLINE T max_##T(T a, T b) { return a > b ? a : b; }
+    static T max_##T(T a, T b) { return a > b ? a : b; }
 MAX(int)
 MAX(uint64_t)
 MAX(unsigned)
@@ -489,7 +472,7 @@ MAX(long)
 #undef MAX
 
 #define MIN(T) \
-    INLINE T min_##T(T a, T b) { return a < b ? a : b; }
+    static T min_##T(T a, T b) { return a < b ? a : b; }
 MIN(int)
 MIN(uint64_t)
 MIN(unsigned)
@@ -502,7 +485,7 @@ MIN(long)
 #undef MIN
 
 #define CLAMP(T) \
-    INLINE T clamp_##T(T a, T b, T c) { return a < b ? b : a > c ? c : a; }
+    static T clamp_##T(T a, T b, T c) { return a < b ? b : a > c ? c : a; }
 CLAMP(int)
 CLAMP(uint64_t)
 CLAMP(unsigned)

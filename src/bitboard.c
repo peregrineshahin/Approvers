@@ -86,7 +86,7 @@ Square   CastlingRookTo[16];
 #ifndef USE_POPCNT
 // popcount16() counts the non-zero bits using SWAR-Popcount algorithm.
 
-INLINE unsigned popcount16(unsigned u) {
+static unsigned popcount16(unsigned u) {
     u -= (u >> 1) & 0x5555U;
     u = ((u >> 2) & 0x3333U) + (u & 0x3333U);
     u = ((u >> 4) + u) & 0x0F0FU;

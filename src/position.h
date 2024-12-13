@@ -156,11 +156,7 @@ struct Position {
     RootMoves* rootMoves;
     Stack*     stack;
     uint64_t   nodes;
-    uint64_t   tbHits;
-    uint64_t   ttHitAverage;
     int        pvIdx, pvLast;
-    int        nmpMinPly;
-    Color      nmpColor;
     Depth      rootDepth;
     Depth      completedDepth;
 
@@ -204,7 +200,7 @@ PURE bool gives_check_special(const Position* pos, Stack* st, Move m);
 void        do_move(Position* pos, Move m, int givesCheck);
 void        undo_move(Position* pos, Move m);
 void        do_null_move(Position* pos);
-INLINE void undo_null_move(Position* pos);
+static void undo_null_move(Position* pos);
 
 // Static exchange evaluation
 PURE bool see_test(const Position* pos, Move m, int value);
@@ -225,9 +221,6 @@ PURE bool is_draw(const Position* pos);
 #define piece_count(c, p) (pos->pieceCount[8 * (c) + (p)] - (8 * (c) + (p)) * 16)
 #define piece_list(c, p) (&pos->pieceList[16 * (8 * (c) + (p))])
 #define square_of(c, p) (pos->pieceList[16 * (8 * (c) + (p))])
-#define loop_through_pieces(c, p, s) \
-    const uint8_t* pl = piece_list(c, p); \
-    while ((s = *pl++) != SQ_NONE)
 #define piece_count_mk(c, p) (((material_key()) >> (20 * (c) + 4 * (p) + 4)) & 15)
 
 // Castling
@@ -266,37 +259,32 @@ PURE bool is_draw(const Position* pos);
 #define non_pawn_material_c(c) (pos->st->nonPawnMaterial[c])
 #define non_pawn_material() (non_pawn_material_c(WHITE) + non_pawn_material_c(BLACK))
 
-INLINE Bitboard blockers_for_king(const Position* pos, Color c) {
+static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
 }
 
-INLINE bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
+static bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
     return pos->st->blockersForKing[c] & sq_bb(from_sq(m));
 }
 
-INLINE bool pawn_passed(const Position* pos, Color c, Square s) {
+static bool pawn_passed(const Position* pos, Color c, Square s) {
     return !(pieces_cp(!c, PAWN) & passed_pawn_span(c, s));
 }
 
-INLINE bool advanced_pawn_push(const Position* pos, Move m) {
+static bool advanced_pawn_push(const Position* pos, Move m) {
     return type_of_p(moved_piece(m)) == PAWN && relative_rank_s(stm(), from_sq(m)) > RANK_4;
 }
 
-INLINE bool opposite_bishops(const Position* pos) {
-    return piece_count(WHITE, BISHOP) == 1 && piece_count(BLACK, BISHOP) == 1
-        && (pieces_p(BISHOP) & DarkSquares) && (pieces_p(BISHOP) & ~DarkSquares);
-}
-
-INLINE bool is_capture_or_promotion(const Position* pos, Move m) {
+static bool is_capture_or_promotion(const Position* pos, Move m) {
     return type_of_m(m) != NORMAL ? type_of_m(m) != CASTLING : !is_empty(to_sq(m));
 }
 
-INLINE bool is_capture(const Position* pos, Move m) {
+static bool is_capture(const Position* pos, Move m) {
     // Castling is encoded as "king captures the rook"
     return (!is_empty(to_sq(m)) && type_of_m(m) != CASTLING) || type_of_m(m) == ENPASSANT;
 }
 
-INLINE bool gives_check(const Position* pos, Stack* st, Move m) {
+static bool gives_check(const Position* pos, Stack* st, Move m) {
     return type_of_m(m) == NORMAL && !(blockers_for_king(pos, !stm()) & pieces_c(stm()))
            ? (bool) (st->checkSquares[type_of_p(moved_piece(m))] & sq_bb(to_sq(m)))
            : gives_check_special(pos, st, m);
@@ -306,7 +294,7 @@ void pos_set_check_info(Position* pos);
 
 // undo_null_move is used to undo a null move.
 
-INLINE void undo_null_move(Position* pos) {
+static void undo_null_move(Position* pos) {
 
     pos->st--;
     pos->sideToMove = !pos->sideToMove;
@@ -315,7 +303,7 @@ INLINE void undo_null_move(Position* pos) {
 // attackers_to() computes a bitboard of all pieces which attack a given
 // square. Slider attacks use the occupied bitboard to indicate occupancy.
 
-INLINE Bitboard attackers_to_occ(const Position* pos, Square s, Bitboard occupied) {
+static Bitboard attackers_to_occ(const Position* pos, Square s, Bitboard occupied) {
     return (attacks_from_pawn(s, BLACK) & pieces_cp(WHITE, PAWN))
          | (attacks_from_pawn(s, WHITE) & pieces_cp(BLACK, PAWN))
          | (attacks_from_knight(s) & pieces_p(KNIGHT))

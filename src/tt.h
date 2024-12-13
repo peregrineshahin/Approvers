@@ -77,7 +77,7 @@ typedef struct TranspositionTable TranspositionTable;
 
 extern TranspositionTable TT;
 
-INLINE void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
+static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
     // Preserve any existing move for the same position
     if (m || (uint16_t) k != tte->key16)
         tte->move16 = (uint16_t) m;
@@ -94,25 +94,25 @@ INLINE void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move
     }
 }
 
-INLINE Move tte_move(TTEntry* tte) { return tte->move16; }
+static Move tte_move(TTEntry* tte) { return tte->move16; }
 
-INLINE Value tte_value(TTEntry* tte) { return tte->value16; }
+static Value tte_value(TTEntry* tte) { return tte->value16; }
 
-INLINE Value tte_eval(TTEntry* tte) { return tte->eval16; }
+static Value tte_eval(TTEntry* tte) { return tte->eval16; }
 
-INLINE Depth tte_depth(TTEntry* tte) { return tte->depth8 + DEPTH_OFFSET; }
+static Depth tte_depth(TTEntry* tte) { return tte->depth8 + DEPTH_OFFSET; }
 
-INLINE bool tte_is_pv(TTEntry* tte) { return tte->genBound8 & 0x4; }
+static bool tte_is_pv(TTEntry* tte) { return tte->genBound8 & 0x4; }
 
-INLINE int tte_bound(TTEntry* tte) { return tte->genBound8 & 0x3; }
+static int tte_bound(TTEntry* tte) { return tte->genBound8 & 0x3; }
 
 void tt_free(void);
 
-INLINE void tt_new_search(void) {
+static void tt_new_search(void) {
     TT.generation8 += 8;  // Lower 3 bits are used by PvNode and Bound
 }
 
-INLINE TTEntry* tt_first_entry(Key key) {
+static TTEntry* tt_first_entry(Key key) {
     return &TT.table[mul_hi64(key, TT.clusterCount)].entry[0];
 }
 
