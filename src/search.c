@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -533,11 +535,19 @@ Value search(
         improving                       = false;
         goto moves_loop;
     }
+    else if (excludedMove)
+    {
+        // Providing the hint that this node's accumulator will be used often
+        hint_nnue(pos);
+        rawEval = eval = ss->staticEval;
+    }
     else if (ttHit)
     {
         // Never assume anything about values stored in TT
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
+        else if (PvNode)
+            hint_nnue(pos);
 
         eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
 
@@ -650,6 +660,7 @@ Value search(
                 }
             }
         ss->ttPv = ttPv;
+        hint_nnue(pos);
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
@@ -1577,9 +1588,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;

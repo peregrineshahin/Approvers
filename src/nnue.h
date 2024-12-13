@@ -25,5 +25,6 @@ void nnue_init();
 void nnue_add_piece(Accumulator *acc, Piece pc, Square sq, Square wksq, Square bksq);
 void nnue_remove_piece(Accumulator *acc, Piece pc, Square sq, Square wksq, Square bksq);
 Value nnue_evaluate(Position *pos);
+void hint(Position* pos);
 
 #endif //NNUE_H

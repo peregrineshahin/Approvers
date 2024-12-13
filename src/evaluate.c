@@ -34,3 +34,7 @@ Value evaluate(Position* pos) {
 
     return clamp(v, VALUE_TB_LOSS_IN_MAX_PLY + 1, VALUE_TB_WIN_IN_MAX_PLY - 1);
 }
+
+void hint_nnue(Position* pos) {
+  hint(pos);
+}

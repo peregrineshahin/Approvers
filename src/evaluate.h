@@ -8,4 +8,5 @@ enum {
 };
 
 Value evaluate(Position* pos);
+void hint_nnue(Position* pos);
 #endif // EVALUATE_H
