@@ -708,6 +708,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square to       = to_sq(m);
     Piece  piece    = piece_on(from);
     Piece  captured = type_of_m(m) == ENPASSANT ? make_piece(them, PAWN) : piece_on(to);
+    Square wksq     = square_of(WHITE, KING);
+    Square bksq     = square_of(BLACK, KING);
+
+    if (type_of_p(piece) == KING && file_of(from) > 3 != file_of(to) > 3)
+        acc->needs_refresh = 1;
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
@@ -727,11 +732,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
-        nnue_remove_piece(acc, piece, from);
-        nnue_remove_piece(acc, captured, rfrom);
+        nnue_remove_piece(acc, piece, from, wksq, bksq);
+        nnue_remove_piece(acc, captured, rfrom, wksq, bksq);
 
-        nnue_add_piece(acc, piece, to);
-        nnue_add_piece(acc, captured, rto);
+        nnue_add_piece(acc, piece, to, wksq, bksq);
+        nnue_add_piece(acc, captured, rto, wksq, bksq);
 
         st->psq += psqt.psq[captured][rto] - psqt.psq[captured][rfrom];
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
@@ -759,7 +764,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         else
             st->nonPawn -= NonPawnPieceValue[captured];
 
-        nnue_remove_piece(acc, captured, capsq);
+        nnue_remove_piece(acc, captured, capsq, wksq, bksq);
 
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
@@ -802,8 +807,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     if (likely(type_of_m(m) != CASTLING)) {
         move_piece(pos, us, piece, from, to);
 
-        nnue_remove_piece(acc, piece, from);
-        nnue_add_piece(acc, piece, to);
+        nnue_remove_piece(acc, piece, from, wksq, bksq);
+        nnue_add_piece(acc, piece, to, wksq, bksq);
     }
 
     // If the moving piece is a pawn do some special extra work
@@ -822,8 +827,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
 
-            nnue_remove_piece(acc, piece, to);
-            nnue_add_piece(acc, promotion, to);
+            nnue_remove_piece(acc, piece, to, wksq, bksq);
+            nnue_add_piece(acc, promotion, to, wksq, bksq);
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
