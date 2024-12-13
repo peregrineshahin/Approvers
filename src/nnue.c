@@ -7,7 +7,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../stage1-epoch80.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
@@ -16,12 +16,10 @@ alignas(64) int16_t in_biases[L1SIZE];
 alignas(64) int16_t l1_biases[OUTSIZE];
 
 void nnue_init() {
-    int8_t* data8 = (int8_t*) gNetworkData;
+    int16_t* data16 = (int16_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-        in_weights[i] = *(data8++);
-
-    int16_t* data16 = (int16_t*) data8;
+        in_weights[i] = *(data16++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data16++);
