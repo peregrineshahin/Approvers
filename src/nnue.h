@@ -9,7 +9,7 @@
 #define L1SIZE  64
 #define OUTSIZE 1
 
-#define QA    192
+#define QA    128
 #define QB     64
 #define SCALE 400
 

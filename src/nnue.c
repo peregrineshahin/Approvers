@@ -7,7 +7,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../peregrine-expr8-64hl-qa128-qb64.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
