@@ -141,7 +141,6 @@ void search_clear(void) {
     stats_clear(pos->counterMoves);
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
-    stats_clear(pos->lowPlyHistory);
     stats_clear(pos->corrHistory);
 
     mainThread.previousScore         = VALUE_INFINITE;
@@ -238,8 +237,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -262,10 +262,6 @@ void thread_search(Position* pos) {
             for (int i = 0; i < 4; i++)
                 mainThread.iterValue[i] = mainThread.previousScore;
     }
-
-    memmove(&((*pos->lowPlyHistory)[0]), &((*pos->lowPlyHistory)[2]),
-            (MAX_LPH - 2) * sizeof((*pos->lowPlyHistory)[0]));
-    memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
     RootMoves* rm                 = pos->rootMoves;
     int        searchAgainCounter = 0;
@@ -403,7 +399,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -491,10 +488,6 @@ Value search(
     ttMove       = rootNode ? pos->rootMoves->move[pos->pvIdx].pv[0] : ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
-
-    if (ss->ttPv && depth > 12 && ss->ply - 1 < MAX_LPH && !captured_piece()
-        && move_is_ok((ss - 1)->currentMove))
-        lph_update(*pos->lowPlyHistory, ss->ply - 1, (ss - 1)->currentMove, stat_bonus(depth - 5));
 
     // At non-PV nodes we check for an early TT cutoff.
     if (!PvNode && ttHit && tte_depth(tte) >= depth
@@ -1492,9 +1485,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
         Square prevSq                                  = to_sq((ss - 1)->currentMove);
         (*pos->counterMoves)[piece_on(prevSq)][prevSq] = move;
     }
-
-    if (depth > 11 && ss->ply < MAX_LPH)
-        lph_update(*pos->lowPlyHistory, ss->ply, move, stat_bonus(depth - 7));
 }
 
 
@@ -1577,9 +1567,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;

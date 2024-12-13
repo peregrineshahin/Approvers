@@ -76,12 +76,10 @@ SMALL
 static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->history;
-    LowPlyHistory*    lph     = pos->lowPlyHistory;
-
-    PieceToHistory* cmh  = (st - 1)->history;
-    PieceToHistory* fmh  = (st - 2)->history;
-    PieceToHistory* fmh2 = (st - 4)->history;
-    PieceToHistory* fmh3 = (st - 6)->history;
+    PieceToHistory*   cmh     = (st - 1)->history;
+    PieceToHistory*   fmh     = (st - 2)->history;
+    PieceToHistory*   fmh2    = (st - 4)->history;
+    PieceToHistory*   fmh3    = (st - 6)->history;
 
     Color c = stm();
 
@@ -92,8 +90,7 @@ static void score_quiets(const Position* pos) {
         Square   from = move >> 6;
         m->value      = (*history)[c][move] + 2 * (*cmh)[piece_on(from)][to]
                  + 2 * (*fmh)[piece_on(from)][to] + 2 * (*fmh2)[piece_on(from)][to]
-                 + (*fmh3)[piece_on(from)][to]
-                 + (st->mp_ply < MAX_LPH ? min(4, st->depth / 3) * (*lph)[st->mp_ply][move] : 0);
+                 + (*fmh3)[piece_on(from)][to];
     }
 }
 
