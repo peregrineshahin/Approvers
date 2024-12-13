@@ -95,7 +95,6 @@ struct Stack {
 
     // MovePicker data
     uint8_t  stage;
-    uint8_t  recaptureSquare;
     uint8_t  mp_ply;
     Move     countermove;
     Depth    depth;

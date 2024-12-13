@@ -67,7 +67,6 @@ enum {
     ST_QSEARCH,
     ST_QCAPTURES_INIT,
     ST_QCAPTURES,
-    ST_QCHECKS,
 
     ST_PROBCUT,
     ST_PROBCUT_INIT,
@@ -96,17 +95,16 @@ static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
         st->stage++;
 }
 
-static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
+static void mp_init_q(const Position* pos, Move ttm, Depth d) {
 
     Stack* st = pos->st;
 
     st->ttMove = ttm;
     st->stage  = checkers() ? ST_EVASION : ST_QSEARCH;
-    if (!ttm || !is_pseudo_legal(pos, ttm) || !(d > DEPTH_QS_RECAPTURES || to_sq(ttm) == s))
+    if (!ttm || !is_pseudo_legal(pos, ttm))
         st->stage++;
 
     st->depth           = d;
-    st->recaptureSquare = s;
 }
 
 static void mp_init_pc(const Position* pos, Move ttm, Value th) {

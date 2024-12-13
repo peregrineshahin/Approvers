@@ -229,21 +229,6 @@ Move next_move(const Position* pos, bool skipQuiets) {
         while (st->cur < st->endMoves)
         {
             move = pick_best(st->cur++, st->endMoves);
-            if (move != st->ttMove
-                && (st->depth > DEPTH_QS_RECAPTURES || to_sq(move) == st->recaptureSquare))
-                return move;
-        }
-        if (st->depth <= DEPTH_QS_NO_CHECKS)
-            break;
-        st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate_quiet_checks(pos, st->cur);
-        st->stage++;
-        /* fallthrough */
-
-    case ST_QCHECKS :
-        while (st->cur < st->endMoves)
-        {
-            move = (st->cur++)->move;
             if (move != st->ttMove)
                 return move;
         }
