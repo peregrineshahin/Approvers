@@ -432,7 +432,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, rawEval, maxValue, probCutBeta;
+    Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
     bool     ttHit, formerPv, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
@@ -443,7 +443,6 @@ Value search(
     inCheck   = checkers();
     moveCount = captureCount = quietCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
-    maxValue                                              = VALUE_INFINITE;
 
     // Check for the available remaining time
     if (load_rlx(pos->resetCalls))
@@ -1115,9 +1114,6 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if ((depth >= 3 || PvNode) && !captured_piece())
         update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth));
-
-    if (PvNode)
-        bestValue = min(bestValue, maxValue);
 
     // If no good move is found and the previous position was ttPv, then the
     // previous opponent move is probably good and the new position is added
