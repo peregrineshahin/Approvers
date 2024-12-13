@@ -53,8 +53,8 @@
     #include <windows.h>
 #endif
 
-#define INLINE static inline __attribute__((always_inline))
-#define NOINLINE __attribute__((noinline))
+#define INLINE static inline
+#define NOINLINE
 
 // Declaring pure functions as pure seems not to help. (Investigate later.)
 //#define PURE __attribute__((pure))
