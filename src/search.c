@@ -627,7 +627,7 @@ Value search(
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
-    // Step 9. Null move search with verification search (is omitted in PV nodes)
+    // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < 22977 && eval >= beta
         && eval >= ss->staticEval
         && ss->staticEval >= beta - 30 * depth - 28 * improving + 84 * ss->ttPv + 182
@@ -646,26 +646,7 @@ Value search(
         undo_null_move(pos);
 
         if (nullValue >= beta)
-        {
-            // Do not return unproven mate or TB scores
-            if (nullValue >= VALUE_TB_WIN_IN_MAX_PLY)
-                nullValue = beta;
-
-            if (pos->nmpMinPly || (abs(beta) < VALUE_KNOWN_WIN && depth < 13))
-                return nullValue;
-
-            // Do verification search at high depths with null move pruning
-            // disabled for us, until ply exceeds nmpMinPly.
-            pos->nmpMinPly = ss->ply + 3 * (depth - R) / 4;
-            pos->nmpColor  = stm();
-
-            Value v = search(pos, ss, beta - 1, beta, depth - R, false, false);
-
-            pos->nmpMinPly = 0;
-
-            if (v >= beta)
-                return nullValue;
-        }
+            return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
     }
 
     probCutBeta = beta + 176 - 49 * improving;
