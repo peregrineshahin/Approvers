@@ -1121,7 +1121,7 @@ moves_loop:  // When in check search starts from here.
     if (bestValue <= alpha)
         ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 3);
 
-    if (!excludedMove && !(rootNode && pos->pvIdx))
+    if (!excludedMove)
         tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), ss->ttPv,
                  bestValue >= beta    ? BOUND_LOWER
                  : PvNode && bestMove ? BOUND_EXACT
