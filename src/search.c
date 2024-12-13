@@ -905,13 +905,6 @@ moves_loop:  // When in check search starts from here.
                  && non_pawn_material() <= 2 * RookValueMg)
             extension = 1;
 
-        // Castling extension
-        if (type_of_m(move) == CASTLING
-            && popcount(pieces_c(stm()) & ~pieces_p(PAWN)
-                        & (to_sq(move) & 0x03 ? KingSide : QueenSide))
-                 <= 2)
-            extension = 1;
-
         // Late irreversible move extension
         if (move == ttMove && rule50_count() > 80
             && (captureOrPromotion || type_of_p(movedPiece) == PAWN))
