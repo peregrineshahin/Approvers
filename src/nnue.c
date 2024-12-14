@@ -7,6 +7,8 @@
 #include "bitboard.h"
 #include "position.h"
 
+static FinnyEntry FinnyTable[64];
+
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
@@ -36,6 +38,11 @@ void nnue_init() {
 
     for (int i = 0; i < OUTSIZE; i++)
         l1_biases[i] = *(data16++);
+
+    for (int i = 0; i < 64; i++) {
+        memcpy(&FinnyTable[i].accumulator.values[0], in_biases, sizeof(in_biases));
+        memcpy(&FinnyTable[i].accumulator.values[1], in_biases, sizeof(in_biases));
+    }
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -64,22 +71,36 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    memcpy(acc->values[side], in_biases, sizeof(acc->values[side]));
-
     Square ksq = square_of(side, KING);
+    FinnyEntry* entry = &FinnyTable[ksq];
+
     for (int c = WHITE; c <= BLACK; c++)
     {
         for (int pt = PAWN; pt <= KING; pt++)
         {
             Bitboard pieces = pieces_cp(c, pt);
-            while (pieces)
+            Bitboard adds = pieces & ~entry->occupancy[side][c][pt - 1];
+            Bitboard subs = ~pieces & entry->occupancy[side][c][pt - 1];
+
+            while (adds)
             {
-                const int idx = make_index(pt, c, pop_lsb(&pieces), ksq, side);
+                const int idx = make_index(pt, c, pop_lsb(&adds), ksq, side) * L1SIZE;
                 for (int i = 0; i < L1SIZE; i++)
-                    acc->values[side][i] += in_weights[idx * L1SIZE + i];
+                    entry->accumulator.values[side][i] += in_weights[idx + i];
             }
+
+            while (subs)
+            {
+                const int idx = make_index(pt, c, pop_lsb(&subs), ksq, side) * L1SIZE;
+                for (int i = 0; i < L1SIZE; i++)
+                    entry->accumulator.values[side][i] -= in_weights[idx + i];
+            }
+
+            entry->occupancy[side][c][pt - 1] = pieces;
         }
     }
+
+    memcpy(acc->values[side], entry->accumulator.values[side], sizeof(acc->values[side]));
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
