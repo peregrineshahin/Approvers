@@ -6,6 +6,8 @@ set(CMAKE_C_STANDARD 11)
 # Enable this to use the Kaggle environment
 # add_definitions(-DKAGGLE)
 
+add_compile_options(-mavx2)
+
 include_directories(src)
 
 add_executable(Peregrine
