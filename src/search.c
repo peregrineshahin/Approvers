@@ -1438,7 +1438,7 @@ static int32_t get_correction(correction_history_t hist, Color side, Key materia
 Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = get_correction(pos->matCorrHist, stm(), material_key());
     int32_t pch = get_correction(pos->pawnCorrHist, stm(), pawn_key());
-    Value   v   = rawEval + (pch + mch) / 2;
+    Value   v   = rawEval + pch + mch;
     v = clamp (v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
     return v;
 }
