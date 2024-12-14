@@ -543,7 +543,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = rawEval + to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval);
 
         if (eval == VALUE_DRAW)
             eval = value_draw(pos);
@@ -560,7 +560,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + 2 * Tempo;
 
-        eval = ss->staticEval = rawEval + to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -1215,7 +1215,7 @@ Value qsearch(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue = rawEval + to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval);
 
 
             // Can ttValue be used as a better position evaluation?
@@ -1228,7 +1228,7 @@ Value qsearch(Position*  pos,
             rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos)
                                                          : -(ss - 1)->staticEval + 2 * Tempo;
 
-            ss->staticEval = bestValue = rawEval + to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval);
         }
 
         // Stand pat. Return immediately if static value is at least beta
