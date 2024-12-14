@@ -18,8 +18,16 @@ alignas(64) int16_t l1_biases[OUTSIZE];
 void nnue_init() {
     int8_t *data8 = (int8_t *) gNetworkData;
 
-    for (int i = 0; i < INSIZE * L1SIZE; i++)
-        in_weights[i] = *(data8++);
+    for (int i = 0; i < INSIZE * L1SIZE; i++) {
+        int x = i / L1SIZE;
+        if (!(x < 8
+              || (56 <= x && x < 64)
+              || (384 <= x && x < 392)
+              || (440 <= x && x < 448)
+              || (320 <= x && x < 384 && (x - 320) % 8 > 3)
+        ))
+            in_weights[i] = *(data8++);
+    }
 
     int16_t *data16 = (int16_t *) data8;
 
