@@ -79,6 +79,7 @@ static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
 static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
 static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
+Value to_corrected(Position* pos, Value rawEval);
 static void    add_correction_history(
      correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth);
@@ -142,7 +143,8 @@ void search_clear(void) {
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
     stats_clear(pos->lowPlyHistory);
-    stats_clear(pos->corrHistory);
+    stats_clear(pos->matCorrHist);
+    stats_clear(pos->pawnCorrHist);
 
     mainThread.previousScore         = VALUE_INFINITE;
     mainThread.previousTimeReduction = 1;
@@ -238,8 +240,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +406,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -539,7 +543,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = rawEval + to_corrected(pos, rawEval);
 
         if (eval == VALUE_DRAW)
             eval = value_draw(pos);
@@ -556,7 +560,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + 2 * Tempo;
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = rawEval + to_corrected(pos, rawEval);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -1133,7 +1137,9 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        add_correction_history(pos->corrHistory, stm(), material_key(), depth,
+        add_correction_history(pos->matCorrHist, stm(), material_key(), depth,
+                               bestValue - ss->staticEval);
+        add_correction_history(pos->pawnCorrHist, stm(), pawn_key(), depth,
                                bestValue - ss->staticEval);
     }
 
@@ -1209,8 +1215,7 @@ Value qsearch(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
+            ss->staticEval = bestValue = rawEval + to_corrected(pos, rawEval);
 
 
             // Can ttValue be used as a better position evaluation?
@@ -1223,8 +1228,7 @@ Value qsearch(Position*  pos,
             rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos)
                                                          : -(ss - 1)->staticEval + 2 * Tempo;
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
+            ss->staticEval = bestValue = rawEval + to_corrected(pos, rawEval);
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1431,6 +1435,14 @@ static int32_t get_correction(correction_history_t hist, Color side, Key materia
     return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
 }
 
+Value to_corrected(Position* pos, Value rawEval) {
+    int32_t mch = get_correction(pos->matCorrHist, stm(), material_key());
+    int32_t pch = get_correction(pos->pawnCorrHist, stm(), pawn_key());
+    Value   v   = rawEval + (pch + mch) / 2;
+    v = clamp (v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
+    return v;
+}
+
 // update_cm_stats() updates countermove and follow-up move history.
 
 static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
@@ -1577,9 +1589,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
