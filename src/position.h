@@ -165,7 +165,8 @@ struct Position {
     ButterflyHistory*       history;
     LowPlyHistory*          lowPlyHistory;
     CapturePieceToHistory*  captureHistory;
-    correction_history_t    corrHistory;
+    correction_history_t    matCorrHist;
+    correction_history_t    pawnCorrHist;
     CounterMoveHistoryStat* counterMoveHistory;
 
     // Thread-control data.
@@ -250,6 +251,7 @@ PURE bool is_draw(const Position* pos);
 // Accessing hash keys
 #define key() (pos->st->key)
 #define material_key() (pos->st->materialKey)
+#define pawn_key() (pos->st->pawnKey)
 
 // Other properties of the position
 #define stm() (pos->sideToMove)
