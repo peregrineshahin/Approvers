@@ -56,13 +56,9 @@ extern uint8_t SquareDistance[64][64];
 extern Bitboard SquareBB[64];
 extern Bitboard FileBB[8];
 extern Bitboard RankBB[8];
-extern Bitboard ForwardRanksBB[2][8];
 extern Bitboard BetweenBB[64][64];
 extern Bitboard LineBB[64][64];
 extern Bitboard DistanceRingBB[64][8];
-extern Bitboard ForwardFileBB[2][64];
-extern Bitboard PassedPawnSpan[2][64];
-extern Bitboard PawnAttackSpan[2][64];
 extern Bitboard PseudoAttacks[8][64];
 extern Bitboard PawnAttacks[2][64];
 
@@ -109,69 +105,12 @@ static Bitboard shift_bb(int Direction, Bitboard b) {
 }
 
 
-// pawn_attacks_bb() returns the squares attacked by pawns of the given color
-// from the squares in the given bitboard.
-
-static Bitboard pawn_attacks_bb(Bitboard b, const Color C) {
-    return C == WHITE ? shift_bb(NORTH_WEST, b) | shift_bb(NORTH_EAST, b)
-                      : shift_bb(SOUTH_WEST, b) | shift_bb(SOUTH_EAST, b);
-}
-
-
-// pawn_double_attacks_bb() returns the pawn attacks for the given color
-// from the squares in the given bitboard.
-
-static Bitboard pawn_double_attacks_bb(Bitboard b, const Color C) {
-    return C == WHITE ? shift_bb(NORTH_WEST, b) & shift_bb(NORTH_EAST, b)
-                      : shift_bb(SOUTH_WEST, b) & shift_bb(SOUTH_EAST, b);
-}
-
-
-// adjacent_files_bb() returns a bitboard representing all the squares
-// on the adjacent files of the given one.
-
-static Bitboard adjacent_files_bb(unsigned f) {
-    return shift_bb(EAST, FileBB[f]) | shift_bb(WEST, FileBB[f]);
-}
-
-
 // between_bb() returns a bitboard representing all the squares between
 // the two given ones. For instance, between_bb(SQ_C4, SQ_F7) returns a
 // bitboard with the bits for square d5 and e6 set. If s1 and s2 are not
 // on the same rank, file or diagonal, 0 is returned.
 
 static Bitboard between_bb(Square s1, Square s2) { return BetweenBB[s1][s2]; }
-
-
-// forward_ranks_bb() returns a bitboard representing all the squares on
-// all the ranks in front of the given one, from the point of view of the
-// given color. For instance, forward_ranks_bb(BLACK, RANK_3) will return
-// the squares on ranks 1 and 2.
-
-static Bitboard forward_ranks_bb(Color c, unsigned r) { return ForwardRanksBB[c][r]; }
-
-
-// forward_file_bb() returns a bitboard representing all the squares
-// along the line in front of the given one, from the point of view of
-// the given color:
-//     ForwardFileBB[c][s] = forward_ranks_bb(c, rank_of(s)) & file_bb(s)
-
-static Bitboard forward_file_bb(Color c, Square s) { return ForwardFileBB[c][s]; }
-
-
-// pawn_attack_span() returns a bitboard representing all the squares
-// that can be attacked by a pawn of the given color when it moves along
-// its file, starting from the given square:
-//     PawnAttackSpan[c][s] = forward_ranks_bb(c, rank_of(s)) & adjacent_files_bb(s);
-
-static Bitboard pawn_attack_span(Color c, Square s) { return PawnAttackSpan[c][s]; }
-
-
-// passed_pawn_span() returns a bitboard mask which can be used to test
-// if a pawn of the given color and on the given square is a passed pawn:
-//     PassedPawnSpan[c][s] = pawn_attack_span(c, s) | forward_bb(c, s)
-
-static Bitboard passed_pawn_span(Color c, Square s) { return PassedPawnSpan[c][s]; }
 
 
 // aligned() returns true if square s is on the line determined by move m.
@@ -326,13 +265,5 @@ static Square pop_lsb(Bitboard* b) {
     *b &= *b - 1;
     return s;
 }
-
-
-// frontmost_sq() and backmost_sq() return the square corresponding to the
-// most/least advanced bit relative to the given color.
-
-static Square frontmost_sq(Color c, Bitboard b) { return c == WHITE ? msb(b) : lsb(b); }
-
-static Square backmost_sq(Color c, Bitboard b) { return c == WHITE ? lsb(b) : msb(b); }
 
 #endif

@@ -106,33 +106,4 @@ static uint64_t mul_hi64(uint64_t a, uint64_t b) {
 #endif
 }
 
-static bool is_little_endian(void) {
-    int num = 1;
-    return *(uint8_t*) &num == 1;
-}
-
-static uint32_t from_le_u32(uint32_t v) { return is_little_endian() ? v : __builtin_bswap32(v); }
-
-static uint16_t from_le_u16(uint16_t v) { return is_little_endian() ? v : __builtin_bswap16(v); }
-
-static uint64_t from_be_u64(uint64_t v) { return is_little_endian() ? __builtin_bswap64(v) : v; }
-
-static uint32_t from_be_u32(uint32_t v) { return is_little_endian() ? __builtin_bswap32(v) : v; }
-
-static uint16_t from_be_u16(uint16_t v) { return is_little_endian() ? __builtin_bswap16(v) : v; }
-
-static uint32_t read_le_u32(void* p) { return from_le_u32(*(uint32_t*) p); }
-
-static uint16_t read_le_u16(void* p) { return from_le_u16(*(uint16_t*) p); }
-
-static uint32_t readu_le_u32(const void* p) {
-    const uint8_t* q = p;
-    return q[0] | (q[1] << 8) | (q[2] << 16) | (q[3] << 24);
-}
-
-static uint16_t readu_le_u16(const void* p) {
-    const uint8_t* q = p;
-    return q[0] | (q[1] << 8);
-}
-
 #endif

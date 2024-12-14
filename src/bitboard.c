@@ -61,26 +61,16 @@ static Bitboard sliding_attack(int dirs[], Square sq, Bitboard occupied) {
 Bitboard SquareBB[64];
 Bitboard FileBB[8];
 Bitboard RankBB[8];
-Bitboard ForwardRanksBB[2][8];
 Bitboard BetweenBB[64][64];
 Bitboard LineBB[64][64];
 Bitboard DistanceRingBB[64][8];
-Bitboard ForwardFileBB[2][64];
-Bitboard PassedPawnSpan[2][64];
-Bitboard PawnAttackSpan[2][64];
 Bitboard PseudoAttacks[8][64];
 Bitboard PawnAttacks[2][64];
 
 #ifndef PEDANTIC
-Bitboard EPMask[16];
 Bitboard CastlingPath[64];
 int      CastlingRightsMask[64];
 Square   CastlingRookSquare[16];
-Key      CastlingHash[16];
-Bitboard CastlingBits[16];
-Score    CastlingPSQ[16];
-Square   CastlingRookFrom[16];
-Square   CastlingRookTo[16];
 #endif
 
 #ifndef USE_POPCNT
@@ -112,18 +102,6 @@ void bitboards_init(void) {
     for (int r = 0; r < 8; r++)
         RankBB[r] = r > RANK_1 ? RankBB[r - 1] << 8 : Rank1BB;
 
-    for (int r = 0; r < 7; r++)
-        ForwardRanksBB[WHITE][r] =
-          ~(ForwardRanksBB[BLACK][r + 1] = ForwardRanksBB[BLACK][r] | RankBB[r]);
-
-    for (int c = 0; c < 2; c++)
-        for (Square s = 0; s < 64; s++)
-        {
-            ForwardFileBB[c][s]  = ForwardRanksBB[c][rank_of(s)] & FileBB[file_of(s)];
-            PawnAttackSpan[c][s] = ForwardRanksBB[c][rank_of(s)] & adjacent_files_bb(file_of(s));
-            PassedPawnSpan[c][s] = ForwardFileBB[c][s] | PawnAttackSpan[c][s];
-        }
-
     for (Square s1 = 0; s1 < 64; s1++)
         for (Square s2 = 0; s2 < 64; s2++)
             if (s1 != s2)
@@ -131,11 +109,6 @@ void bitboards_init(void) {
                 SquareDistance[s1][s2] = max(distance_f(s1, s2), distance_r(s1, s2));
                 DistanceRingBB[s1][SquareDistance[s1][s2]] |= sq_bb(s2);
             }
-
-#ifndef PEDANTIC
-    for (Square s = SQ_A4; s <= SQ_H5; s++)
-        EPMask[s - SQ_A4] = ((sq_bb(s) >> 1) & ~FileHBB) | ((sq_bb(s) << 1) & ~FileABB);
-#endif
 
     int steps[][5] = {{0}, {7, 9}, {6, 10, 15, 17}, {0}, {0}, {0}, {1, 7, 8, 9}};
 

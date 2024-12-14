@@ -267,10 +267,6 @@ static bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
     return pos->st->blockersForKing[c] & sq_bb(from_sq(m));
 }
 
-static bool pawn_passed(const Position* pos, Color c, Square s) {
-    return !(pieces_cp(!c, PAWN) & passed_pawn_span(c, s));
-}
-
 static bool advanced_pawn_push(const Position* pos, Move m) {
     return type_of_p(moved_piece(m)) == PAWN && relative_rank_s(stm(), from_sq(m)) > RANK_4;
 }

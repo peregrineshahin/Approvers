@@ -408,11 +408,6 @@ extern uint32_t NonPawnPieceValue[16];
 #define make_castling(from, to) ((Move) ((to) | ((from) << 6) | (CASTLING << 14)))
 #define move_is_ok(m) (from_sq(m) != to_sq(m))
 
-static bool opposite_colors(Square s1, Square s2) {
-    Square s = s1 ^ s2;
-    return ((s >> 3) ^ s) & 1;
-}
-
 static Key make_key(uint64_t seed) {
     return seed * 6364136223846793005ULL + 1442695040888963407ULL;
 }
