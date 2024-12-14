@@ -204,7 +204,7 @@ void benchmark(Position* current, char* str) {
 
     elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'
 
-    fprintf(stderr,
+    fprintf(stdout,
             "\n==========================="
             "\nTotal time (ms) : %" PRIu64 "\nNodes searched  : %" PRIu64
             "\nNodes/second    : %" PRIu64 "\n",
