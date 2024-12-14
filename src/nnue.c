@@ -1,3 +1,4 @@
+#include <immintrin.h>
 #include <stdalign.h>
 #include <stdint.h>
 
@@ -38,6 +39,33 @@ void nnue_init() {
         l1_biases[i] = *(data16++);
 }
 
+static Value forward(const int16_t* acc, const int16_t* weights) {
+    const __m256i min = _mm256_setzero_si256();
+    const __m256i max = _mm256_set1_epi16(QA);
+    __m256i vector = _mm256_setzero_si256();
+
+    for (int i = 0; i < L1SIZE; i += 16) {
+        __m256i v = _mm256_load_si256((__m256i *)(acc + i));
+        v = _mm256_min_epi16(_mm256_max_epi16(v, min), max);
+
+        const __m256i w = _mm256_load_si256((__m256i *)(weights + i));
+        const __m256i product = _mm256_madd_epi16(_mm256_mullo_epi16(v, w), v);
+
+        vector = _mm256_add_epi32(vector, product);
+    }
+
+    const __m128i upper_half = _mm256_extracti128_si256(vector, 1);
+    const __m128i lower_half = _mm256_castsi256_si128(vector);
+
+    const __m128i sum_128 = _mm_add_epi32(upper_half, lower_half);
+    const __m128i sum_64 = _mm_add_epi32(_mm_unpackhi_epi64(sum_128, sum_128), sum_128);
+
+    const __m128i shuffled = _mm_shuffle_epi32(sum_64, 1);
+    const __m128i sum = _mm_add_epi32(shuffled, sum_64);
+
+    return _mm_cvtsi128_si32(sum);
+}
+
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
     if (file_of(ksq) > 3)
         sq ^= 7;
@@ -45,21 +73,11 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static Value activate(const int x) {
-    const int v = max(0, min(QA, x));
-    return v * v;
-}
-
 static Value output_transform(const Accumulator* acc, const Position* pos) {
     const int16_t* stm  = acc->values[pos->sideToMove];
     const int16_t* nstm = acc->values[!pos->sideToMove];
 
-    int output = 0;
-    for (int i = 0; i < L1SIZE; i++)
-    {
-        output += activate(stm[i]) * (int) l1_weights[i];
-        output += activate(nstm[i]) * (int) l1_weights[i + L1SIZE];
-    }
+    Value output = forward(stm, l1_weights) + forward(nstm, l1_weights + L1SIZE);
     return (output / QA + l1_biases[0]) * SCALE / (QA * QB);
 }
 
