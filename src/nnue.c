@@ -7,7 +7,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-static FinnyEntry FinnyTable[64];
+static FinnyEntry FinnyTable[2];
 
 INCBIN(Network, "../default.nnue");
 
@@ -39,7 +39,7 @@ void nnue_init() {
     for (int i = 0; i < OUTSIZE; i++)
         l1_biases[i] = *(data16++);
 
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < 2; i++) {
         memcpy(&FinnyTable[i].accumulator.values[0], in_biases, sizeof(in_biases));
         memcpy(&FinnyTable[i].accumulator.values[1], in_biases, sizeof(in_biases));
     }
@@ -72,7 +72,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
     Square ksq = square_of(side, KING);
-    FinnyEntry* entry = &FinnyTable[ksq];
+    FinnyEntry* entry = &FinnyTable[file_of(ksq) > 3];
 
     for (int c = WHITE; c <= BLACK; c++)
     {
