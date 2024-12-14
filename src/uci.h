@@ -40,7 +40,8 @@ enum {
     OPT_HASH,
     OPT_CLEAR_HASH,
     OPT_PONDER,
-    OPT_MOVE_OVERHEAD
+    OPT_MOVE_OVERHEAD,
+    OPT_LARGE_PAGES
 };
 
 struct Option {
