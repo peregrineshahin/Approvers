@@ -55,7 +55,7 @@ static void on_threads(Option* opt) { delayedSettings.numThreads = opt->value; }
 
 static Option optionsMap[] = {
   {"Threads", OPT_TYPE_SPIN, 1, 1, MAX_THREADS, NULL, on_threads, 0, NULL},
-  {"Hash", OPT_TYPE_SPIN, 1, 1, MAXHASHMB, NULL, on_hash_size, 0, NULL},
+  {"Hash", OPT_TYPE_SPIN, 1, 16, MAXHASHMB, NULL, on_hash_size, 0, NULL},
   {"Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL},
   {"Ponder", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL},
   {"Move Overhead", OPT_TYPE_SPIN, 10, 0, 5000, NULL, NULL, 0, NULL},
