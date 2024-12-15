@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -1048,7 +1050,12 @@ moves_loop:  // When in check search starts from here.
                     update_pv(ss->pv, move, (ss + 1)->pv);
 
                 if (PvNode && value < beta)  // Update alpha! Always alpha < beta
+                {
+                    // Reduce other moves if we have found at least one score improvement (~2 Elo)
+                    if (depth > 2 && depth < 14)
+                        depth -= 2;
                     alpha = value;
+                }
                 else
                 {
                     ss->statScore = 0;
@@ -1325,7 +1332,9 @@ Value qsearch(Position*  pos,
                     update_pv(ss->pv, move, (ss + 1)->pv);
 
                 if (PvNode && value < beta)  // Update alpha here!
+                {
                     alpha = value;
+                }
                 else
                     break;  // Fail high
             }
@@ -1577,9 +1586,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
