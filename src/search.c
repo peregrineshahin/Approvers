@@ -810,7 +810,7 @@ moves_loop:  // When in check search starts from here.
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
             else if (ttValue >= beta)
-                extension -= 3;
+                extension -= 2;
             else if (cutNode)
             {
                 extension -= 1;
