@@ -13,27 +13,37 @@
 #define QB 64
 #define SCALE 400
 
+enum {
+    ACC_EMPTY,
+    ACC_COMPUTED,
+    ACC_INIT
+};
+
 typedef struct Accumulator Accumulator;
 
 struct Accumulator {
-    bool needs_refresh;
+    int state[2];
     alignas(64) int16_t values[2][L1SIZE];
 };
 
 typedef struct DirtyPiece DirtyPiece;
 
 struct DirtyPiece {
-    int len;
-    Piece piece[3];
+    int    len;
+    Piece  piece[3];
     Square from[3];
     Square to[3];
 };
 
+typedef struct IndexList IndexList;
+
+struct IndexList {
+    unsigned size;
+    unsigned values[32];
+};
+
 void nnue_init();
 
-void  nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq);
-void  nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq);
-void  update_accumulator(Accumulator* acc, const Position* pos);
 Value nnue_evaluate(Position* pos);
 
 #endif  //NNUE_H

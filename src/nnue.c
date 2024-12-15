@@ -81,72 +81,113 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     return (output / QA + l1_biases[0]) * SCALE / (QA * QB);
 }
 
-static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    memcpy(acc->values[side], in_biases, sizeof(acc->values[side]));
-
-    Square ksq = square_of(side, KING);
-    for (int c = WHITE; c <= BLACK; c++)
+static void append_changed_indices(const Position* pos, const Color c, const DirtyPiece* dp, IndexList* removed, IndexList* added) {
+    Square ksq = square_of(c, KING);
+    for (int i = 0; i < dp->len; i++)
     {
-        for (int pt = PAWN; pt <= KING; pt++)
+        Piece pc = dp->piece[i];
+        if (dp->from[i] != SQ_NONE)
+            removed->values[removed->size++] = make_index(type_of_p(pc), color_of(pc), dp->from[i], ksq, c);
+
+        if (dp->to[i] != SQ_NONE)
+            added->values[added->size++] = make_index(type_of_p(pc), color_of(pc), dp->to[i], ksq, c);
+    }
+}
+
+static void append_active_indices(const Position* pos, const Color c, IndexList* active) {
+    Square   ksq = square_of(c, KING);
+    Bitboard bb  = pieces();
+
+    while (bb)
+    {
+        Square s  = pop_lsb(&bb);
+        Piece  p  = piece_on(s);
+        active->values[active->size++] = make_index(type_of_p(p), color_of(p), s, ksq, c);
+    }
+}
+
+static void update_accumulator(const Position* pos, const Color c) {
+    Stack* st   = pos->st;
+    int    gain = popcount(pieces()) - 2;
+    while (st->accumulator.state[c] == ACC_EMPTY)
+    {
+        DirtyPiece* dp = &st->dirtyPiece;
+        if ((gain -= dp->len + 1) < 0)
+            break;
+
+        if (dp->piece[0] == make_piece(c, KING) && file_of(dp->from[0]) != file_of(dp->to[0]))
+            break;
+
+        st--;
+    }
+
+    if (st->accumulator.state[c] == ACC_COMPUTED)
+    {
+        if (st == pos->st)
+            return;
+
+        IndexList added[2], removed[2];
+        added[0].size = added[1].size = removed[0].size = removed[1].size = 0;
+
+        append_changed_indices(pos, c, &(st + 1)->dirtyPiece, &removed[0], &added[0]);
+        for (Stack* st2 = st + 2; st2 <= pos->st; st2++)
+            append_changed_indices(pos, c, &st2->dirtyPiece, &removed[1], &added[1]);
+
+        (st + 1)->accumulator.state[c] = ACC_COMPUTED;
+        pos->st->accumulator.state[c]  = ACC_COMPUTED;
+
+        Stack* stack[3] = {st + 1, st + 1 == pos->st ? NULL : pos->st, NULL};
+
+        for (unsigned l = 0; stack[l]; l++)
         {
-            Bitboard pieces = pieces_cp(c, pt);
-            while (pieces)
+            memcpy(&stack[l]->accumulator.values[c], &st->accumulator.values[c], L1SIZE * sizeof(int16_t));
+            st = stack[l];
+
+            for (unsigned k = 0; k < removed[l].size; k++)
             {
-                const int idx = make_index(pt, c, pop_lsb(&pieces), ksq, side);
-                for (int i = 0; i < L1SIZE; i++)
-                    acc->values[side][i] += in_weights[idx * L1SIZE + i];
+                unsigned       index  = removed[l].values[k];
+                const unsigned offset = L1SIZE * index;
+
+                for (unsigned j = 0; j < L1SIZE; j++)
+                    st->accumulator.values[c][j] -= in_weights[offset + j];
+            }
+
+            for (unsigned k = 0; k < added[l].size; k++)
+            {
+                unsigned       index  = added[l].values[k];
+                const unsigned offset = L1SIZE * index;
+
+                for (unsigned j = 0; j < L1SIZE; j++)
+                    st->accumulator.values[c][j] += in_weights[offset + j];
             }
         }
     }
-}
-
-void update_accumulator(Accumulator* acc, const Position* pos) {
-    DirtyPiece* dp = &pos->st->dirtyPiece;
-    Square wksq = square_of(WHITE, KING);
-    Square bksq = square_of(BLACK, KING);
-
-    for (int i = 0; i < dp->len; i++) {
-        if (dp->from[i] != SQ_NONE) {
-            nnue_remove_piece(acc, dp->piece[i], dp->from[i], wksq, bksq);
-        }
-
-        if (dp->to[i] != SQ_NONE) {
-            nnue_add_piece(acc, dp->piece[i], dp->to[i], wksq, bksq);
-        }
-    }
-}
-
-void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
-
-    for (int i = 0; i < L1SIZE; i++)
+    else
     {
-        acc->values[WHITE][i] += in_weights[white * L1SIZE + i];
-        acc->values[BLACK][i] += in_weights[black * L1SIZE + i];
-    }
-}
+        Accumulator* accumulator = &pos->st->accumulator;
+        accumulator->state[c]    = ACC_COMPUTED;
+        IndexList active;
+        active.size = 0;
+        append_active_indices(pos, c, &active);
 
-void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
+        memcpy(accumulator->values[c], in_biases, L1SIZE * sizeof(int16_t));
 
-    for (int i = 0; i < L1SIZE; i++)
-    {
-        acc->values[WHITE][i] -= in_weights[white * L1SIZE + i];
-        acc->values[BLACK][i] -= in_weights[black * L1SIZE + i];
+        for (unsigned k = 0; k < active.size; k++)
+        {
+            unsigned index  = active.values[k];
+            unsigned offset = L1SIZE * index;
+
+            for (unsigned j = 0; j < L1SIZE; j++)
+                accumulator->values[c][j] += in_weights[offset + j];
+        }
     }
 }
 
 Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
-    if (acc->needs_refresh)
-    {
-        build_accumulator(acc, pos, WHITE);
-        build_accumulator(acc, pos, BLACK);
-        acc->needs_refresh = false;
-    }
+    update_accumulator(pos, WHITE);
+    update_accumulator(pos, BLACK);
 
     return output_transform(acc, pos);
 }

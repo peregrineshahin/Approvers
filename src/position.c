@@ -688,8 +688,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(pos->st - 1)->accumulator, sizeof(pos->st->accumulator));
+    st->accumulator.state[0] = ACC_EMPTY;
+    st->accumulator.state[1] = ACC_EMPTY;
 
     DirtyPiece* dp = &st->dirtyPiece;
     dp->len = 1;
@@ -837,11 +837,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
     pos->nodes++;
 
     set_check_info(pos);
-
-    if (type_of_p(piece) == KING && file_of(from) > 3 != file_of(to) > 3)
-        acc->needs_refresh = 1;
-    else
-        update_accumulator(acc, pos);
 }
 
 
@@ -911,7 +906,11 @@ void do_null_move(Position* pos) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
 
-    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
+    st->accumulator.state[0] = ACC_EMPTY;
+    st->accumulator.state[1] = ACC_EMPTY;
+
+    st->dirtyPiece.len = 0;
+    st->dirtyPiece.piece[0] = 0;
 
     if (unlikely(st->epSquare))
     {

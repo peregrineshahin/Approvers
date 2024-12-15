@@ -235,6 +235,8 @@ void thread_search(Position* pos) {
     for (int i = -7; i < 3; i++)
     {
         memset(SStackBegin(ss[i]), 0, SStackSize);
+        ss[i].accumulator.state[0] = ACC_INIT;
+        ss[i].accumulator.state[1] = ACC_INIT;
     }
     (ss - 1)->endMoves = pos->moveList;
 
@@ -246,8 +248,6 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
     ss->pv = pv;
-
-    ss->accumulator.needs_refresh = 1;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
