@@ -78,9 +78,9 @@ static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
 static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
+static int16_t get_correction(correction_history_t hist, Color side, Key materialKey);
 static void    add_correction_history(
-     correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
+     correction_history_t hist, Color side, Key materialKey, Depth depth, int16_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
@@ -1129,9 +1129,12 @@ moves_loop:  // When in check search starts from here.
                  depth, bestMove, rawEval);
 
     // Adjust correction history
+    int bound = tte_bound(tte);
     if (!inCheck && (!bestMove || !is_capture_or_promotion(pos, bestMove))
-        && !(bestValue >= beta && bestValue <= ss->staticEval)
-        && !(!bestMove && bestValue >= ss->staticEval))
+        && abs(bestValue) < VALUE_KNOWN_WIN
+        && (bound == BOUND_EXACT
+        || (bound == BOUND_LOWER && bestValue >= ss->staticEval)
+        || (bound == BOUND_UPPER && bestValue <= ss->staticEval)))
     {
         add_correction_history(pos->corrHistory, stm(), material_key(), depth,
                                bestValue - ss->staticEval);
@@ -1415,20 +1418,15 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 
 // differential.
 static void add_correction_history(
-  correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff) {
-    int32_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(16, 1 + depth);
-    int32_t  scaledDiff = diff * CORRECTION_HISTORY_GRAIN;
-    int32_t  update =
-      *entry * (CORRECTION_HISTORY_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight;
-    // Clamp entry in-bounds.
-    *entry = max(-CORRECTION_HISTORY_MAX,
-                 min(CORRECTION_HISTORY_MAX, update / CORRECTION_HISTORY_WEIGHT_SCALE));
+  correction_history_t hist, Color side, Key materialKey, Depth depth, int16_t diff) {
+    int16_t  bonus = clamp(diff * depth / 8, -256, 256);
+    int16_t* entry = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
+    *entry         = *entry + bonus - *entry * abs(bonus) / CORRECTION_HISTORY_MAX;
 }
 
 // Get the correction history differential for the given side and materialKey.
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
-    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
+static int16_t get_correction(correction_history_t hist, Color side, Key materialKey) {
+    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_SCALE;
 }
 
 // update_cm_stats() updates countermove and follow-up move history.
