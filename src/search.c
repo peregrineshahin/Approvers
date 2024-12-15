@@ -305,7 +305,7 @@ void thread_search(Position* pos) {
         if (pos->rootDepth >= 4)
         {
             Value previousScore = rm->move[pvIdx].previousScore;
-            delta               = 17;
+            delta               = 17 + 30 / pos->rootDepth;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
         }
