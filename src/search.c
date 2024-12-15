@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -808,23 +810,7 @@ moves_loop:  // When in check search starts from here.
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
             else if (ttValue >= beta)
-            {
-                // Fix up our move picker data
-                mp_init(pos, ttMove, depth, ss->ply);
-                ss->stage++;
-                ss->countermove  = cm;  // pedantic
-                ss->mpKillers[0] = k1;
-                ss->mpKillers[1] = k2;
-
-                ss->excludedMove = move;
-                value            = search(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode, false);
-                ss->excludedMove = 0;
-
-                if (value >= beta)
-                {
-                    return beta;
-                }
-            }
+                extension -= 3;
             else if (cutNode)
             {
                 extension -= 1;
@@ -1577,9 +1563,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
