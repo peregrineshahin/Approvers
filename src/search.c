@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -873,8 +875,8 @@ moves_loop:  // When in check search starts from here.
 
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
-        if (depth >= 3 && moveCount > 1 + 2 * rootNode + 2 * (PvNode && abs(bestValue) < 2)
-            && (!captureOrPromotion || moveCountPruning
+        if (depth >= 3 && moveCount > 1 + 2 * rootNode
+            && (!captureOrPromotion || moveCountPruning || (!PvNode && !formerPv)
                 || ss->staticEval + PieceValue[EG][captured_piece()] <= alpha || cutNode))
         {
             Depth r = reduction(improving, depth, moveCount);
@@ -887,6 +889,10 @@ moves_loop:  // When in check search starts from here.
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= 2;
+
+            // Increase reduction at root and non-PV nodes when the best move does not change frequently
+            if ((rootNode || !PvNode) && pos->rootDepth > 10 && pos->bestMoveChanges <= 2)
+                r++;
 
             if (moveCountPruning && !formerPv)
                 r++;
@@ -1577,9 +1583,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
