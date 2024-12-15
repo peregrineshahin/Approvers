@@ -778,7 +778,7 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
-            Value singularBeta  = ttValue - ((formerPv + 4) * depth) / 2;
+            Value singularBeta  = ttValue - 4 * depth;
             Depth singularDepth = (depth - 1 + 3 * formerPv) / 2;
             ss->excludedMove    = move;
             Move cm             = ss->countermove;
