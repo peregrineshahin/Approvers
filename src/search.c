@@ -1260,7 +1260,7 @@ Value qsearch(Position*  pos,
         moveCount++;
 
         // Futility pruning
-        if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
+        if (bestValue > VALUE_TB_LOSS_IN_MAX_PLY && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
             && !advanced_pawn_push(pos, move))
         {
 
@@ -1283,7 +1283,7 @@ Value qsearch(Position*  pos,
         }
 
         // Do not search moves with negative SEE values
-        if (!InCheck && !see_test(pos, move, 0))
+        if (bestValue > VALUE_TB_LOSS_IN_MAX_PLY && !see_test(pos, move, 0))
             continue;
 
         // Speculative prefetch as early as possible
@@ -1300,7 +1300,7 @@ Value qsearch(Position*  pos,
         bool captureOrPromotion = is_capture_or_promotion(pos, move);
         ss->history             = &(*pos->counterMoveHistory)[moved_piece(move)][to_sq(move)];
 
-        if (!captureOrPromotion && moveCount
+        if (!captureOrPromotion && bestValue > VALUE_TB_LOSS_IN_MAX_PLY
             && (*(ss - 1)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold
             && (*(ss - 2)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold)
             continue;
