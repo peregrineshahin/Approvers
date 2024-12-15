@@ -82,22 +82,33 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    memcpy(acc->values[side], in_biases, sizeof(acc->values[side]));
+    const __m256i* biases = (__m256i*) in_biases;
+    __m256i registers[L1SIZE / 16] = {
+        biases[0],
+        biases[1],
+        biases[2],
+        biases[3]
+    };
 
-    Square ksq = square_of(side, KING);
-    for (int c = WHITE; c <= BLACK; c++)
-    {
-        for (int pt = PAWN; pt <= KING; pt++)
-        {
-            Bitboard pieces = pieces_cp(c, pt);
-            while (pieces)
-            {
-                const int idx = make_index(pt, c, pop_lsb(&pieces), ksq, side);
-                for (int i = 0; i < L1SIZE; i++)
-                    acc->values[side][i] += in_weights[idx * L1SIZE + i];
-            }
-        }
+    const Square ksq = square_of(side, KING);
+    for (Bitboard pieces = pieces(); pieces;) {
+        const Square sq = pop_lsb(&pieces);
+        const Piece pc  = piece_on(sq);
+
+        const int index = make_index(type_of_p(pc), color_of(pc), sq, ksq, side);
+        const __m256i* weights = (__m256i*) &in_weights[index * L1SIZE];
+
+        registers[0] = _mm256_add_epi16(registers[0], weights[0]);
+        registers[1] = _mm256_add_epi16(registers[1], weights[1]);
+        registers[2] = _mm256_add_epi16(registers[2], weights[2]);
+        registers[3] = _mm256_add_epi16(registers[3], weights[3]);
     }
+
+    __m256i* values = (__m256i*) &acc->values[side];
+    values[0] = registers[0];
+    values[1] = registers[1];
+    values[2] = registers[2];
+    values[3] = registers[3];
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
