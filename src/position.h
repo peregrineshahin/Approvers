@@ -55,6 +55,8 @@ void zob_init(void);
 struct Stack {
     // Copied when making a move
     Key pawnKey;
+    Key minorKey;
+    Key majorKey;
     Key materialKey;
     union {
         struct {
@@ -166,7 +168,8 @@ struct Position {
     LowPlyHistory*          lowPlyHistory;
     CapturePieceToHistory*  captureHistory;
     correction_history_t    matCorrHist;
-    correction_history_t    pawnCorrHist;
+    correction_history_t    minorCorrHist;
+    correction_history_t    majorCorrHist;
     CounterMoveHistoryStat* counterMoveHistory;
 
     // Thread-control data.
@@ -251,7 +254,8 @@ PURE bool is_draw(const Position* pos);
 // Accessing hash keys
 #define key() (pos->st->key)
 #define material_key() (pos->st->materialKey)
-#define pawn_key() (pos->st->pawnKey)
+#define minor_key() (pos->st->minorKey)
+#define major_key() (pos->st->majorKey)
 
 // Other properties of the position
 #define stm() (pos->sideToMove)

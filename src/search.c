@@ -78,10 +78,10 @@ static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
 static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
+static int16_t get_correction(correction_history_t hist, Color side, Key key);
 Value to_corrected(Position* pos, Value rawEval);
 static void    add_correction_history(
-     correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
+     correction_history_t hist, Color side, Key key, Depth depth, int16_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
@@ -144,7 +144,8 @@ void search_clear(void) {
     stats_clear(pos->captureHistory);
     stats_clear(pos->lowPlyHistory);
     stats_clear(pos->matCorrHist);
-    stats_clear(pos->pawnCorrHist);
+    stats_clear(pos->minorCorrHist);
+    stats_clear(pos->majorCorrHist);
 
     mainThread.previousScore         = VALUE_INFINITE;
     mainThread.previousTimeReduction = 1;
@@ -1137,10 +1138,10 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        add_correction_history(pos->matCorrHist, stm(), material_key(), depth,
-                               bestValue - ss->staticEval);
-        add_correction_history(pos->pawnCorrHist, stm(), pawn_key(), depth,
-                               bestValue - ss->staticEval);
+        const int diff = bestValue - ss->staticEval;
+        add_correction_history(pos->matCorrHist, stm(), material_key(), depth, diff);
+        add_correction_history(pos->minorCorrHist, stm(), minor_key(), depth, diff);
+        add_correction_history(pos->majorCorrHist, stm(), major_key(), depth, diff);
     }
 
 
@@ -1419,11 +1420,11 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 
 // differential.
 static void add_correction_history(
-  correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff) {
-    int32_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(16, 1 + depth);
-    int32_t  scaledDiff = diff * CORRECTION_HISTORY_GRAIN;
-    int32_t  update =
+  correction_history_t hist, Color side, Key key, Depth depth, int16_t diff) {
+    int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
+    int16_t  newWeight  = min(16, 1 + depth);
+    int16_t  scaledDiff = diff * CORRECTION_HISTORY_GRAIN;
+    int16_t  update =
       *entry * (CORRECTION_HISTORY_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight;
     // Clamp entry in-bounds.
     *entry = max(-CORRECTION_HISTORY_MAX,
@@ -1431,16 +1432,17 @@ static void add_correction_history(
 }
 
 // Get the correction history differential for the given side and materialKey.
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
-    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
+static int16_t get_correction(correction_history_t hist, Color side, Key key) {
+    return hist[side][key % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
 }
 
 Value to_corrected(Position* pos, Value rawEval) {
-    int32_t mch = get_correction(pos->matCorrHist, stm(), material_key());
-    int32_t pch = get_correction(pos->pawnCorrHist, stm(), pawn_key());
-    Value   v   = rawEval + pch + mch;
-    v = clamp (v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
-    return v;
+    int16_t mch = get_correction(pos->matCorrHist, stm(), material_key());
+    int16_t minor = get_correction(pos->minorCorrHist, stm(), minor_key());
+    int16_t major = get_correction(pos->majorCorrHist, stm(), major_key());
+
+    Value v = rawEval + mch + minor + major;
+    return clamp(v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
 }
 
 // update_cm_stats() updates countermove and follow-up move history.

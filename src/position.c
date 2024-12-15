@@ -269,6 +269,12 @@ static void set_state(Position* pos, Stack* st) {
         Square s  = pop_lsb(&b);
         Piece  pc = piece_on(s);
         st->key ^= zob.psq[pc][s];
+
+        if (type_of_p(pc) == KNIGHT || type_of_p(pc) == BISHOP)
+            st->minorKey ^= zob.psq[pc][s];
+
+        if (type_of_p(pc) == ROOK || type_of_p(pc) == QUEEN)
+            st->majorKey ^= zob.psq[pc][s];
     }
 
     if (st->epSquare != 0)
@@ -771,6 +777,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
         // Reset ply counters
         st->plyCounters = 0;
+
+        if (type_of_p(captured) == KNIGHT || type_of_p(captured) == BISHOP)
+            st->minorKey ^= zob.psq[captured][capsq];
+
+        if (type_of_p(captured) == ROOK || type_of_p(captured) == QUEEN)
+            st->majorKey ^= zob.psq[captured][capsq];
     }
 
     // Set captured piece
@@ -802,6 +814,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
         nnue_remove_piece(acc, piece, from, wksq, bksq);
         nnue_add_piece(acc, piece, to, wksq, bksq);
+
+        if (type_of_p(piece) == KNIGHT || type_of_p(piece) == BISHOP)
+            st->minorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
+
+        if (type_of_p(piece) == ROOK || type_of_p(piece) == QUEEN)
+            st->majorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
     }
 
     // If the moving piece is a pawn do some special extra work

@@ -423,7 +423,7 @@ enum {
     MAX_LPH = 4
 };
 enum {
-    CORRECTION_HISTORY_ENTRY_NB     = 4096,
+    CORRECTION_HISTORY_ENTRY_NB     = 8192,
     CORRECTION_HISTORY_GRAIN        = 256,
     CORRECTION_HISTORY_WEIGHT_SCALE = 256,
     CORRECTION_HISTORY_MAX          = CORRECTION_HISTORY_GRAIN * 32,
@@ -435,7 +435,7 @@ typedef PieceToHistory CounterMoveHistoryStat[16][64];
 typedef int16_t        ButterflyHistory[2][4096];
 typedef int16_t        CapturePieceToHistory[16][64][8];
 typedef int16_t        LowPlyHistory[MAX_LPH][4096];
-typedef int32_t        correction_history_t[2][CORRECTION_HISTORY_ENTRY_NB];
+typedef int16_t        correction_history_t[2][CORRECTION_HISTORY_ENTRY_NB];
 
 struct ExtMove {
     Move move;
