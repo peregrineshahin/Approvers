@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -653,8 +655,12 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= 6 && !ttMove)
-        depth -= 2;
+    if (PvNode && !ttMove)
+        depth -= 3;
+
+    // Dive into quiescense search when the depth reaches zero
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0, PvNode, checkers());
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -1577,9 +1583,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
