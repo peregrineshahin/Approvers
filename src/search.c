@@ -589,8 +589,7 @@ Value search(
         && !excludedMove && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (817 + 71 * depth) / 213 + min((eval - beta) / 192, 3);
-
+        Depth R = (982 + 85 * depth) / 256 + min((eval - beta) / 192, 3);
         ss->currentMove = MOVE_NULL;
         ss->history     = &(*pos->counterMoveHistory)[0][0];
 
