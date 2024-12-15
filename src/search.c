@@ -930,7 +930,7 @@ moves_loop:  // When in check search starts from here.
                     r++;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / 14884;
+                r -= ss->statScore / 17884;
             }
             else
             {
