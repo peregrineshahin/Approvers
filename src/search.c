@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -949,10 +951,19 @@ moves_loop:  // When in check search starts from here.
             Depth d = clamp(newDepth - r, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
-            if (value > alpha && d != newDepth)
+            if (value > alpha && d < newDepth)
             {
 
-                value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+                // Adjust full-depth search based on LMR results - if the result was
+                // good enough search deeper, if it was bad enough search shallower.
+                const bool doDeeperSearch    = value > (bestValue + 42 + 2 * newDepth);
+                const bool doShallowerSearch = value < bestValue + 10;
+
+                newDepth += doDeeperSearch - doShallowerSearch;
+
+                if (newDepth > d)
+                    value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+
                 if (!captureOrPromotion)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_bonus(newDepth);
@@ -1577,9 +1588,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
