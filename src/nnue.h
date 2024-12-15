@@ -20,10 +20,20 @@ struct Accumulator {
     alignas(64) int16_t values[2][L1SIZE];
 };
 
+typedef struct DirtyPiece DirtyPiece;
+
+struct DirtyPiece {
+    int len;
+    Piece piece[3];
+    Square from[3];
+    Square to[3];
+};
+
 void nnue_init();
 
 void  nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq);
 void  nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq);
+void  update_accumulator(Accumulator* acc, const Position* pos);
 Value nnue_evaluate(Position* pos);
 
 #endif  //NNUE_H

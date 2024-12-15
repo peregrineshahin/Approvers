@@ -679,10 +679,6 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 // do_move() makes a move. The move is assumed to be legal.
 #include "evaluate.h"
 void do_move(Position* pos, Move m, int givesCheck) {
-    //if(pos->nodes==7381)
-    //printf("hey\n");
-    //printf("n = %lu, key = %08lx, m = %d, eval = %d\n", pos->nodes, key(), (int)m, !checkers() ? evaluate(pos) : 0);
-
     Key key = key() ^ zob.side;
 
     // Copy some fields of the old state to our new Stack object except the
@@ -693,7 +689,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
     Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+    memcpy(acc, &(pos->st - 1)->accumulator, sizeof(pos->st->accumulator));
+
+    DirtyPiece* dp = &st->dirtyPiece;
+    dp->len = 1;
 
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
@@ -705,21 +704,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square to       = to_sq(m);
     Piece  piece    = piece_on(from);
     Piece  captured = type_of_m(m) == ENPASSANT ? make_piece(them, PAWN) : piece_on(to);
-    Square wksq     = square_of(WHITE, KING);
-    Square bksq     = square_of(BLACK, KING);
-
-    if (type_of_p(piece) == KING && file_of(from) > 3 != file_of(to) > 3)
-        acc->needs_refresh = 1;
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
-
-
-        Square rfrom, rto;
-
         int kingSide = to > from;
-        rfrom        = to;  // Castling is encoded as "king captures friendly rook"
-        rto          = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+        Square rfrom = to;  // Castling is encoded as "king captures friendly rook"
+        Square rto   = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
         to           = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
 
         // Remove both pieces first since squares could overlap in Chess960
@@ -729,16 +719,14 @@ void do_move(Position* pos, Move m, int givesCheck) {
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_remove_piece(acc, captured, rfrom, wksq, bksq);
-
-        nnue_add_piece(acc, piece, to, wksq, bksq);
-        nnue_add_piece(acc, captured, rto, wksq, bksq);
+        dp->len = 2;
+        dp->piece[1] = captured;
+        dp->from[1] = rfrom;
+        dp->to[1] = rto;
 
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
-
     else if (captured)
     {
         Square capsq = to;
@@ -750,20 +738,20 @@ void do_move(Position* pos, Move m, int givesCheck) {
             if (unlikely(type_of_m(m) == ENPASSANT))
             {
                 capsq ^= 8;
-
-
                 pos->board[capsq] = 0;  // Not done by remove_piece()
             }
-
             st->pawnKey ^= zob.psq[captured][capsq];
         }
         else
             st->nonPawn -= NonPawnPieceValue[captured];
 
-        nnue_remove_piece(acc, captured, capsq, wksq, bksq);
-
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
+
+        dp->len = 2;
+        dp->piece[1] = captured;
+        dp->from[1] = capsq;
+        dp->to[1] = SQ_NONE;
 
         // Update material hash key
         key ^= zob.psq[captured][capsq];
@@ -787,22 +775,18 @@ void do_move(Position* pos, Move m, int givesCheck) {
     // Update castling rights if needed
     if (st->castlingRights && (pos->castlingRightsMask[from] | pos->castlingRightsMask[to]))
     {
-        //    uint32_t cr = pos->castlingRightsMask[from] | pos->castlingRightsMask[to];
-        //    key ^= zob.castling[st->castlingRights & cr];
-        //    st->castlingRights &= ~cr;
         key ^= zob.castling[st->castlingRights];
         st->castlingRights &= ~(pos->castlingRightsMask[from] | pos->castlingRightsMask[to]);
         key ^= zob.castling[st->castlingRights];
     }
 
-    // Move the piece. The tricky Chess960 castling is handled earlier.
-    if (likely(type_of_m(m) != CASTLING))
-    {
-        move_piece(pos, us, piece, from, to);
+    dp->piece[0] = piece;
+    dp->from[0] = from;
+    dp->to[0] = to;
 
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_add_piece(acc, piece, to, wksq, bksq);
-    }
+    // Move the king
+    if (likely(type_of_m(m) != CASTLING))
+        move_piece(pos, us, piece, from, to);
 
     // If the moving piece is a pawn do some special extra work
     if (type_of_p(piece) == PAWN)
@@ -820,8 +804,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
 
-            nnue_remove_piece(acc, piece, to, wksq, bksq);
-            nnue_add_piece(acc, promotion, to, wksq, bksq);
+            dp->to[0] = SQ_NONE;
+
+            dp->piece[dp->len] = promotion;
+            dp->from[dp->len] = SQ_NONE;
+            dp->to[dp->len] = to;
+            dp->len++;
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
@@ -843,23 +831,17 @@ void do_move(Position* pos, Move m, int givesCheck) {
     st->key = key;
 
     // Calculate checkers bitboard (if move gives check)
-#if 1
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
-#else
-    st->checkersBB = 0;
-    if (givesCheck)
-    {
-        if (type_of_m(m) != NORMAL || ((st - 1)->blockersForKing[them] & sq_bb(from)))
-            st->checkersBB = attackers_to(square_of(them, KING)) & pieces_c(us);
-        else
-            st->checkersBB = (st - 1)->checkSquares[piece & 7] & sq_bb(to);
-    }
-#endif
 
     pos->sideToMove = !pos->sideToMove;
     pos->nodes++;
 
     set_check_info(pos);
+
+    if (type_of_p(piece) == KING && file_of(from) > 3 != file_of(to) > 3)
+        acc->needs_refresh = 1;
+    else
+        update_accumulator(acc, pos);
 }
 
 

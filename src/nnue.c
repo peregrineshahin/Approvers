@@ -100,6 +100,22 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
     }
 }
 
+void update_accumulator(Accumulator* acc, const Position* pos) {
+    DirtyPiece* dp = &pos->st->dirtyPiece;
+    Square wksq = square_of(WHITE, KING);
+    Square bksq = square_of(BLACK, KING);
+
+    for (int i = 0; i < dp->len; i++) {
+        if (dp->from[i] != SQ_NONE) {
+            nnue_remove_piece(acc, dp->piece[i], dp->from[i], wksq, bksq);
+        }
+
+        if (dp->to[i] != SQ_NONE) {
+            nnue_add_piece(acc, dp->piece[i], dp->to[i], wksq, bksq);
+        }
+    }
+}
+
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);

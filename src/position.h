@@ -118,6 +118,7 @@ struct Stack {
     Square ksq;
 
     Accumulator accumulator;
+    DirtyPiece dirtyPiece;
 };
 
 typedef struct Stack Stack;
