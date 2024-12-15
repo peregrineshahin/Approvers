@@ -1280,6 +1280,11 @@ Value qsearch(Position*  pos,
                 bestValue = max(bestValue, futilityBase);
                 continue;
             }
+            else if (futilityBase > alpha && !see_test(pos, move, (alpha - futilityBase) * 4))
+            {
+                bestValue = alpha;
+                continue;
+            }
         }
 
         // Do not search moves with negative SEE values
