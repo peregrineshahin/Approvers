@@ -656,6 +656,11 @@ Value search(
     if (PvNode && depth >= 6 && !ttMove)
         depth -= 2;
 
+    // For cutNodes, if depth is high enough, decrease depth by 2 if there is no ttMove,
+    // or by 1 if there is a ttMove with an upper bound.
+    if (cutNode && depth >= 7 && (!ttMove || tte_bound(tte) == BOUND_UPPER))
+        depth -= 1 + !ttMove;
+
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
     PieceToHistory* cmh  = (ss - 1)->history;
