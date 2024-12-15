@@ -1254,6 +1254,8 @@ Value qsearch(Position*  pos,
     // Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
     {
+        if (!is_legal(pos, move))
+            continue;
 
         givesCheck = gives_check(pos, ss, move);
 
@@ -1288,13 +1290,6 @@ Value qsearch(Position*  pos,
 
         // Speculative prefetch as early as possible
         prefetch(tt_first_entry(key_after(pos, move)));
-
-        // Check for legality just before making the move
-        if (!is_legal(pos, move))
-        {
-            moveCount--;
-            continue;
-        }
 
         ss->currentMove         = move;
         bool captureOrPromotion = is_capture_or_promotion(pos, move);
