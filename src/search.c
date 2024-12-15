@@ -54,9 +54,9 @@ static int futility_margin(Depth d, bool improving) { return 223 * (d - improvin
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
-static Depth reduction(int i, Depth d, int mn) {
+Depth reduction(bool i, Depth d, int mn, Value delta, Value rootDelta) {
     int r = Reductions[d] * Reductions[mn];
-    return (r + 509) / 1024 + (!i && r > 894);
+    return (r + 1372 - delta * 1073 / rootDelta) / 1024 + (!i && r > 936);
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -461,6 +463,10 @@ Value search(
         // Step 2. Check for aborted search and immediate draw
         if (load_rlx(Threads.stop) || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
+    }
+    else
+    {
+        pos->rootDelta = beta - alpha;
     }
 
 
@@ -711,6 +717,10 @@ moves_loop:  // When in check search starts from here.
         // Calculate new depth for this move
         newDepth = depth - 1;
 
+        Value delta = beta - alpha;
+
+        Depth r = reduction(improving, depth, moveCount, delta, pos->rootDelta);
+
         // Step 13. Pruning at shallow depth
         if (!rootNode && non_pawn_material_c(stm()) && bestValue > VALUE_TB_LOSS_IN_MAX_PLY)
         {
@@ -718,7 +728,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - reduction(improving, depth, moveCount), 0);
+            int lmrDepth = max(newDepth - r, 0);
 
             if (!captureOrPromotion && !givesCheck)
             {
@@ -877,7 +887,6 @@ moves_loop:  // When in check search starts from here.
             && (!captureOrPromotion || moveCountPruning
                 || ss->staticEval + PieceValue[EG][captured_piece()] <= alpha || cutNode))
         {
-            Depth r = reduction(improving, depth, moveCount);
 
             // Decrease reduction at non-check cut nodes for second move at low
             // depths
@@ -1577,9 +1586,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;

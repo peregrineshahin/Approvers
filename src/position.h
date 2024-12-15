@@ -148,6 +148,7 @@ struct Position {
     Bitboard castlingPath[16];
     Key      rootKeyFlip;
     uint16_t gamePly;
+    Value    rootDelta;
     bool     hasRepeated;
 
     ExtMove* moveList;
