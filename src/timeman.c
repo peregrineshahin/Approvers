@@ -19,19 +19,41 @@
 */
 
 #include <float.h>
+
 #include "search.h"
 #include "timeman.h"
 #include "uci.h"
 
 struct TimeManagement Time;  // Our global time management struct
 
-double my_sqrt(double x) {
-    if (x <= 0)
-        return 0;
-    double guess = x / 2.0;
-    for (int i = 0; i < 10; ++i)
-        guess = (guess + x / guess) / 2.0;
-    return guess;
+double my_exp(double x) {
+    double result = 1.0;
+    double term = 1.0;
+    for (int n = 1; n < 20; ++n) {
+        term *= x / n;
+        result += term;
+    }
+    return result;
+}
+
+double my_ln(double x) {
+    double result = 0.0;
+    double term = (x - 1) / (x + 1);
+    double term_squared = term * term;
+    double numerator = term;
+    for (int n = 1; n < 20; ++n) {
+        result += numerator / (2 * n - 1);
+        numerator *= term_squared;
+    }
+    return 2 * result;
+}
+
+double my_log10(double x) {
+    return my_ln(x) / my_ln(10.0);
+}
+
+double my_pow(double base, double exp) {
+    return my_exp(exp * my_ln(base));
 }
 
 // tm_init() is called at the beginning of the search and calculates the
@@ -51,21 +73,25 @@ void time_init(Color us, int ply) {
     // Maximum move horizon of 50 moves
     int mtg = 50;
 
-    // Make sure that timeLeft > 0 since we may use it as a divisor
+    // If less than one second, gradually reduce mtg
+    if (Limits.time[us] < 1000 && (double)mtg / Limits.inc[us] >= 1000)
+        mtg = Limits.time[us] * 0.05;
+
+    // Make sure timeLeft is > 0 since we may use it as a divisor
     TimePoint timeLeft =
       max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
 
-    timeLeft = 100 * timeLeft / 100;
+    // Calculate time constants based on current time left.
+    double logTimeInSec = my_log10(Limits.time[us] / 1000.0);
+    double optConstant  = min(0.00308 + 0.000319 * logTimeInSec, 0.00506);
+    double maxConstant  = max(3.39 + 3.01 * logTimeInSec, 2.93);
 
-    // x basetime (+z increment)
-    // If there is a healthy increment, timeLeft can exceed actual available
-    // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(0.008 + my_sqrt(ply + 3.0) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(7.0, 4.0 + ply / 12.0);
+    opt_scale = min(0.0122 + my_pow(ply + 2.95, 0.462) * optConstant, 0.213 * Limits.time[us] / timeLeft);
+    max_scale = min(6.64, maxConstant + ply / 12.0);
 
     // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime = min(0.8 * Limits.time[us] - moveOverhead, max_scale * Time.optimumTime);
+    Time.maximumTime = min(0.825 * Limits.time[us] - moveOverhead, max_scale * Time.optimumTime) - 10;
 
     if (option_value(OPT_PONDER))
         Time.optimumTime += Time.optimumTime / 4;

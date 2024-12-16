@@ -22,8 +22,6 @@
 #define TIMEMAN_H
 
 #include "misc.h"
-#include "search.h"
-#include "thread.h"
 
 // The TimeManagement class computes the optimal time to think depending on
 // the maximum available time, the game move number and other parameters.
@@ -32,7 +30,6 @@ struct TimeManagement {
     TimePoint startTime;
     int       optimumTime;
     int       maximumTime;
-    int64_t   availableNodes;
 };
 
 extern struct TimeManagement Time;

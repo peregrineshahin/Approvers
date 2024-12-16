@@ -124,8 +124,6 @@ void search_clear(void) {
         return;
     }
 
-    Time.availableNodes = 0;
-
     tt_clear();
     for (int i = 0; i < numCmhTables; i++)
         if (cmhTables[i])
