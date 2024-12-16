@@ -36,6 +36,13 @@ extern void benchmark(Position* pos, char* str);
 
 char lastFen[256];
 
+#define SET(nz) if (strcmp(#nz, name) == 0) { nz = atoi(value); return; }
+
+extern int nmp_v1;
+extern int nmp_v2;
+extern int nmp_v3;
+extern int nmp_v4;
+
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -162,6 +169,11 @@ void setoption(char* str) {
     }
     if (!value || strlen(value) == 0)
         value = "<empty>";
+
+    SET(nmp_v1)
+    SET(nmp_v2)
+    SET(nmp_v3)
+    SET(nmp_v4)
 
     if (option_set_by_name(name, value))
         return;
@@ -323,8 +335,13 @@ void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "uci") == 0)
         {
-            printf("id name ");
-            printf("\n");
+            printf("id name\n");
+
+            printf("option name nmp_v1 type string\n");
+            printf("option name nmp_v2 type string\n");
+            printf("option name nmp_v3 type string\n");
+            printf("option name nmp_v4 type string\n");
+
             printf("uciok\n");
             fflush(stdout);
         }

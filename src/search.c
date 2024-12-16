@@ -35,6 +35,11 @@
 #define load_rlx(x) atomic_load_explicit(&(x), memory_order_relaxed)
 #define store_rlx(x, y) atomic_store_explicit(&(x), y, memory_order_relaxed)
 
+int nmp_v1 = 817;
+int nmp_v2 = 71;
+int nmp_v3 = 213;
+int nmp_v4 = 192;
+
 LimitsType Limits;
 
 extern char lastFen[256];
@@ -591,7 +596,7 @@ Value search(
         && !excludedMove && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (817 + 71 * depth) / 213 + min((eval - beta) / 192, 3);
+        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
 
         ss->currentMove = MOVE_NULL;
         ss->history     = &(*pos->counterMoveHistory)[0][0];
