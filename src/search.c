@@ -125,6 +125,7 @@ int mg_rook    = 1276;
 int eg_rook    = 1380;
 int mg_queen   = 2538;
 int eg_queen   = 2682;
+int eval_scale = 120;
 
 LimitsType Limits;
 

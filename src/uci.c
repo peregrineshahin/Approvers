@@ -134,6 +134,7 @@ extern int mg_rook;
 extern int eg_rook;
 extern int mg_queen;
 extern int eg_queen;
+extern int eval_scale;
 
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -352,6 +353,7 @@ void setoption(char* str) {
     SET(eg_rook)
     SET(mg_queen)
     SET(eg_queen)
+    SET(eval_scale)
 
     if (option_set_by_name(name, value))
         return;
@@ -605,6 +607,7 @@ void uci_loop(int argc, char** argv) {
             printf("option name eg_rook type string\n");
             printf("option name mg_queen type string\n");
             printf("option name eg_queen type string\n");
+            printf("option name eval_scale type string\n");
 
             printf("uciok\n");
             fflush(stdout);
