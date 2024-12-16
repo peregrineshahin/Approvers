@@ -29,7 +29,7 @@ Value evaluate(Position* pos) {
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
 
-    v = 110 * v / 100;
+    v = 120 * v / 100;
 
     // v = (v / 16) * 16;
     // v = (stm() == WHITE ? v : -v) + Tempo
