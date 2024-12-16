@@ -997,6 +997,10 @@ moves_loop:  // When in check search starts from here.
             if (singularQuietLMR)
                 r -= 1 + formerPv;
 
+            // Increase reduction for cut nodes
+            if (cutNode)
+                r += 1 + !captureOrPromotion;
+
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
@@ -1005,10 +1009,6 @@ moves_loop:  // When in check search starts from here.
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r++;
-
-                // Increase reduction for cut nodes
-                if (cutNode)
-                    r += 2;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
