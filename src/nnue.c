@@ -11,10 +11,10 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
+alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
 
 alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_biases[OUTSIZE];
+alignas(64) int16_t l1_biases[BUCKETS];
 
 void nnue_init() {
     int8_t* data8 = (int8_t*) gNetworkData;
@@ -32,11 +32,16 @@ void nnue_init() {
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data16++);
 
-    for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
-        l1_weights[i] = *(data16++);
+    for (int i = 0; i < L1SIZE * 2; i++)
+        for (int j = 0; j < BUCKETS; j++)
+            l1_weights[j][i] = *(data16++);
 
-    for (int i = 0; i < OUTSIZE; i++)
+    for (int i = 0; i < BUCKETS; i++)
         l1_biases[i] = *(data16++);
+}
+
+static int get_bucket(int pc_count) {
+    return min(7, (63 - pc_count) * (32 - pc_count) / 225);
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {
@@ -77,8 +82,10 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     const int16_t* stm  = acc->values[pos->sideToMove];
     const int16_t* nstm = acc->values[!pos->sideToMove];
 
-    Value output = forward(stm, l1_weights) + forward(nstm, l1_weights + L1SIZE);
-    return (output / QA + l1_biases[0]) * SCALE / (QA * QB);
+    const int bucket = get_bucket(popcount(pieces()));
+
+    Value output = forward(stm, l1_weights[bucket]) + forward(nstm, l1_weights[bucket] + L1SIZE);
+    return (output / QA + l1_biases[bucket]) * SCALE / (QA * QB);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
