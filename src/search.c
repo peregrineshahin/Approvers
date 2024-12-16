@@ -932,19 +932,6 @@ moves_loop:  // When in check search starts from here.
                 // Decrease/increase reduction for moves with a good/bad history.
                 r -= ss->statScore / 14884;
             }
-            else
-            {
-
-                // Increase reduction for captures/promotions if late move and at
-                // low depth
-                if (depth < 8 && moveCount > 2)
-                    r++;
-
-                // Unless giving check, this capture is likely bad
-                if (!givesCheck
-                    && ss->staticEval + PieceValue[EG][captured_piece()] + 213 * depth <= alpha)
-                    r++;
-            }
 
             Depth d = clamp(newDepth - r, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
