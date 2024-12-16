@@ -51,6 +51,10 @@ void time_init(Color us, int ply) {
     // Maximum move horizon of 50 moves
     int mtg = 50;
 
+    // https://tests.stockfishchess.org/tests/view/65ee2cdf0ec64f0526c43bbb
+    if (Limits.time[us] < 1000)
+        mtg = Limits.time[us] * 0.05;
+
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =
       max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
