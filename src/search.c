@@ -997,13 +997,13 @@ moves_loop:  // When in check search starts from here.
             if (singularQuietLMR)
                 r -= 1 + formerPv;
 
+            if ((ss + 1)->cutoffCnt > 3)
+                r++;
+
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r++;
-
-                if ((ss + 1)->cutoffCnt > 3)
                     r++;
 
                 // Increase reduction for cut nodes
