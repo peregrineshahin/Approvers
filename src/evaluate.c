@@ -26,11 +26,11 @@
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
 
-    // Damp down the evaluation linearly when shuffling
-    v = v * (100 - rule50_count()) / 100;
+    int material =
+      non_pawn_material() + 4 * PawnValueMg * (piece_count(WHITE, PAWN) + piece_count(BLACK, PAWN));
+    int scale = 580 + material / 32 - 4 * rule50_count();
 
-    // v = (v / 16) * 16;
-    // v = (stm() == WHITE ? v : -v) + Tempo
+    v = v * scale / 1024 + Tempo;
 
     return clamp(v, VALUE_TB_LOSS_IN_MAX_PLY + 1, VALUE_TB_WIN_IN_MAX_PLY - 1);
 }
