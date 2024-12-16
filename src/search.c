@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -572,8 +574,7 @@ Value search(
 
     if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus =
-          clamp(-depth * 4 * ((ss - 1)->staticEval + ss->staticEval - 2 * Tempo), -1000, 1000);
+        int bonus = clamp(-10 * ((ss - 1)->staticEval + ss->staticEval), -1831, 1428) + 623;
         history_update(*pos->history, !stm(), (ss - 1)->currentMove, bonus);
     }
 
@@ -1564,9 +1565,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
