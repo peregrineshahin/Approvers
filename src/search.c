@@ -1305,9 +1305,7 @@ Value qsearch(Position*  pos,
         }
         else
         {
-            rawEval =
-              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
-
+            rawEval = evaluate(pos);
             ss->staticEval = bestValue =
               rawEval + get_correction(pos->corrHistory, stm(), material_key());
         }
