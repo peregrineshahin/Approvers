@@ -32,13 +32,14 @@
 // moves.
 
 struct RootMove {
-    int   pvSize;
-    Value score;
-    Value previousScore;
-    int   tbRank;
-    int   bestMoveCount;
-    Value tbScore;
-    Move  pv[MAX_PLY];
+    int      pvSize;
+    Value    score;
+    Value    previousScore;
+    uint64_t effort;
+    int      tbRank;
+    int      bestMoveCount;
+    Value    tbScore;
+    Move     pv[MAX_PLY];
 };
 
 typedef struct RootMove RootMove;

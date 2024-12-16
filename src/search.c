@@ -374,6 +374,8 @@ void thread_search(Position* pos) {
         // Do we have time for the next iteration? Can we stop searching now?
         if (use_time_management() && !Threads.stop)
         {
+            int nodesEffort = pos->rootMoves->move[0].effort * 100 / max(1, pos->nodes);
+
             double fallingEval = (318 + 6 * (mainThread.previousScore - bestValue)
                                   + 6 * (mainThread.iterValue[iterIdx] - bestValue))
                                / 825.0;
@@ -393,16 +395,12 @@ void thread_search(Position* pos) {
             double totalTime =
               rm->size == 1 ? 0 : time_optimum() * fallingEval * reduction * bestMoveInstability;
 
-            // Stop the search if we have exceeded the totalTime (at least 1ms)
-            if (time_elapsed() > totalTime)
-            {
-                // If we are allowed to ponder do not stop the search now but
-                // keep pondering until the GUI sends "stop".
-                if (Threads.ponder)
-                {}
-                else
-                    Threads.stop = true;
-            }
+            if (pos->completedDepth >= 10 && nodesEffort >= 97 && time_elapsed() > totalTime * 0.739 && !Threads.ponder)
+                Threads.stop = true;
+
+            // Stop the search if we have exceeded the totalTime
+            if (time_elapsed() > totalTime && !Threads.ponder)
+                Threads.stop = true;
             else
                 Threads.increaseDepth =
                   !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
@@ -867,6 +865,8 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove = move;
         ss->history     = &(*pos->counterMoveHistory)[movedPiece][to_sq(move)];
 
+        uint64_t node_count = rootNode ? pos->nodes : 0;
+
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
         // HACK: Fix bench after introduction of 2-fold MultiPV bug
@@ -999,6 +999,8 @@ moves_loop:  // When in check search starts from here.
                     rm = &pos->rootMoves->move[idx];
                     break;
                 }
+
+            rm->effort += pos->nodes - node_count;
 
             // PV move or new best move ?
             if (moveCount == 1 || value > alpha)
