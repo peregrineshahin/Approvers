@@ -83,9 +83,8 @@ static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move
         tte->move16 = (uint16_t) m;
 
     // Don't overwrite more valuable entries
-    if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4 || b == BOUND_EXACT)
+    if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET + 3 + 2 * pv > tte->depth8 || b == BOUND_EXACT)
     {
-
         tte->key16     = (uint16_t) k;
         tte->depth8    = (uint8_t) (d - DEPTH_OFFSET);
         tte->genBound8 = (uint8_t) (TT.generation8 | ((uint8_t) pv << 2) | b);
