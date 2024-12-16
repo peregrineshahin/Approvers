@@ -94,6 +94,9 @@ extern int se_v5;
 extern int se_v6;
 extern int prb_v1;
 extern int prb_v2;
+extern int rfp_v1;
+extern int lmr_v1;
+
 
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -272,6 +275,8 @@ void setoption(char* str) {
     SET(se_v6)
     SET(prb_v1)
     SET(prb_v2)
+    SET(rfp_v1)
+    SET(lmr_v1)
 
 
     if (option_set_by_name(name, value))
@@ -486,6 +491,8 @@ void uci_loop(int argc, char** argv) {
             printf("option name se_v6 type string\n");
             printf("option name prb_v1 type string\n");
             printf("option name prb_v2 type string\n");
+            printf("option name rfp_v1 type string\n");
+            printf("option name lmr_v1 type string\n");
 
             printf("uciok\n");
             fflush(stdout);

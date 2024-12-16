@@ -44,9 +44,9 @@ int nmp_v6     = 30;
 int nmp_v7     = 28;
 int nmp_v8     = 84;
 int nmp_v9     = 182;
-int lph_v1     = 12;
-int lph_v2     = 5;
-int qmo_v1     = 4;
+int lph_v1     = 1200;
+int lph_v2     = 500;
+int qmo_v1     = 400;
 int qmo_v2     = 1000;
 int qmo_v3     = 1000;
 int rz_v1      = 510;
@@ -60,31 +60,33 @@ int sb_v3      = 17;
 int sb_v4      = 134;
 int rd_init_v1 = 2200;
 int d_v1       = 17;
-int iir_v1     = 6;
-int iir_v2     = 2;
-int cbp_v1     = 4;
+int iir_v1     = 600;
+int iir_v2     = 200;
+int cbp_v1     = 400;
 int cbp_v2     = 0;
-int fpp_v1     = 7;
+int fpp_v1     = 700;
 int fpp_v2     = 283;
 int fpp_v3     = 170;
 int fpp_v4     = 27376;
-int sqsee_v1   = 29;
-int sqsee_v2   = 18;
-int sch_v1     = 1;
+int sqsee_v1   = 2900;
+int sqsee_v2   = 1800;
+int sch_v1     = 100;
 int sch_v2     = 0;
-int sfpc_v1    = 6;
-int sfpc_v2    = 2;
+int sfpc_v1    = 600;
+int sfpc_v2    = 200;
 int sfpc_v3    = 169;
 int sfpc_v4    = 244;
 int scsee_v1   = 221;
-int se_v1      = 7;
-int se_v2      = 4;
-int se_v3      = 2;
-int se_v4      = 3;
-int se_v5      = 75;
-int se_v6      = 1;
+int se_v1      = 700;
+int se_v2      = 400;
+int se_v3      = 200;
+int se_v4      = 300;
+int se_v5      = 7500;
+int se_v6      = 100;
 int prb_v1     = 176;
 int prb_v2     = 49;
+int rfp_v1     = 800;
+int lmr_v1     = 1000;
 
 LimitsType Limits;
 
@@ -543,10 +545,10 @@ Value search(
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
-    if (ss->ttPv && depth > lph_v1 && ss->ply - 1 < MAX_LPH && !captured_piece()
+    if (ss->ttPv && depth > lph_v1 / 100 && ss->ply - 1 < MAX_LPH && !captured_piece()
         && move_is_ok((ss - 1)->currentMove))
         lph_update(*pos->lowPlyHistory, ss->ply - 1, (ss - 1)->currentMove,
-                   stat_bonus(depth - lph_v2));
+                   stat_bonus(depth - lph_v2 / 100));
 
     // At non-PV nodes we check for an early TT cutoff.
     if (!PvNode && ttHit && tte_depth(tte) >= depth
@@ -624,13 +626,14 @@ Value search(
 
     if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus = clamp(-depth * qmo_v1 * ((ss - 1)->staticEval + ss->staticEval - 2 * Tempo),
-                          -qmo_v2, qmo_v3);
+        int bonus =
+          clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - 2 * Tempo),
+                -qmo_v2, qmo_v3);
         history_update(*pos->history, !stm(), (ss - 1)->currentMove, bonus);
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < 8 && eval - futility_margin(depth, improving) >= beta
+    if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
@@ -705,8 +708,8 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= max(iir_v1, 3) && !ttMove)
-        depth -= max(iir_v2, 2);
+    if (PvNode && depth >= max(iir_v1 / 100, 3) && !ttMove)
+        depth -= max(iir_v2 / 100, 2);
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -775,13 +778,14 @@ moves_loop:  // When in check search starts from here.
             if (!captureOrPromotion && !givesCheck)
             {
                 // Countermoves based pruning
-                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
+                if (lmrDepth < cbp_v1 / 100
+                                 + ((ss - 1)->statScore > cbp_v2 / 100 || (ss - 1)->moveCount == 1)
                     && (*cmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
                     && (*fmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
                     continue;
 
                 // Futility pruning: parent node
-                if (lmrDepth < fpp_v1 && !inCheck
+                if (lmrDepth < fpp_v1 / 100 && !inCheck
                     && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha
                     && (*cmh)[movedPiece][to_sq(move)] + (*fmh)[movedPiece][to_sq(move)]
                            + (*fmh2)[movedPiece][to_sq(move)] + (*fmh3)[movedPiece][to_sq(move)] / 2
@@ -791,20 +795,22 @@ moves_loop:  // When in check search starts from here.
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
                 if (!see_test(pos, move,
-                              -(sqsee_v1 - min(lmrDepth, sqsee_v2)) * lmrDepth * lmrDepth))
+                              -(sqsee_v1 / 100 - min(lmrDepth, sqsee_v2 / 100)) * lmrDepth
+                                * lmrDepth))
                     continue;
             }
             else
             {
                 // Capture history based pruning when the move doesn't give check
-                if (!givesCheck && lmrDepth < sch_v1
+                if (!givesCheck && lmrDepth < sch_v1 / 100
                     && (*pos->captureHistory)[movedPiece][to_sq(move)]
                                              [type_of_p(piece_on(to_sq(move)))]
                          < sch_v2)
                     continue;
 
                 // Futility pruning for captures
-                if (!givesCheck && lmrDepth < sfpc_v1 && !(PvNode && abs(bestValue) < sfpc_v2)
+                if (!givesCheck && lmrDepth < sfpc_v1 / 100
+                    && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
                     && PieceValue[MG][type_of_p(movedPiece)]
                          >= PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
                     && !inCheck
@@ -826,14 +832,14 @@ moves_loop:  // When in check search starts from here.
         // that move is singular and should be extended. To verify this we do a
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
-        if (depth >= se_v1 && move == ttMove && !rootNode
+        if (depth >= se_v1 / 100 && move == ttMove && !rootNode
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
-            Value singularBeta  = ttValue - ((formerPv + se_v2) * depth) / se_v3;
-            Depth singularDepth = (depth - 1 + se_v4 * formerPv) / 2;
+            Value singularBeta  = ttValue - ((formerPv + se_v2 / 100) * depth) / (se_v3 / 100);
+            Depth singularDepth = (depth - 1 + se_v4 / 100 * formerPv) / 2;
             ss->excludedMove    = move;
             Move cm             = ss->countermove;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
@@ -843,7 +849,7 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5)
+                if (!PvNode && value < singularBeta - se_v5 / 100)
                     extension = 2;
 
                 singularQuietLMR = !ttCapture;
@@ -881,7 +887,7 @@ moves_loop:  // When in check search starts from here.
             }
             else if (cutNode)
             {
-                extension -= se_v6;
+                extension -= se_v6 / 100;
             }
 
             // The call to search_NonPV with the same value of ss messed up our
@@ -935,7 +941,7 @@ moves_loop:  // When in check search starts from here.
 
             // Decrease reduction at non-check cut nodes for second move at low
             // depths
-            if (cutNode && depth <= 10 && moveCount <= 2 && !inCheck)
+            if (cutNode && depth <= lmr_v1 / 100 && moveCount <= 2 && !inCheck)
                 r--;
 
             // Decrease reduction if position is or has been on the PV
