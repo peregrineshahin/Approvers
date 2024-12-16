@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -272,7 +273,7 @@ void thread_search(Position* pos) {
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
-    while (++pos->rootDepth < MAX_PLY && !Threads.stop
+    while ((pos->rootDepth += 2) < MAX_PLY && !Threads.stop
            && !(Limits.depth && pos->threadIdx == 0 && pos->rootDepth > Limits.depth))
     {
         // Age out PV variability metric
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -1564,9 +1566,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
