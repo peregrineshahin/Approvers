@@ -432,7 +432,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
+    Value    bestValue, value, ttValue, eval, rawEval;
     bool     ttHit, formerPv, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
@@ -601,55 +601,6 @@ Value search(
 
         if (nullValue >= beta)
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
-    }
-
-    probCutBeta = beta + 176 - 49 * improving;
-
-    // Step 10. ProbCut
-    // If we have a good enough capture and a reduced search returns a value
-    // much above beta, we can (almost) safely prune the previous move.
-    if (!PvNode && depth > 4 && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
-        && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
-             && ttValue < probCutBeta))
-    {
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && is_capture_or_promotion(pos, ttMove))
-            return probCutBeta;
-
-        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
-        int  probCutCount = 2 + 2 * cutNode;
-        bool ttPv         = ss->ttPv;
-        ss->ttPv          = false;
-
-        while ((move = next_move(pos, 0)) && probCutCount)
-            if (move != excludedMove && is_legal(pos, move))
-            {
-
-                captureOrPromotion = true;
-                probCutCount--;
-
-                ss->currentMove = move;
-                ss->history     = &(*pos->counterMoveHistory)[moved_piece(move)][to_sq(move)];
-                givesCheck      = gives_check(pos, ss, move);
-                do_move(pos, move, givesCheck);
-
-                // Perform a preliminary qsearch to verify that the move holds
-                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false, givesCheck);
-
-                // If the qsearch held, perform the regular search
-                if (value >= probCutBeta)
-                    value = -search(pos, ss + 1, -probCutBeta, -probCutBeta + 1, depth - 4,
-                                    !cutNode, false);
-                undo_move(pos, move);
-                if (value >= probCutBeta)
-                {
-                    if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
-                        tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
-                                 depth - 3, move, rawEval);
-                    return value;
-                }
-            }
-        ss->ttPv = ttPv;
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
