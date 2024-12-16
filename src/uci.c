@@ -96,7 +96,23 @@ extern int prb_v1;
 extern int prb_v2;
 extern int rfp_v1;
 extern int lmr_v1;
-
+extern int lmr_v2;
+extern int lmr_v3;
+extern int lmr_v4;
+extern int lmr_v5;
+extern int lmr_v6;
+extern int lmr_v7;
+extern int lmr_v8;
+extern int fmc_v1;
+extern int fmc_v2;
+extern int fmc_v3;
+extern int asd_v1;
+extern int ses_v1;
+extern int qsf_v1;
+extern int ch_v1;
+extern int ch_v2;
+extern int ch_v3;
+extern int tempo;
 
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -277,7 +293,23 @@ void setoption(char* str) {
     SET(prb_v2)
     SET(rfp_v1)
     SET(lmr_v1)
-
+    SET(lmr_v2)
+    SET(lmr_v3)
+    SET(lmr_v4)
+    SET(lmr_v5)
+    SET(lmr_v6)
+    SET(lmr_v7)
+    SET(lmr_v8)
+    SET(fmc_v1)
+    SET(fmc_v2)
+    SET(fmc_v3)
+    SET(asd_v1)
+    SET(ses_v1)
+    SET(qsf_v1)
+    SET(ch_v1)
+    SET(ch_v2)
+    SET(ch_v3)
+    SET(tempo)
 
     if (option_set_by_name(name, value))
         return;
@@ -493,6 +525,23 @@ void uci_loop(int argc, char** argv) {
             printf("option name prb_v2 type string\n");
             printf("option name rfp_v1 type string\n");
             printf("option name lmr_v1 type string\n");
+            printf("option name lmr_v2 type string\n");
+            printf("option name lmr_v3 type string\n");
+            printf("option name lmr_v4 type string\n");
+            printf("option name lmr_v5 type string\n");
+            printf("option name lmr_v6 type string\n");
+            printf("option name lmr_v7 type string\n");
+            printf("option name lmr_v8 type string\n");
+            printf("option name fmc_v1 type string\n");
+            printf("option name fmc_v2 type string\n");
+            printf("option name fmc_v3 type string\n");
+            printf("option name asd_v1 type string\n");
+            printf("option name ses_v1 type string\n");
+            printf("option name qsf_v1 type string\n");
+            printf("option name ch_v1 type string\n");
+            printf("option name ch_v2 type string\n");
+            printf("option name ch_v3 type string\n");
+            printf("option name tempo type string\n");
 
             printf("uciok\n");
             fflush(stdout);

@@ -87,6 +87,23 @@ int prb_v1     = 176;
 int prb_v2     = 49;
 int rfp_v1     = 800;
 int lmr_v1     = 1000;
+int lmr_v2     = 1300;
+int lmr_v3     = 5287;
+int lmr_v4     = 106;
+int lmr_v5     = 104;
+int lmr_v6     = 119;
+int lmr_v7     = 140;
+int lmr_v8     = 14884;
+int fmc_v1     = 300;
+int fmc_v2     = 300;
+int fmc_v3     = 200;
+int asd_v1     = 500;
+int ses_v1     = 300;
+int qsf_v1     = 145;
+int ch_v1      = 1600;
+int ch_v2      = 256;
+int ch_v3      = 256;
+int tempo      = 56;
 
 LimitsType Limits;
 
@@ -112,7 +129,7 @@ static Depth reduction(int i, Depth d, int mn) {
 
 static int futility_move_count(bool improving, Depth depth) {
     //  return (3 + depth * depth) / (2 - improving);
-    return improving ? 3 + depth * depth : (3 + depth * depth) / 2;
+    return improving ? fmc_v1 / 100 + depth * depth : (fmc_v2 / 100 + depth * depth) / (fmc_v3 / 100);
 }
 
 // History and stats update bonus, based on depth
@@ -400,7 +417,7 @@ void thread_search(Position* pos) {
                 break;
             }
 
-            delta += delta / 4 + 5;
+            delta += delta / 4 + asd_v1 / 100;
         }
 
         // Sort the PV lines searched so far and update the GUI
@@ -608,7 +625,7 @@ Value search(
         if ((ss - 1)->currentMove != MOVE_NULL)
             rawEval = evaluate(pos);
         else
-            rawEval = -(ss - 1)->staticEval + 2 * Tempo;
+            rawEval = -(ss - 1)->staticEval + tempo;
 
         eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
 
@@ -627,7 +644,7 @@ Value search(
     if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus =
-          clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - 2 * Tempo),
+          clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                 -qmo_v2, qmo_v3);
         history_update(*pos->history, !stm(), (ss - 1)->currentMove, bonus);
     }
@@ -836,7 +853,7 @@ moves_loop:  // When in check search starts from here.
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - 3)
+            && tte_depth(tte) >= depth - ses_v1 / 100)
         {
             Value singularBeta  = ttValue - ((formerPv + se_v2 / 100) * depth) / (se_v3 / 100);
             Depth singularDepth = (depth - 1 + se_v4 / 100 * formerPv) / 2;
@@ -952,7 +969,7 @@ moves_loop:  // When in check search starts from here.
                 r++;
 
             // Decrease reduction if opponent's move count is high
-            if ((ss - 1)->moveCount > 13)
+            if ((ss - 1)->moveCount > lmr_v2 / 100)
                 r--;
 
             // Decrease reduction if ttMove has been singularly extended
@@ -980,17 +997,17 @@ moves_loop:  // When in check search starts from here.
 
                 ss->statScore = (*cmh)[movedPiece][to_sq(move)] + (*fmh)[movedPiece][to_sq(move)]
                               + (*fmh2)[movedPiece][to_sq(move)]
-                              + (*pos->history)[!stm()][from_to(move)] - 5287;
+                              + (*pos->history)[!stm()][from_to(move)] - lmr_v3;
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -106 && (ss - 1)->statScore < -104)
+                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
                     r--;
 
-                else if ((ss - 1)->statScore >= -119 && ss->statScore < -140)
+                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
                     r++;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / 14884;
+                r -= ss->statScore / lmr_v8;
             }
 
             Depth d = clamp(newDepth - r, 1, newDepth);
@@ -1268,7 +1285,7 @@ Value qsearch(Position*  pos,
         else
         {
             rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos)
-                                                         : -(ss - 1)->staticEval + 2 * Tempo;
+                                                         : -(ss - 1)->staticEval + tempo;
 
             ss->staticEval = bestValue =
               rawEval + get_correction(pos->corrHistory, stm(), material_key());
@@ -1287,7 +1304,7 @@ Value qsearch(Position*  pos,
         if (PvNode && bestValue > alpha)
             alpha = bestValue;
 
-        futilityBase = bestValue + 145;
+        futilityBase = bestValue + qsf_v1;
     }
 
     ss->history = &(*pos->counterMoveHistory)[0][0];
@@ -1464,18 +1481,16 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 static void add_correction_history(
   correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff) {
     int32_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(16, 1 + depth);
-    int32_t  scaledDiff = diff * CORRECTION_HISTORY_GRAIN;
-    int32_t  update =
-      *entry * (CORRECTION_HISTORY_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight;
+    int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
+    int32_t  scaledDiff = diff * ch_v2;
+    int32_t  update = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
     // Clamp entry in-bounds.
-    *entry = max(-CORRECTION_HISTORY_MAX,
-                 min(CORRECTION_HISTORY_MAX, update / CORRECTION_HISTORY_WEIGHT_SCALE));
+    *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
 // Get the correction history differential for the given side and materialKey.
 static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
-    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / CORRECTION_HISTORY_GRAIN;
+    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / ch_v2;
 }
 
 // update_cm_stats() updates countermove and follow-up move history.
