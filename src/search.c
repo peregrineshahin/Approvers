@@ -157,8 +157,7 @@ static int futility_move_count(bool improving, Depth depth) {
 
 // History and stats update bonus, based on depth
 static Value stat_bonus(Depth depth) {
-    int d = depth;
-    return d > sb_v1 ? sb_v2 : sb_v3 * d * d + sb_v4 * d - sb_v4;
+    return min((6 * depth + 229) * depth - 215, 2000);
 }
 
 // Add a small random component to draw evaluations to keep search dynamic
@@ -172,7 +171,7 @@ static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
 static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
 static void    add_correction_history(
      correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
-static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth);
+static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
@@ -232,7 +231,6 @@ void search_clear(void) {
     stats_clear(pos->counterMoves);
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
-    stats_clear(pos->lowPlyHistory);
     stats_clear(pos->corrHistory);
 
     mainThread.previousScore         = VALUE_INFINITE;
@@ -354,10 +352,6 @@ void thread_search(Position* pos) {
             for (int i = 0; i < 4; i++)
                 mainThread.iterValue[i] = mainThread.previousScore;
     }
-
-    memmove(&((*pos->lowPlyHistory)[0]), &((*pos->lowPlyHistory)[2]),
-            (MAX_LPH - 2) * sizeof((*pos->lowPlyHistory)[0]));
-    memset(&((*pos->lowPlyHistory)[MAX_LPH - 2]), 0, 2 * sizeof((*pos->lowPlyHistory)[0]));
 
     RootMoves* rm                 = pos->rootMoves;
     int        searchAgainCounter = 0;
@@ -585,11 +579,6 @@ Value search(
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
-    if (ss->ttPv && depth > lph_v1 / 100 && ss->ply - 1 < MAX_LPH && !captured_piece()
-        && move_is_ok((ss - 1)->currentMove))
-        lph_update(*pos->lowPlyHistory, ss->ply - 1, (ss - 1)->currentMove,
-                   stat_bonus(depth - lph_v2 / 100));
-
     // At non-PV nodes we check for an early TT cutoff.
     if (!PvNode && ttHit && tte_depth(tte) >= depth
         && ttValue != VALUE_NONE  // Possible in case of TT access race.
@@ -601,7 +590,7 @@ Value search(
             if (ttValue >= beta)
             {
                 if (!is_capture_or_promotion(pos, ttMove))
-                    update_quiet_stats(pos, ss, ttMove, stat_bonus(depth), depth);
+                    update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
 
                 // Extra penalty for early quiet moves of the previous ply
                 if ((ss - 1)->moveCount <= 2 && !captured_piece())
@@ -1177,7 +1166,7 @@ moves_loop:  // When in check search starts from here.
         if (!is_capture_or_promotion(pos, bestMove))
         {
             int bonus = stat_bonus(depth + (bestValue > beta + mg_pawn));
-            update_quiet_stats(pos, ss, bestMove, bonus, depth);
+            update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
@@ -1556,7 +1545,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 // update_quiet_stats() updates killers, history, countermove and countermove
 // plus follow-up move history when a new quiet best move is found.
 
-static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, Depth depth) {
+static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
     if (ss->killers[0] != move)
     {
         ss->killers[1] = ss->killers[0];
@@ -1575,9 +1564,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
         Square prevSq                                  = to_sq((ss - 1)->currentMove);
         (*pos->counterMoves)[piece_on(prevSq)][prevSq] = move;
     }
-
-    if (depth > 11 && ss->ply < MAX_LPH)
-        lph_update(*pos->lowPlyHistory, ss->ply, move, stat_bonus(depth - 7));
 }
 
 
