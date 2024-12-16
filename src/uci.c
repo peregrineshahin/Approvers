@@ -36,6 +36,106 @@ extern void benchmark(Position* pos, char* str);
 
 char lastFen[256];
 
+#define SET(nz) \
+    if (strcmp(#nz, name) == 0) \
+    { \
+        nz = atoi(value); \
+        return; \
+    }
+
+extern int nmp_v1;
+extern int nmp_v2;
+extern int nmp_v3;
+extern int nmp_v4;
+extern int nmp_v5;
+extern int nmp_v6;
+extern int nmp_v7;
+extern int nmp_v8;
+extern int nmp_v9;
+extern int lph_v1;
+extern int lph_v2;
+extern int qmo_v1;
+extern int qmo_v2;
+extern int qmo_v3;
+extern int rz_v1;
+extern int ft_v1;
+extern int rd_v1;
+extern int rd_v2;
+extern int rd_v3;
+extern int rd_v3;
+extern int sb_v1;
+extern int sb_v2;
+extern int sb_v3;
+extern int sb_v4;
+extern int rd_init_v1;
+extern int d_v1;
+extern int iir_v1;
+extern int iir_v2;
+extern int cbp_v1;
+extern int cbp_v2;
+extern int fpp_v1;
+extern int fpp_v2;
+extern int fpp_v3;
+extern int fpp_v4;
+extern int sqsee_v1;
+extern int sqsee_v2;
+extern int sch_v1;
+extern int sch_v2;
+extern int sfpc_v1;
+extern int sfpc_v2;
+extern int sfpc_v3;
+extern int sfpc_v4;
+extern int scsee_v1;
+extern int se_v1;
+extern int se_v2;
+extern int se_v3;
+extern int se_v4;
+extern int se_v5;
+extern int se_v6;
+extern int prb_v1;
+extern int prb_v2;
+extern int rfp_v1;
+extern int lmr_v1;
+extern int lmr_v2;
+extern int lmr_v3;
+extern int lmr_v4;
+extern int lmr_v5;
+extern int lmr_v6;
+extern int lmr_v7;
+extern int lmr_v8;
+extern int fmc_v1;
+extern int fmc_v2;
+extern int fmc_v3;
+extern int asd_v1;
+extern int ses_v1;
+extern int qsf_v1;
+extern int ch_v1;
+extern int ch_v2;
+extern int ch_v3;
+extern int tempo;
+extern int mp_v1;
+extern int mp_v2;
+extern int mp_v3;
+extern int mp_v4;
+extern int mp_v5;
+extern int mp_v6;
+extern int mp_v7;
+extern int mp_v8;
+extern int mp_v9;
+extern int mp_v10;
+extern int mp_v11;
+extern int mg_pawn;
+extern int eg_pawn;
+extern int mg_knight;
+extern int eg_knight;
+extern int mg_bishop;
+extern int eg_bishop;
+extern int mg_rook;
+extern int eg_rook;
+extern int mg_queen;
+extern int eg_queen;
+extern int eval_scale;
+
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -61,10 +161,10 @@ void position(Position* pos, char* str) {
         strncpy(fen, str + 4, 127);
         fen[127] = 0;
     }
-    #ifndef DKAGGLE
+#ifndef DKAGGLE
     else if (strncmp(str, "startpos", 8) == 0)
         strcpy(fen, StartFEN);
-    #endif
+#endif
     else
         return;
 
@@ -140,9 +240,9 @@ void setoption(char* str) {
     if (!name)
     {
         name = "";
-        #ifndef DKAGGLE
+#ifndef DKAGGLE
         goto error;
-        #endif
+#endif
     }
 
     name += 4;
@@ -162,6 +262,98 @@ void setoption(char* str) {
     }
     if (!value || strlen(value) == 0)
         value = "<empty>";
+
+    SET(nmp_v1)
+    SET(nmp_v2)
+    SET(nmp_v3)
+    SET(nmp_v4)
+    SET(nmp_v5)
+    SET(nmp_v6)
+    SET(nmp_v7)
+    SET(nmp_v8)
+    SET(nmp_v9)
+    SET(lph_v1)
+    SET(lph_v2)
+    SET(qmo_v1)
+    SET(qmo_v2)
+    SET(qmo_v3)
+    SET(rz_v1)
+    SET(ft_v1)
+    SET(rd_v1)
+    SET(rd_v2)
+    SET(rd_v3)
+    SET(sb_v1)
+    SET(sb_v2)
+    SET(sb_v3)
+    SET(sb_v4)
+    SET(rd_init_v1)
+    SET(d_v1)
+    SET(iir_v1)
+    SET(iir_v2)
+    SET(cbp_v1)
+    SET(cbp_v2)
+    SET(fpp_v1)
+    SET(fpp_v2)
+    SET(fpp_v3)
+    SET(fpp_v4)
+    SET(sqsee_v1)
+    SET(sqsee_v2)
+    SET(sch_v1)
+    SET(sch_v2)
+    SET(sfpc_v1)
+    SET(sfpc_v2)
+    SET(sfpc_v3)
+    SET(sfpc_v4)
+    SET(scsee_v1)
+    SET(se_v1)
+    SET(se_v2)
+    SET(se_v3)
+    SET(se_v4)
+    SET(se_v5)
+    SET(se_v6)
+    SET(prb_v1)
+    SET(prb_v2)
+    SET(rfp_v1)
+    SET(lmr_v1)
+    SET(lmr_v2)
+    SET(lmr_v3)
+    SET(lmr_v4)
+    SET(lmr_v5)
+    SET(lmr_v6)
+    SET(lmr_v7)
+    SET(lmr_v8)
+    SET(fmc_v1)
+    SET(fmc_v2)
+    SET(fmc_v3)
+    SET(asd_v1)
+    SET(ses_v1)
+    SET(qsf_v1)
+    SET(ch_v1)
+    SET(ch_v2)
+    SET(ch_v3)
+    SET(tempo)
+    SET(mp_v1)
+    SET(mp_v2)
+    SET(mp_v3)
+    SET(mp_v4)
+    SET(mp_v5)
+    SET(mp_v6)
+    SET(mp_v7)
+    SET(mp_v8)
+    SET(mp_v9)
+    SET(mp_v10)
+    SET(mp_v11)
+    SET(mg_pawn)
+    SET(eg_pawn)
+    SET(mg_knight)
+    SET(eg_knight)
+    SET(mg_bishop)
+    SET(eg_bishop)
+    SET(mg_rook)
+    SET(eg_rook)
+    SET(mg_queen)
+    SET(eg_queen)
+    SET(eval_scale)
 
     if (option_set_by_name(name, value))
         return;
@@ -195,7 +387,7 @@ static void go(Position* pos, char* str) {
             Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "binc") == 0)
             Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
-        #ifndef DKAGGLE
+#ifndef DKAGGLE
         else if (strcmp(token, "depth") == 0)
             Limits.depth = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "nodes") == 0)
@@ -206,7 +398,7 @@ static void go(Position* pos, char* str) {
             Limits.infinite = true;
         else if (strcmp(token, "ponder") == 0)
             ponderMode = true;
-        #endif
+#endif
     }
 
     start_thinking(pos, ponderMode);
@@ -323,8 +515,100 @@ void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "uci") == 0)
         {
-            printf("id name ");
-            printf("\n");
+            printf("id name\n");
+            printf("option name nmp_v1 type string\n");
+            printf("option name nmp_v2 type string\n");
+            printf("option name nmp_v3 type string\n");
+            printf("option name nmp_v4 type string\n");
+            printf("option name nmp_v5 type string\n");
+            printf("option name nmp_v6 type string\n");
+            printf("option name nmp_v7 type string\n");
+            printf("option name nmp_v8 type string\n");
+            printf("option name nmp_v9 type string\n");
+            printf("option name lph_v1 type string\n");
+            printf("option name lph_v2 type string\n");
+            printf("option name qmo_v1 type string\n");
+            printf("option name qmo_v2 type string\n");
+            printf("option name qmo_v3 type string\n");
+            printf("option name rz_v1 type string\n");
+            printf("option name ft_v1 type string\n");
+            printf("option name rd_v1 type string\n");
+            printf("option name rd_v2 type string\n");
+            printf("option name rd_v3 type string\n");
+            printf("option name rd_v3 type string\n");
+            printf("option name sb_v1 type string\n");
+            printf("option name sb_v2 type string\n");
+            printf("option name sb_v3 type string\n");
+            printf("option name sb_v4 type string\n");
+            printf("option name rd_init_v1 type string\n");
+            printf("option name d_v1 type string\n");
+            printf("option name iir_v1 type string\n");
+            printf("option name iir_v2 type string\n");
+            printf("option name cbp_v1 type string\n");
+            printf("option name cbp_v2 type string\n");
+            printf("option name fpp_v1 type string\n");
+            printf("option name fpp_v2 type string\n");
+            printf("option name fpp_v3 type string\n");
+            printf("option name fpp_v4 type string\n");
+            printf("option name sqsee_v1 type string\n");
+            printf("option name sqsee_v2 type string\n");
+            printf("option name sch_v1 type string\n");
+            printf("option name sch_v2 type string\n");
+            printf("option name sfpc_v1 type string\n");
+            printf("option name sfpc_v2 type string\n");
+            printf("option name sfpc_v3 type string\n");
+            printf("option name sfpc_v4 type string\n");
+            printf("option name scsee_v1 type string\n");
+            printf("option name se_v1 type string\n");
+            printf("option name se_v2 type string\n");
+            printf("option name se_v3 type string\n");
+            printf("option name se_v4 type string\n");
+            printf("option name se_v5 type string\n");
+            printf("option name se_v6 type string\n");
+            printf("option name prb_v1 type string\n");
+            printf("option name prb_v2 type string\n");
+            printf("option name rfp_v1 type string\n");
+            printf("option name lmr_v1 type string\n");
+            printf("option name lmr_v2 type string\n");
+            printf("option name lmr_v3 type string\n");
+            printf("option name lmr_v4 type string\n");
+            printf("option name lmr_v5 type string\n");
+            printf("option name lmr_v6 type string\n");
+            printf("option name lmr_v7 type string\n");
+            printf("option name lmr_v8 type string\n");
+            printf("option name fmc_v1 type string\n");
+            printf("option name fmc_v2 type string\n");
+            printf("option name fmc_v3 type string\n");
+            printf("option name asd_v1 type string\n");
+            printf("option name ses_v1 type string\n");
+            printf("option name qsf_v1 type string\n");
+            printf("option name ch_v1 type string\n");
+            printf("option name ch_v2 type string\n");
+            printf("option name ch_v3 type string\n");
+            printf("option name tempo type string\n");
+            printf("option name mp_v1 type string\n");
+            printf("option name mp_v2 type string\n");
+            printf("option name mp_v3 type string\n");
+            printf("option name mp_v4 type string\n");
+            printf("option name mp_v5 type string\n");
+            printf("option name mp_v6 type string\n");
+            printf("option name mp_v7 type string\n");
+            printf("option name mp_v8 type string\n");
+            printf("option name mp_v9 type string\n");
+            printf("option name mp_v10 type string\n");
+            printf("option name mp_v11 type string\n");
+            printf("option name mg_pawn type string\n");
+            printf("option name eg_pawn type string\n");
+            printf("option name mg_knight type string\n");
+            printf("option name eg_knight type string\n");
+            printf("option name mg_bishop type string\n");
+            printf("option name eg_bishop type string\n");
+            printf("option name mg_rook type string\n");
+            printf("option name eg_rook type string\n");
+            printf("option name mg_queen type string\n");
+            printf("option name eg_queen type string\n");
+            printf("option name eval_scale type string\n");
+
             printf("uciok\n");
             fflush(stdout);
         }
@@ -386,7 +670,7 @@ void uci_loop(int argc, char** argv) {
 
 char* uci_value(char* str, Value v) {
     if (abs(v) < VALUE_MATE_IN_MAX_PLY)
-        sprintf(str, "cp %d", v * 100 / PawnValueEg);
+        sprintf(str, "cp %d", v);
     else
         sprintf(str, "mate %d", (v > 0 ? VALUE_MATE - v + 1 : -VALUE_MATE - v) / 2);
 
