@@ -410,8 +410,8 @@ enum {
     MAX_LPH = 4
 };
 enum {
-    CORRECTION_HISTORY_ENTRY_NB     = 4096,
-    CORRECTION_HISTORY_MAX          = 8192,
+    CORRECTION_HISTORY_ENTRY_NB = 4096,
+    CORRECTION_HISTORY_MAX      = 8192,
 };
 
 typedef Move           CounterMoveStat[16][64];
