@@ -655,8 +655,8 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= 6 && !ttMove)
-        depth -= 2;
+    if ((PvNode || cutNode) && depth >= 2 + 2 * cutNode && !ttMove)
+        depth--;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
