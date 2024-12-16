@@ -113,6 +113,27 @@ extern int ch_v1;
 extern int ch_v2;
 extern int ch_v3;
 extern int tempo;
+extern int mp_v1;
+extern int mp_v2;
+extern int mp_v3;
+extern int mp_v4;
+extern int mp_v5;
+extern int mp_v6;
+extern int mp_v7;
+extern int mp_v8;
+extern int mp_v9;
+extern int mp_v10;
+extern int mp_v11;
+extern int mg_pawn;
+extern int eg_pawn;
+extern int mg_knight;
+extern int eg_knight;
+extern int mg_bishop;
+extern int eg_bishop;
+extern int mg_rook;
+extern int eg_rook;
+extern int mg_queen;
+extern int eg_queen;
 
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -310,6 +331,27 @@ void setoption(char* str) {
     SET(ch_v2)
     SET(ch_v3)
     SET(tempo)
+    SET(mp_v1)
+    SET(mp_v2)
+    SET(mp_v3)
+    SET(mp_v4)
+    SET(mp_v5)
+    SET(mp_v6)
+    SET(mp_v7)
+    SET(mp_v8)
+    SET(mp_v9)
+    SET(mp_v10)
+    SET(mp_v11)
+    SET(mg_pawn)
+    SET(eg_pawn)
+    SET(mg_knight)
+    SET(eg_knight)
+    SET(mg_bishop)
+    SET(eg_bishop)
+    SET(mg_rook)
+    SET(eg_rook)
+    SET(mg_queen)
+    SET(eg_queen)
 
     if (option_set_by_name(name, value))
         return;
@@ -542,6 +584,27 @@ void uci_loop(int argc, char** argv) {
             printf("option name ch_v2 type string\n");
             printf("option name ch_v3 type string\n");
             printf("option name tempo type string\n");
+            printf("option name mp_v1 type string\n");
+            printf("option name mp_v2 type string\n");
+            printf("option name mp_v3 type string\n");
+            printf("option name mp_v4 type string\n");
+            printf("option name mp_v5 type string\n");
+            printf("option name mp_v6 type string\n");
+            printf("option name mp_v7 type string\n");
+            printf("option name mp_v8 type string\n");
+            printf("option name mp_v9 type string\n");
+            printf("option name mp_v10 type string\n");
+            printf("option name mp_v11 type string\n");
+            printf("option name mg_pawn type string\n");
+            printf("option name eg_pawn type string\n");
+            printf("option name mg_knight type string\n");
+            printf("option name eg_knight type string\n");
+            printf("option name mg_bishop type string\n");
+            printf("option name eg_bishop type string\n");
+            printf("option name mg_rook type string\n");
+            printf("option name eg_rook type string\n");
+            printf("option name mg_queen type string\n");
+            printf("option name eg_queen type string\n");
 
             printf("uciok\n");
             fflush(stdout);
@@ -604,7 +667,7 @@ void uci_loop(int argc, char** argv) {
 
 char* uci_value(char* str, Value v) {
     if (abs(v) < VALUE_MATE_IN_MAX_PLY)
-        sprintf(str, "cp %d", v * 100 / PawnValueEg);
+        sprintf(str, "cp %d", v);
     else
         sprintf(str, "mate %d", (v > 0 ? VALUE_MATE - v + 1 : -VALUE_MATE - v) / 2);
 

@@ -12,6 +12,12 @@
 #include "tt.h"
 #include "uci.h"
 
+extern int mg_pawn;
+extern int mg_knight;
+extern int mg_bishop;
+extern int mg_rook;
+extern int mg_queen;
+
 static void set_castling_right(Position* pos, Color c, Square rfrom);
 static void set_state(Position* pos, Stack* st);
 
@@ -977,11 +983,11 @@ bool see_test(const Position* pos, Move m, int value) {
     Square   from = from_sq(m), to = to_sq(m);
     Bitboard occ;
 
-    int swap = PieceValue[MG][piece_on(to)] - value;
+    int swap = *PieceValue[MG][piece_on(to)] - value;
     if (swap < 0)
         return false;
 
-    swap = PieceValue[MG][piece_on(from)] - swap;
+    swap = *PieceValue[MG][piece_on(from)] - swap;
     if (swap <= 0)
         return true;
 
@@ -1004,34 +1010,34 @@ bool see_test(const Position* pos, Move m, int value) {
         Bitboard bb;
         if ((bb = stmAttackers & pieces_p(PAWN)))
         {
-            if ((swap = PawnValueMg - swap) < res)
+            if ((swap = mg_pawn - swap) < res)
                 break;
             occ ^= bb & -bb;
             attackers |= attacks_bb_bishop(to, occ) & pieces_pp(BISHOP, QUEEN);
         }
         else if ((bb = stmAttackers & pieces_p(KNIGHT)))
         {
-            if ((swap = KnightValueMg - swap) < res)
+            if ((swap = mg_knight - swap) < res)
                 break;
             occ ^= bb & -bb;
         }
         else if ((bb = stmAttackers & pieces_p(BISHOP)))
         {
-            if ((swap = BishopValueMg - swap) < res)
+            if ((swap = mg_bishop - swap) < res)
                 break;
             occ ^= bb & -bb;
             attackers |= attacks_bb_bishop(to, occ) & pieces_pp(BISHOP, QUEEN);
         }
         else if ((bb = stmAttackers & pieces_p(ROOK)))
         {
-            if ((swap = RookValueMg - swap) < res)
+            if ((swap = mg_rook - swap) < res)
                 break;
             occ ^= bb & -bb;
             attackers |= attacks_bb_rook(to, occ) & pieces_pp(ROOK, QUEEN);
         }
         else if ((bb = stmAttackers & pieces_p(QUEEN)))
         {
-            if ((swap = QueenValueMg - swap) < res)
+            if ((swap = mg_queen - swap) < res)
                 break;
             occ ^= bb & -bb;
             attackers |= (attacks_bb_bishop(to, occ) & pieces_pp(BISHOP, QUEEN))

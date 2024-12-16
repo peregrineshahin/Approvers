@@ -104,6 +104,27 @@ int ch_v1      = 1600;
 int ch_v2      = 256;
 int ch_v3      = 256;
 int tempo      = 56;
+int mp_v1      = 69;
+int mp_v2      = 1024;
+int mp_v3      = 3000;
+int mp_v4      = 100;
+int mp_v5      = 200;
+int mp_v6      = 200;
+int mp_v7      = 200;
+int mp_v8      = 100;
+int mp_v9      = 100;
+int mp_v10     = 400;
+int mp_v11     = 300;
+int mg_pawn    = 126;
+int eg_pawn    = 208;
+int mg_knight  = 781;
+int eg_knight  = 854;
+int mg_bishop  = 825;
+int eg_bishop  = 915;
+int mg_rook    = 1276;
+int eg_rook    = 1380;
+int mg_queen   = 2538;
+int eg_queen   = 2682;
 
 LimitsType Limits;
 
@@ -828,11 +849,11 @@ moves_loop:  // When in check search starts from here.
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
                     && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
-                    && PieceValue[MG][type_of_p(movedPiece)]
-                         >= PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                    && *PieceValue[MG][type_of_p(movedPiece)]
+                         >= *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
                     && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
-                           + PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                           + *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
                     continue;
 
@@ -922,8 +943,8 @@ moves_loop:  // When in check search starts from here.
             extension = 1;
 
         // Last capture extension
-        else if (PieceValue[EG][captured_piece()] > PawnValueEg
-                 && non_pawn_material() <= 2 * RookValueMg)
+        else if (*PieceValue[EG][captured_piece()] > eg_pawn
+                 && non_pawn_material() <= 2 * mg_rook)
             extension = 1;
 
         // Late irreversible move extension
@@ -952,7 +973,7 @@ moves_loop:  // When in check search starts from here.
         // re-searched at full depth.
         if (depth >= 3 && moveCount > 1 + 2 * rootNode + 2 * (PvNode && abs(bestValue) < 2)
             && (!captureOrPromotion || moveCountPruning
-                || ss->staticEval + PieceValue[EG][captured_piece()] <= alpha || cutNode))
+                || ss->staticEval + *PieceValue[EG][captured_piece()] <= alpha || cutNode))
         {
             Depth r = reduction(improving, depth, moveCount);
 
@@ -1155,7 +1176,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + PawnValueMg));
+            int bonus = stat_bonus(depth + (bestValue > beta + mg_pawn));
             update_quiet_stats(pos, ss, bestMove, bonus, depth);
 
             // Decrease all the other played quiet moves
@@ -1331,7 +1352,7 @@ Value qsearch(Position*  pos,
             if (moveCount > 2)
                 continue;
 
-            futilityValue = futilityBase + PieceValue[EG][piece_on(to_sq(move))];
+            futilityValue = futilityBase + *PieceValue[EG][piece_on(to_sq(move))];
 
             if (futilityValue <= alpha)
             {

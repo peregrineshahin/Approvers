@@ -22,6 +22,18 @@
 #include "movepick.h"
 #include "thread.h"
 
+extern int mp_v1;
+extern int mp_v2;
+extern int mp_v3;
+extern int mp_v4;
+extern int mp_v5;
+extern int mp_v6;
+extern int mp_v7;
+extern int mp_v8;
+extern int mp_v9;
+extern int mp_v10;
+extern int mp_v11;
+
 // An insertion sort which sorts moves in descending order up to and
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.
@@ -68,7 +80,7 @@ static void score_captures(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         m->value =
-          PieceValue[MG][piece_on(to_sq(m->move))] * 6
+          *PieceValue[MG][piece_on(to_sq(m->move))] * 6
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
@@ -90,10 +102,12 @@ static void score_quiets(const Position* pos) {
         uint32_t move = m->move & 4095;
         Square   to   = move & 63;
         Square   from = move >> 6;
-        m->value      = (*history)[c][move] + 2 * (*cmh)[piece_on(from)][to]
-                 + 2 * (*fmh)[piece_on(from)][to] + 2 * (*fmh2)[piece_on(from)][to]
-                 + (*fmh3)[piece_on(from)][to]
-                 + (st->mp_ply < MAX_LPH ? min(4, st->depth / 3) * (*lph)[st->mp_ply][move] : 0);
+        m->value = (mp_v4 * (*history)[c][move]
+                 + mp_v5 * (*cmh)[piece_on(from)][to]
+                 + mp_v6 * (*fmh)[piece_on(from)][to]
+                 + mp_v7 * (*fmh2)[piece_on(from)][to]
+                 + mp_v8 * (*fmh3)[piece_on(from)][to]
+                 + mp_v9 * (st->mp_ply < MAX_LPH ? min((mp_v10 / 100), st->depth / (mp_v11 / 100)) * (*lph)[st->mp_ply][move] : 0)) / 100;
     }
 }
 
@@ -108,7 +122,7 @@ static void score_evasions(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         if (is_capture(pos, m->move))
-            m->value = PieceValue[MG][piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
+            m->value = *PieceValue[MG][piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
                      + (*cmh)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28);
@@ -145,7 +159,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
             move = pick_best(st->cur++, st->endMoves);
             if (move != st->ttMove)
             {
-                if (see_test(pos, move, -69 * (st->cur - 1)->value / 1024))
+                if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2))
                     return move;
 
                 // Losing capture, move it to the beginning of the array.
@@ -181,7 +195,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
             st->cur      = st->endBadCaptures;
             st->endMoves = generate(pos, st->cur, QUIETS);
             score_quiets(pos);
-            partial_insertion_sort(st->cur, st->endMoves, -3000 * st->depth);
+            partial_insertion_sort(st->cur, st->endMoves, -mp_v3 * st->depth);
         }
         st->stage++;
         /* fallthrough */
