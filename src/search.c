@@ -238,8 +238,9 @@ void thread_search(Position* pos) {
     }
     (ss - 1)->endMoves = pos->moveList;
 
-    for (int i = -7; i < 0; i++) {
-        ss[i].history = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
+    for (int i = -7; i < 0; i++)
+    {
+        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
         ss[i].staticEval = VALUE_NONE;
     }
 
@@ -403,7 +404,8 @@ void thread_search(Position* pos) {
                     Threads.stop = true;
             }
             else
-                Threads.increaseDepth = !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Threads.increaseDepth =
+                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
         }
 
         mainThread.iterValue[iterIdx] = bestValue;
@@ -670,6 +672,9 @@ moves_loop:  // When in check search starts from here.
     ttCapture                           = ttMove && is_capture_or_promotion(pos, ttMove);
     formerPv                            = ss->ttPv && !PvNode;
 
+    bool likelyFailLow =
+      PvNode && ttMove && (tte_bound(tte) & BOUND_UPPER) && tte_depth(tte) >= depth;
+
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta
     // cutoff occurs
@@ -885,7 +890,7 @@ moves_loop:  // When in check search starts from here.
                 r--;
 
             // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
+            if (ss->ttPv && !likelyFailLow)
                 r -= 2;
 
             if (moveCountPruning && !formerPv)
@@ -1564,9 +1569,9 @@ void prepare_for_search(Position* root, bool ponderMode) {
 
     Position* pos  = Threads.pos[0];
     pos->rootDepth = 0;
-    pos->nodes = 0;
-    RootMoves* rm            = pos->rootMoves;
-    rm->size                 = end - list;
+    pos->nodes     = 0;
+    RootMoves* rm  = pos->rootMoves;
+    rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;

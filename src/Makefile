@@ -31,7 +31,7 @@ endif
 EXE = cfish
 
 ### Installation dir definitions
-PREFIX = /usr/local
+PREFIX = $(HOME)/.local
 BINDIR = $(PREFIX)/bin
 
 ### Built-in benchmark for pgo-builds
