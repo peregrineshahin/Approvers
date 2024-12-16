@@ -908,7 +908,7 @@ moves_loop:  // When in check search starts from here.
                     r++;
 
                 if ((ss + 1)->cutoffCnt > 3)
-                    r++;
+                    r += 2;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
