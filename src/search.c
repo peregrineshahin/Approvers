@@ -603,6 +603,10 @@ Value search(
 
         if (nullValue >= beta)
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
+
+        // https://tests.stockfishchess.org/tests/view/6591c9fc79aa8af82b958893
+        if (depth >= 12)
+            depth--;
     }
 
     probCutBeta = beta + 176 - 49 * improving;
