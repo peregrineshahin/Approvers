@@ -26,8 +26,6 @@
 #include "tt.h"
 #include "uci.h"
 
-static void thread_idle_loop(Position* pos);
-
 #ifndef _WIN32
     #define THREAD_FUNC void*
 #else
@@ -104,8 +102,6 @@ static THREAD_FUNC thread_init(void* arg) {
 
 #endif
 
-    thread_idle_loop(pos);
-
     return 0;
 }
 
@@ -137,22 +133,6 @@ static void thread_create(int idx) {
 // thread_destroy() waits for thread termination before returning.
 
 static void thread_destroy(Position* pos) {
-#ifndef _WIN32
-    pthread_mutex_lock(&pos->mutex);
-    pos->action = THREAD_EXIT;
-    pthread_cond_signal(&pos->sleepCondition);
-    pthread_mutex_unlock(&pos->mutex);
-    pthread_join(pos->nativeThread, NULL);
-    pthread_cond_destroy(&pos->sleepCondition);
-    pthread_mutex_destroy(&pos->mutex);
-#else
-    pos->action = THREAD_EXIT;
-    SetEvent(pos->startEvent);
-    WaitForSingleObject(pos->nativeThread, INFINITE);
-    CloseHandle(pos->startEvent);
-    CloseHandle(pos->stopEvent);
-#endif
-
     free(pos->counterMoves);
     free(pos->history);
     free(pos->captureHistory);
@@ -160,73 +140,6 @@ static void thread_destroy(Position* pos) {
     free(pos->stackAllocation);
     free(pos->moveList);
     free(pos);
-}
-
-
-void thread_wake_up(Position* pos, int action) {
-#ifndef _WIN32
-
-    pthread_mutex_lock(&pos->mutex);
-
-#endif
-
-    if (action != THREAD_STATE_RESUME)
-        pos->action = action;
-
-#ifndef _WIN32
-
-    pthread_cond_signal(&pos->sleepCondition);
-    pthread_mutex_unlock(&pos->mutex);
-
-#else
-
-    SetEvent(pos->startEvent);
-
-#endif
-}
-
-
-// thread_idle_loop() is where the thread is parked when it has no work to do.
-
-static void thread_idle_loop(Position* pos) {
-    while (true)
-    {
-#ifndef _WIN32
-
-        pthread_mutex_lock(&pos->mutex);
-
-        while (pos->action == THREAD_SLEEP)
-        {
-            pthread_cond_signal(&pos->sleepCondition);  // Wake up any waiting thread
-            pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
-        }
-
-        pthread_mutex_unlock(&pos->mutex);
-
-#else
-
-        WaitForSingleObject(pos->startEvent, INFINITE);
-
-#endif
-
-        if (pos->action == THREAD_EXIT)
-        {
-            break;
-        }
-
-        if (pos->threadIdx == 0)
-            mainthread_search();
-        else
-            thread_search(pos);
-
-        pos->action = THREAD_SLEEP;
-
-#ifdef _WIN32
-
-        SetEvent(pos->stopEvent);
-
-#endif
-    }
 }
 
 
@@ -258,17 +171,6 @@ void threads_init(void) {
 
 void threads_exit(void) {
     threads_set_number(0);
-
-#ifndef _WIN32
-
-    pthread_cond_destroy(&Threads.sleepCondition);
-    pthread_mutex_destroy(&Threads.mutex);
-
-#else
-
-    CloseHandle(Threads.event);
-
-#endif
 }
 
 

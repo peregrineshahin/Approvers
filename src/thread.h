@@ -58,7 +58,6 @@ enum {
 };
 
 void thread_search(Position* pos);
-void thread_wake_up(Position* pos, int action);
 
 // MainThread struct seems to exist mostly for easy move.
 
