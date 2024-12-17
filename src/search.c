@@ -441,7 +441,8 @@ void thread_search(Position* pos) {
         stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 #ifndef KAGGLE
-        uci_print_pv(pos, pos->rootDepth, alpha, beta);
+        if (!Threads.ponder)
+            uci_print_pv(pos, pos->rootDepth, alpha, beta);
 #endif
 
         if (!Threads.stop)
