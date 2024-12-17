@@ -79,15 +79,8 @@ void mainthread_search(void);
 // access to threads data is done through this class.
 
 struct ThreadPool {
-    Position* pos[MAX_THREADS];
-    int       numThreads;
-#ifndef _WIN32
-    pthread_mutex_t mutex;
-    pthread_cond_t  sleepCondition;
-    bool            initializing;
-#else
-    HANDLE event;
-#endif
+    Position*   pos[MAX_THREADS];
+    int         numThreads;
     atomic_bool ponder, stop, increaseDepth;
 };
 
