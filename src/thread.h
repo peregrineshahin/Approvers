@@ -22,40 +22,10 @@
 #define THREAD_H
 
 #include <stdatomic.h>
-#ifndef _WIN32
-    #include <pthread.h>
-#else
-    #include <windows.h>
-#endif
 
 #include "types.h"
 
 #define MAX_THREADS 1
-
-#ifndef _WIN32
-    #define LOCK_T pthread_mutex_t
-    #define LOCK_INIT(x) pthread_mutex_init(&(x), NULL)
-    #define LOCK_DESTROY(x) pthread_mutex_destroy(&(x))
-    #define LOCK(x) pthread_mutex_lock(&(x))
-    #define UNLOCK(x) pthread_mutex_unlock(&(x))
-#else
-    #define LOCK_T HANDLE
-    #define LOCK_INIT(x) \
-        do \
-        { \
-            x = CreateMutex(NULL, FALSE, NULL); \
-        } while (0)
-    #define LOCK_DESTROY(x) CloseHandle(x)
-    #define LOCK(x) WaitForSingleObject(x, INFINITE)
-    #define UNLOCK(x) ReleaseMutex(x)
-#endif
-
-enum {
-    THREAD_SLEEP,
-    THREAD_SEARCH,
-    THREAD_EXIT,
-    THREAD_STATE_RESUME
-};
 
 void thread_search(Position* pos);
 
@@ -88,7 +58,6 @@ typedef struct ThreadPool ThreadPool;
 
 void threads_init(void);
 void threads_exit(void);
-void threads_start_thinking(Position* pos, LimitsType*);
 void threads_set_number(int num);
 
 extern ThreadPool Threads;
