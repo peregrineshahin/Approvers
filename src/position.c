@@ -303,60 +303,6 @@ static void set_state(Position* pos, Stack* st) {
 }
 
 
-// pos_fen() returns a FEN representation of the position. In case of
-// Chess960 the Shredder-FEN notation is used. This is used for copying
-// the root position to search threads.
-
-void pos_fen(const Position* pos, char* str) {
-    int cnt;
-
-    for (int r = 7; r >= 0; r--)
-    {
-        for (int f = 0; f < 8; f++)
-        {
-            for (cnt = 0; f < 8 && !piece_on(8 * r + f); f++)
-                cnt++;
-            if (cnt)
-                *str++ = '0' + cnt;
-            if (f < 8)
-                *str++ = PieceToChar[piece_on(8 * r + f)];
-        }
-        if (r > 0)
-            *str++ = '/';
-    }
-
-    *str++ = ' ';
-    *str++ = stm() == WHITE ? 'w' : 'b';
-    *str++ = ' ';
-
-    int cr = pos->st->castlingRights;
-
-    if (cr & WHITE_OO)
-        *str++ = 'K';
-    if (cr & WHITE_OOO)
-        *str++ = 'Q';
-    if (cr & BLACK_OO)
-        *str++ = 'k';
-    if (cr & BLACK_OOO)
-        *str++ = 'q';
-    if (!cr)
-        *str++ = '-';
-
-    *str++ = ' ';
-    if (ep_square() != 0)
-    {
-        *str++ = 'a' + file_of(ep_square());
-        *str++ = '1' + rank_of(ep_square());
-    }
-    else
-    {
-        *str++ = '-';
-    }
-
-    sprintf(str, " %d %d", rule50_count(), 1 + (game_ply() - (stm() == BLACK)) / 2);
-}
-
-
 // Turning slider_blockers() into an static function was slower, even
 // though it should only add a single slightly optimised copy to evaluate().
 #if 1
