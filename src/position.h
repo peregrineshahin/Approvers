@@ -173,14 +173,7 @@ struct Position {
     int         callsCnt;
     int         action;
     int         threadIdx;
-#ifndef _WIN32
-    pthread_t       nativeThread;
-    pthread_mutex_t mutex;
-    pthread_cond_t  sleepCondition;
-#else
-    HANDLE nativeThread;
-    HANDLE startEvent, stopEvent;
-#endif
+
     void* stackAllocation;
 };
 

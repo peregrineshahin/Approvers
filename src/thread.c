@@ -40,9 +40,7 @@ int                      numCmhTables = 0;
 
 // thread_init() is where a search thread starts and initialises itself.
 
-static THREAD_FUNC thread_init(void* arg) {
-    int idx = (intptr_t) arg;
-
+static THREAD_FUNC thread_init(int idx) {
 #ifdef PER_THREAD_CMH
     int t = idx;
 #else
@@ -79,28 +77,7 @@ static THREAD_FUNC thread_init(void* arg) {
 
     atomic_store(&pos->resetCalls, false);
 
-#ifndef _WIN32  // linux
-
-    pthread_mutex_init(&pos->mutex, NULL);
-    pthread_cond_init(&pos->sleepCondition, NULL);
-
     Threads.pos[idx] = pos;
-
-    pthread_mutex_lock(&Threads.mutex);
-    Threads.initializing = false;
-    pthread_cond_signal(&Threads.sleepCondition);
-    pthread_mutex_unlock(&Threads.mutex);
-
-#else  // Windows
-
-    pos->startEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    pos->stopEvent  = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    Threads.pos[idx] = pos;
-
-    SetEvent(Threads.event);
-
-#endif
 
     return 0;
 }
@@ -108,25 +85,7 @@ static THREAD_FUNC thread_init(void* arg) {
 // thread_create() launches a new thread.
 
 static void thread_create(int idx) {
-#ifndef _WIN32
-
-    pthread_t thread;
-
-    Threads.initializing = true;
-    pthread_mutex_lock(&Threads.mutex);
-    pthread_create(&thread, NULL, thread_init, (void*) (intptr_t) idx);
-    while (Threads.initializing)
-        pthread_cond_wait(&Threads.sleepCondition, &Threads.mutex);
-    pthread_mutex_unlock(&Threads.mutex);
-
-#else
-
-    HANDLE thread = CreateThread(NULL, 0, thread_init, (void*) (intptr_t) idx, 0, NULL);
-    WaitForSingleObject(Threads.event, INFINITE);
-
-#endif
-
-    Threads.pos[idx]->nativeThread = thread;
+    thread_init(idx);
 }
 
 
@@ -149,17 +108,6 @@ static void thread_destroy(Position* pos) {
 // allocation of Endgames in the Thread constructor.
 
 void threads_init(void) {
-#ifndef _WIN32
-
-    pthread_mutex_init(&Threads.mutex, NULL);
-    pthread_cond_init(&Threads.sleepCondition, NULL);
-
-#else
-
-    Threads.event = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-#endif
-
     Threads.numThreads = 1;
     thread_create(0);
 }
