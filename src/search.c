@@ -156,9 +156,7 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) {
-    return min((6 * depth + 229) * depth - 215, 2000);
-}
+static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -878,7 +876,10 @@ moves_loop:  // When in check search starts from here.
             {
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5 / 100)
+                {
                     extension = 2;
+                    depth += depth < 12;
+                }
 
                 singularQuietLMR = !ttCapture;
             }
