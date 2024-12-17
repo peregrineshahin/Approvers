@@ -71,7 +71,6 @@ static THREAD_FUNC thread_init(void* arg) {
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
-    pos->lowPlyHistory   = calloc(sizeof(LowPlyHistory), 1);
     pos->rootMoves       = calloc(sizeof(RootMoves), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
@@ -157,7 +156,6 @@ static void thread_destroy(Position* pos) {
     free(pos->counterMoves);
     free(pos->history);
     free(pos->captureHistory);
-    free(pos->lowPlyHistory);
     free(pos->rootMoves);
     free(pos->stackAllocation);
     free(pos->moveList);
