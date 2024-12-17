@@ -494,7 +494,6 @@ void uci_loop(int argc, char** argv) {
         {
             Threads.stop     = true;
             Threads.sleeping = false;
-            thread_wait_until_sleeping(threads_main());
         }
         UNLOCK(Threads.lock);
 
@@ -653,9 +652,6 @@ void uci_loop(int argc, char** argv) {
             fflush(stdout);
         }
     } while (argc == 1 && strcmp(token, "quit") != 0);
-
-    if (Threads.searching)
-        thread_wait_until_sleeping(threads_main());
 
     free(cmd);
     free(pos.stackAllocation);

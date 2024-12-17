@@ -163,29 +163,6 @@ static void thread_destroy(Position* pos) {
 }
 
 
-// thread_wait_for_search_finished() waits on sleep condition until
-// not searching.
-
-void thread_wait_until_sleeping(Position* pos) {
-#ifndef _WIN32
-
-    pthread_mutex_lock(&pos->mutex);
-
-    while (pos->action != THREAD_SLEEP)
-        pthread_cond_wait(&pos->sleepCondition, &pos->mutex);
-
-    pthread_mutex_unlock(&pos->mutex);
-
-#else
-
-    WaitForSingleObject(pos->stopEvent, INFINITE);
-
-#endif
-
-    if (pos->threadIdx == 0)
-        Threads.searching = false;
-}
-
 void thread_wake_up(Position* pos, int action) {
 #ifndef _WIN32
 

@@ -1635,11 +1635,8 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 // then returns immediately.
 
 void start_thinking(Position* root, bool ponderMode) {
-    if (Threads.searching)
-        thread_wait_until_sleeping(threads_main());
-
     prepare_for_search(root, ponderMode);
-    thread_wake_up(threads_main(), THREAD_SEARCH);
+    mainthread_search();
 }
 
 void prepare_for_search(Position* root, bool ponderMode) {
