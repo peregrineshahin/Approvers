@@ -36,12 +36,6 @@
 // DD-MM-YY and show in engine_info.
 char Version[] = "";
 
-#ifndef _WIN32
-pthread_mutex_t ioMutex = PTHREAD_MUTEX_INITIALIZER;
-#else
-HANDLE ioMutex;
-#endif
-
 // xorshift64star Pseudo-Random Number Generator
 // This class is based on original code written and dedicated
 // to the public domain by Sebastiano Vigna (2014).

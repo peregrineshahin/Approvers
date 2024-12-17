@@ -21,10 +21,6 @@
 #ifndef POSITION_H
 #define POSITION_H
 
-
-#ifndef _WIN32
-    #include <pthread.h>
-#endif
 #include <stdatomic.h>
 #include <stddef.h>  // For offsetof()
 #include <string.h>
