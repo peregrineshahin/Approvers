@@ -450,6 +450,7 @@ void uci_loop(int argc, char** argv) {
     }
 
     delayedSettings.ttSize = 1;
+    delayedSettings.numThreads = 1;
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
