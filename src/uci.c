@@ -34,8 +34,6 @@
 extern void benchmark(Position* pos, char* str);
 #endif
 
-char lastFen[256];
-
 #ifndef KAGGLE
 #define SET(nz) \
     if (strcmp(#nz, name) == 0) \
@@ -595,10 +593,7 @@ void uci_loop(int argc, char** argv) {
         else if (strcmp(token, "go") == 0)
             go(&pos, str);
         else if (strcmp(token, "position") == 0)
-        {
             position(&pos, str);
-            pos_fen(&pos, lastFen);
-        }
         else if (strcmp(token, "setoption") == 0)
             setoption(str);
 
