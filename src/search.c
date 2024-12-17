@@ -156,9 +156,7 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) {
-    return min((6 * depth + 229) * depth - 215, 2000);
-}
+static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -734,10 +732,6 @@ Value search(
             }
         ss->ttPv = ttPv;
     }
-
-    // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= max(iir_v1 / 100, 3) && !ttMove)
-        depth -= max(iir_v2 / 100, 2);
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
