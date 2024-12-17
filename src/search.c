@@ -156,9 +156,7 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) {
-    return min((6 * depth + 229) * depth - 215, 2000);
-}
+static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -1180,8 +1178,20 @@ moves_loop:  // When in check search starts from here.
             update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_bonus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
-    else if ((depth >= 3 || PvNode) && !captured_piece())
-        update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth));
+    else if (!captured_piece() && prevSq != SQ_NONE)
+    {
+        int bonus = (117 * (depth > 5) + 39 * !(PvNode || cutNode) + 168 * ((ss - 1)->moveCount > 8)
+                     + 115 * (!inCheck && bestValue <= ss->staticEval - 108));
+
+        // Proportional to "how much damage we have to undo"
+        bonus += min(-(ss - 1)->statScore / 113, 300);
+
+        bonus = max(bonus, 0);
+        update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth) * bonus / 93);
+
+        history_update(*pos->history, !stm(), (ss - 1)->currentMove,
+                       stat_bonus(depth) * bonus / 179);
+    }
 
     // If no good move is found and the previous position was ttPv, then the
     // previous opponent move is probably good and the new position is added
