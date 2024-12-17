@@ -129,13 +129,6 @@ void benchmark(Position* current, char* str) {
         fens    = Defaults;
         numFens = sizeof(Defaults) / sizeof(char*);
     }
-    else if (strcasecmp(fenFile, "current") == 0)
-    {
-        fens    = malloc(sizeof(*fens));
-        fens[0] = malloc(128);
-        pos_fen(current, fens[0]);
-        numFens = 1;
-    }
     else
     {
         int maxFens = 100;
