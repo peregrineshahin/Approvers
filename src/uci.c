@@ -94,6 +94,7 @@ extern int se_v3;
 extern int se_v4;
 extern int se_v5;
 extern int se_v6;
+extern int se_v7;
 extern int prb_v1;
 extern int prb_v2;
 extern int rfp_v1;
@@ -300,6 +301,7 @@ void setoption(char* str) {
     SET(se_v4)
     SET(se_v5)
     SET(se_v6)
+    SET(se_v7)
     SET(prb_v1)
     SET(prb_v2)
     SET(rfp_v1)
@@ -559,6 +561,7 @@ void uci_loop(int argc, char** argv) {
             printf("option name se_v4 type string\n");
             printf("option name se_v5 type string\n");
             printf("option name se_v6 type string\n");
+            printf("option name se_v7 type string\n");
             printf("option name prb_v1 type string\n");
             printf("option name prb_v2 type string\n");
             printf("option name rfp_v1 type string\n");

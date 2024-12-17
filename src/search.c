@@ -82,7 +82,8 @@ int se_v2      = 372;
 int se_v3      = 229;
 int se_v4      = 283;
 int se_v5      = 4000;
-int se_v6      = 101;
+int se_v6      = 34000;
+int se_v7      = 101;
 int prb_v1     = 173;
 int prb_v2     = 51;
 int rfp_v1     = 840;
@@ -156,9 +157,7 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) {
-    return min((6 * depth + 229) * depth - 215, 2000);
-}
+static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -880,6 +879,9 @@ moves_loop:  // When in check search starts from here.
                 if (!PvNode && value < singularBeta - se_v5 / 100)
                     extension = 2;
 
+                if (!PvNode && value < singularBeta - se_v6 / 100)
+                    extension = 3;
+
                 singularQuietLMR = !ttCapture;
             }
 
@@ -915,7 +917,7 @@ moves_loop:  // When in check search starts from here.
             }
             else if (cutNode)
             {
-                extension -= se_v6 / 100;
+                extension -= se_v7 / 100;
             }
 
             // The call to search_NonPV with the same value of ss messed up our
