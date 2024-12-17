@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
     bitboards_init();
     zob_init();
     threads_init();
+    options_init();
     search_clear();
 
     uci_loop(argc, argv);

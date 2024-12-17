@@ -236,7 +236,19 @@ void position(Position* pos, char* str) {
 void setoption(char* str) {
     char *name, *value;
 
-    name = strstr(str, "name") + 5;
+    name = strstr(str, "name");
+    if (!name)
+    {
+        name = "";
+#ifndef DKAGGLE
+        goto error;
+#endif
+    }
+
+    name += 4;
+    while (isblank(*name))
+        name++;
+
     value = strstr(name, "value");
     if (value)
     {
@@ -248,6 +260,8 @@ void setoption(char* str) {
         while (isblank(*value))
             value++;
     }
+    if (!value || strlen(value) == 0)
+        value = "<empty>";
 
     SET(nmp_v1)
     SET(nmp_v2)
@@ -341,13 +355,12 @@ void setoption(char* str) {
     SET(eg_queen)
     SET(eval_scale)
 
-    if (strcmp("Hash", name) == 0)
-    {
-        delayedSettings.ttSize = atoi(value);
+    if (option_set_by_name(name, value))
         return;
-    }
-
+#ifndef DKAGGLE
+error:
     fprintf(stderr, "No such option: %s\n", name);
+#endif
 }
 
 
@@ -361,7 +374,7 @@ static void go(Position* pos, char* str) {
 
     process_delayed_settings();
 
-    Limits           = (struct LimitsType) {0};
+    Limits           = (struct LimitsType){0};
     Limits.startTime = now();  // As early as possible!
 
     for (token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
@@ -445,8 +458,6 @@ void uci_loop(int argc, char** argv) {
         strcat(cmd, argv[i]);
         strcat(cmd, " ");
     }
-
-    delayedSettings.ttSize = 1;
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
@@ -622,7 +633,7 @@ void uci_loop(int argc, char** argv) {
         else if (strcmp(token, "setoption") == 0)
             setoption(str);
 
-        // Additional custom non-UCI commands, useful for debugging
+            // Additional custom non-UCI commands, useful for debugging
 #ifndef KAGGLE
         else if (strcmp(token, "eval") == 0)
         {

@@ -21,8 +21,7 @@
 #include <float.h>
 #include "search.h"
 #include "timeman.h"
-
-int MoveOverhead = 10;
+#include "uci.h"
 
 struct TimeManagement Time;  // Our global time management struct
 
@@ -35,9 +34,14 @@ double my_sqrt(double x) {
     return guess;
 }
 
-// tm_init() is called at the beginning of the search and calculates
-// the time bounds allowed for the current game ply.
+// tm_init() is called at the beginning of the search and calculates the
+// time bounds allowed for the current game ply. We currently support:
+// 1) x basetime (+z increment)
+// 2) x moves in y seconds (+z increment)
+
 void time_init(Color us, int ply) {
+    int moveOverhead = option_value(OPT_MOVE_OVERHEAD);
+
     // opt_scale is a percentage of available time to use for the current move.
     // max_scale is a multiplier applied to optimumTime.
     double opt_scale, max_scale;
@@ -49,10 +53,11 @@ void time_init(Color us, int ply) {
 
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =
-      max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
+      max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - moveOverhead * (2 + mtg));
 
     timeLeft = 100 * timeLeft / 100;
 
+    // x basetime (+z increment)
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
     opt_scale = min(0.008 + my_sqrt(ply + 3.0) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
@@ -60,5 +65,8 @@ void time_init(Color us, int ply) {
 
     // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime = min(0.8 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+    Time.maximumTime = min(0.8 * Limits.time[us] - moveOverhead, max_scale * Time.optimumTime);
+
+    if (option_value(OPT_PONDER))
+        Time.optimumTime += Time.optimumTime / 4;
 }
