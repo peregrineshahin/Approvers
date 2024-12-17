@@ -927,11 +927,6 @@ moves_loop:  // When in check search starts from here.
             ss->mpKillers[1] = k2;
         }
 
-        // Check extension
-        else if (givesCheck
-                 && (is_discovery_check_on_king(pos, !stm(), move) || see_test(pos, move, 0)))
-            extension = 1;
-
         // Last capture extension
         else if (*PieceValue[EG][captured_piece()] > eg_pawn && non_pawn_material() <= 2 * mg_rook)
             extension = 1;
