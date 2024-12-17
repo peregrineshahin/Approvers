@@ -97,6 +97,14 @@ int lmr_v8     = 15862;
 int fmc_v1     = 293;
 int fmc_v2     = 285;
 int fmc_v3     = 203;
+int hb_v1      = 600;
+int hb_v2      = 229;
+int hb_v3      = 215;
+int hb_v4      = 2000;
+int hm_v1      = 600;
+int hm_v2      = 229;
+int hm_v3      = 215;
+int hm_v4      = 2000;
 int asd_v1     = 464;
 int ses_v1     = 323;
 int qsf_v1     = 151;
@@ -156,7 +164,10 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
+static Value stat_bonus(Depth d) { return min((hb_v1 / 100 * d + hb_v2) * d - hb_v3, hb_v4); }
+
+// History and stats update malus, based on depth
+static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm_v3, hm_v4); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -592,12 +603,12 @@ Value search(
 
                 // Extra penalty for early quiet moves of the previous ply
                 if ((ss - 1)->moveCount <= 2 && !captured_piece())
-                    update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_bonus(depth + 1));
+                    update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
             }
             // Penalty for a quiet ttMove that fails low
             else if (!is_capture_or_promotion(pos, ttMove))
             {
-                int penalty = -stat_bonus(depth);
+                int penalty = -stat_malus(depth);
                 history_update(*pos->history, stm(), ttMove, penalty);
                 update_cm_stats(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
             }
@@ -1021,7 +1032,7 @@ moves_loop:  // When in check search starts from here.
                 value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_bonus(newDepth);
+                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
 
                     if (move == ss->killers[0])
                         bonus += bonus / 4;
@@ -1175,7 +1186,7 @@ moves_loop:  // When in check search starts from here.
         // when it gets refuted
         if (((ss - 1)->moveCount == 1 || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
-            update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_bonus(depth + 1));
+            update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)

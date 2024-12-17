@@ -108,6 +108,14 @@ extern int lmr_v8;
 extern int fmc_v1;
 extern int fmc_v2;
 extern int fmc_v3;
+extern int hb_v1;
+extern int hb_v2;
+extern int hb_v3;
+extern int hb_v4;
+extern int hm_v1;
+extern int hm_v2;
+extern int hm_v3;
+extern int hm_v4;
 extern int asd_v1;
 extern int ses_v1;
 extern int qsf_v1;
@@ -314,6 +322,14 @@ void setoption(char* str) {
     SET(fmc_v1)
     SET(fmc_v2)
     SET(fmc_v3)
+    SET(hb_v1);
+    SET(hb_v2);
+    SET(hb_v3);
+    SET(hb_v4);
+    SET(hm_v1);
+    SET(hm_v2);
+    SET(hm_v3);
+    SET(hm_v4);
     SET(asd_v1)
     SET(ses_v1)
     SET(qsf_v1)
@@ -573,6 +589,14 @@ void uci_loop(int argc, char** argv) {
             printf("option name fmc_v1 type string\n");
             printf("option name fmc_v2 type string\n");
             printf("option name fmc_v3 type string\n");
+            printf("option name hb_v1 type string\n");
+            printf("option name hb_v2 type string\n");
+            printf("option name hb_v3 type string\n");
+            printf("option name hb_v4 type string\n");
+            printf("option name hm_v1 type string\n");
+            printf("option name hm_v2 type string\n");
+            printf("option name hm_v3 type string\n");
+            printf("option name hm_v4 type string\n");
             printf("option name asd_v1 type string\n");
             printf("option name ses_v1 type string\n");
             printf("option name qsf_v1 type string\n");
