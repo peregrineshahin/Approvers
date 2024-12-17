@@ -4,7 +4,6 @@
 struct settings {
     size_t ttSize;
     size_t numThreads;
-    bool   largePages;
     bool   clear;
 };
 
