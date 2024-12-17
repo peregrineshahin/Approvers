@@ -198,7 +198,6 @@ void benchmark(Position* current, char* str) {
 
         Limits.startTime = now();
         start_thinking(&pos, false);
-        thread_wait_until_sleeping(threads_main());
         nodes += Threads.pos[0]->nodes;
     }
 
