@@ -1577,17 +1577,49 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 }
 
+static int peak_stdin()
+{
+#ifndef WIN32
+    fd_set rf = {0};
+    struct timeval tv = {0, 0};
+    FD_SET(fileno(stdin), &rf);
+    select(fileno(stdin) + 1, &rf, NULL, NULL, &tv);
+    return FD_ISSET(fileno(stdin), &rf);
+#else
+    static HANDLE hIn;
+    static int init = 0, pipe = 0;
+    DWORD dw;
+
+    if (!init++)
+    {
+        hIn = GetStdHandle(STD_INPUT_HANDLE);
+        pipe = !GetConsoleMode(hIn, &dw);
+        if (!pipe)
+        {
+            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
+            FlushConsoleInputBuffer(hIn);
+        }
+    }
+
+    if (pipe)
+        return PeekNamedPipe(hIn, NULL, 0, NULL, &dw, NULL) ? dw : 1;
+
+    GetNumberOfConsoleInputEvents(hIn, &dw);
+    return dw > 1 ? dw : 0;
+#endif
+}
 
 // check_time() is used to print debug info and, more importantly, to detect
 // when we are out of available time and thus stop the search.
-
 static void check_time(void) {
-    TimePoint elapsed = time_elapsed();
-
-    // An engine may not stop pondering until told so by the GUI
     if (Threads.ponder)
+    {
+        if (peak_stdin())
+            Threads.stop = 1;
         return;
+    }
 
+    TimePoint elapsed = time_elapsed();
     if ((use_time_management() && elapsed > time_maximum() - 10)
         || (Limits.movetime && elapsed >= Limits.movetime)
         || (Limits.nodes && Threads.pos[0]->nodes >= Limits.nodes))
