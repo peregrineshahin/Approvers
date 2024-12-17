@@ -36,12 +36,14 @@ extern void benchmark(Position* pos, char* str);
 
 char lastFen[256];
 
+#ifndef KAGGLE
 #define SET(nz) \
     if (strcmp(#nz, name) == 0) \
     { \
         nz = atoi(value); \
         return; \
     }
+#endif
 
 extern int nmp_v1;
 extern int nmp_v2;
@@ -263,6 +265,7 @@ void setoption(char* str) {
     if (!value || strlen(value) == 0)
         value = "<empty>";
 
+#ifndef KAGGLE
     SET(nmp_v1)
     SET(nmp_v2)
     SET(nmp_v3)
@@ -354,6 +357,7 @@ void setoption(char* str) {
     SET(mg_queen)
     SET(eg_queen)
     SET(eval_scale)
+#endif
 
     if (option_set_by_name(name, value))
         return;
@@ -515,6 +519,7 @@ void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "uci") == 0)
         {
+            #ifndef KAGGLE
             printf("id name\n");
             printf("option name nmp_v1 type string\n");
             printf("option name nmp_v2 type string\n");
@@ -611,6 +616,7 @@ void uci_loop(int argc, char** argv) {
 
             printf("uciok\n");
             fflush(stdout);
+            #endif
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
