@@ -97,6 +97,34 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream) {
 
 #ifdef _WIN32
 typedef SIZE_T(WINAPI* GLPM)(void);
+size_t largePageMinimum;
+
+bool large_pages_supported(void) {
+    GLPM impGetLargePageMinimum = (GLPM) (void (*)(void)) GetProcAddress(
+      GetModuleHandle("kernel32.dll"), "GetLargePageMinimum");
+    if (!impGetLargePageMinimum)
+        return 0;
+
+    if ((largePageMinimum = impGetLargePageMinimum()) == 0)
+        return 0;
+
+    LUID privLuid;
+    if (!LookupPrivilegeValue(NULL, SE_LOCK_MEMORY_NAME, &privLuid))
+        return 0;
+
+    HANDLE token;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+        return 0;
+
+    TOKEN_PRIVILEGES tokenPrivs;
+    tokenPrivs.PrivilegeCount           = 1;
+    tokenPrivs.Privileges[0].Luid       = privLuid;
+    tokenPrivs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    if (!AdjustTokenPrivileges(token, FALSE, &tokenPrivs, 0, NULL, NULL))
+        return 0;
+
+    return 1;
+}
 
 // The following two functions were taken from mingw_lock.c
 
