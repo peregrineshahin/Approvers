@@ -80,7 +80,7 @@ static void score_captures(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         m->value =
-          *PieceValue[MG][piece_on(to_sq(m->move))] * 6
+          *PieceValue[piece_on(to_sq(m->move))] * 6
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
@@ -120,7 +120,7 @@ static void score_evasions(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         if (is_capture(pos, m->move))
-            m->value = *PieceValue[MG][piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
+            m->value = *PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
                      + (*cmh)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28);

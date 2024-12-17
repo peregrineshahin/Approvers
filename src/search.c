@@ -123,16 +123,11 @@ int mp_v8      = 107;
 int mp_v9      = 98;
 int mp_v10     = 377;
 int mp_v11     = 251;
-int mg_pawn    = 128;
-int eg_pawn    = 212;
-int mg_knight  = 626;
-int eg_knight  = 911;
-int mg_bishop  = 797;
-int eg_bishop  = 988;
-int mg_rook    = 1263;
-int eg_rook    = 1487;
-int mg_queen   = 2564;
-int eg_queen   = 2740;
+int pawn       = 212;
+int knight     = 626;
+int bishop     = 797;
+int rook       = 1263;
+int queen      = 2564;
 int eval_scale = 95;
 
 LimitsType Limits;
@@ -848,11 +843,11 @@ moves_loop:  // When in check search starts from here.
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
                     && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
-                    && *PieceValue[MG][type_of_p(movedPiece)]
-                         >= *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                    && *PieceValue[type_of_p(movedPiece)]
+                         >= *PieceValue[type_of_p(piece_on(to_sq(move)))]
                     && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
-                           + *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                           + *PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
                     continue;
 
@@ -937,7 +932,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (*PieceValue[EG][captured_piece()] > eg_pawn && non_pawn_material() <= 2 * mg_rook)
+        else if (*PieceValue[captured_piece()] > pawn && non_pawn_material() <= 2 * rook)
             extension = 1;
 
         // Late irreversible move extension
@@ -1168,7 +1163,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + mg_pawn));
+            int bonus = stat_bonus(depth + (bestValue > beta + pawn));
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
@@ -1356,7 +1351,7 @@ Value qsearch(Position*  pos,
             if (moveCount > 2)
                 continue;
 
-            futilityValue = futilityBase + *PieceValue[EG][piece_on(to_sq(move))];
+            futilityValue = futilityBase + *PieceValue[piece_on(to_sq(move))];
 
             if (futilityValue <= alpha)
             {
