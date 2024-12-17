@@ -37,8 +37,9 @@ struct RootMove {
     Value previousScore;
     int   tbRank;
     int   bestMoveCount;
-    Value tbScore;
     Move  pv[MAX_PLY];
+    Value averageScore;
+    Value meanSquaredScore;
 };
 
 typedef struct RootMove RootMove;
