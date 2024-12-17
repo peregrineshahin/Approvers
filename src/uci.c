@@ -413,21 +413,6 @@ void uci_loop(int argc, char** argv) {
     char     fen[strlen(StartFEN) + 1];
     char*    token;
 
-    LOCK_INIT(Threads.lock);
-
-    // Threads.searching is only read and set by the UI thread.
-    // The UI thread uses it to know whether it must still call
-    // thread_wait_until_sleeping() on the main search thread.
-    // (This is important for our native Windows threading implementation.)
-    Threads.searching = false;
-
-    // Threads.sleeping is set by the main search thread if it has run
-    // out of work but must wait for a "stop" command from
-    // the GUI to arrive before being allowed to output "bestmove". The main
-    // thread will then go to sleep and has to be waken up by the UI thread.
-    // This variable must be accessed only after acquiring Threads.lock.
-    Threads.sleeping = false;
-
     // Allocate 215 Stack slots.
     // Slots 100-200 form a circular buffer to be filled with game moves.
     // Slots 0-99 make room for prepending the part of game history relevant
@@ -489,29 +474,10 @@ void uci_loop(int argc, char** argv) {
         Threads.ponder = false;
         Threads.stop   = true;
 
-        LOCK(Threads.lock);
-        if (Threads.searching)
-        {
-            Threads.stop     = true;
-            Threads.sleeping = false;
-        }
-        UNLOCK(Threads.lock);
+        if (strcmp(token, "quit") == 0)
+            break;
 
-        Threads.stop = false;
-
-        if (strcmp(token, "quit") == 0 || strcmp(token, "stop") == 0)
-        {
-            if (Threads.searching)
-            {
-                Threads.stop = true;
-                LOCK(Threads.lock);
-                if (Threads.sleeping)
-                    thread_wake_up(threads_main(), THREAD_STATE_RESUME);
-                Threads.sleeping = false;
-                UNLOCK(Threads.lock);
-            }
-        }
-        else if (strcmp(token, "uci") == 0)
+        if (strcmp(token, "uci") == 0)
         {
             #ifndef KAGGLE
             printf("id name\n");
@@ -656,8 +622,6 @@ void uci_loop(int argc, char** argv) {
     free(cmd);
     free(pos.stackAllocation);
     free(pos.moveList);
-
-    LOCK_DESTROY(Threads.lock);
 }
 
 

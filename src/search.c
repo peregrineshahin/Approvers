@@ -1674,6 +1674,4 @@ void prepare_for_search(Position* root, bool ponderMode) {
     pos->st                 = pos->stack + n;
     (pos->st - 1)->endMoves = pos->moveList;
     pos_set_check_info(pos);
-
-    Threads.searching = true;
 }
