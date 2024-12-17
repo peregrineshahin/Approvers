@@ -35,97 +35,101 @@
 #define load_rlx(x) atomic_load_explicit(&(x), memory_order_relaxed)
 #define store_rlx(x, y) atomic_store_explicit(&(x), y, memory_order_relaxed)
 
-int nmp_v1     = 773;
-int nmp_v2     = 72;
-int nmp_v3     = 193;
-int nmp_v4     = 206;
-int nmp_v5     = 23275;
-int nmp_v6     = 29;
-int nmp_v7     = 26;
-int nmp_v8     = 88;
-int nmp_v9     = 164;
-int lph_v1     = 1149;
-int lph_v2     = 562;
-int qmo_v1     = 380;
-int qmo_v2     = 1081;
-int qmo_v3     = 1040;
-int rz_v1      = 517;
-int ft_v1      = 217;
-int rd_v1      = 538;
-int rd_v2      = 1151;
-int rd_v3      = 888;
-int sb_v1      = 13;
-int sb_v2      = 30;
-int sb_v3      = 17;
-int sb_v4      = 136;
-int rd_init_v1 = 2319;
-int d_v1       = 21;
-int iir_v1     = 614;
-int iir_v2     = 202;
-int cbp_v1     = 428;
-int cbp_v2     = 6;
-int fpp_v1     = 690;
-int fpp_v2     = 298;
-int fpp_v3     = 168;
-int fpp_v4     = 27912;
-int sqsee_v1   = 2937;
-int sqsee_v2   = 1790;
-int sch_v1     = 99;
+int nmp_v1     = 779;
+int nmp_v2     = 71;
+int nmp_v3     = 194;
+int nmp_v4     = 216;
+int nmp_v5     = 24645;
+int nmp_v6     = 30;
+int nmp_v7     = 30;
+int nmp_v8     = 92;
+int nmp_v9     = 181;
+int lph_v1     = 1163;
+int lph_v2     = 613;
+int qmo_v1     = 354;
+int qmo_v2     = 1091;
+int qmo_v3     = 1087;
+int rz_v1      = 540;
+int ft_v1      = 210;
+int rd_v1      = 543;
+int rd_v2      = 1140;
+int rd_v3      = 817;
+int sb_v1      = 14;
+int sb_v2      = 33;
+int sb_v3      = 20;
+int sb_v4      = 156;
+int rd_init_v1 = 2530;
+int d_v1       = 20;
+int iir_v1     = 631;
+int iir_v2     = 199;
+int cbp_v1     = 417;
+int cbp_v2     = 7;
+int fpp_v1     = 606;
+int fpp_v2     = 296;
+int fpp_v3     = 173;
+int fpp_v4     = 26148;
+int sqsee_v1   = 3275;
+int sqsee_v2   = 1908;
+int sch_v1     = 97;
 int sch_v2     = -1;
-int sfpc_v1    = 617;
+int sfpc_v1    = 641;
 int sfpc_v2    = 179;
-int sfpc_v3    = 159;
-int sfpc_v4    = 238;
-int scsee_v1   = 219;
-int se_v1      = 654;
-int se_v2      = 372;
-int se_v3      = 229;
-int se_v4      = 283;
-int se_v5      = 4000;
-int se_v6      = 101;
-int prb_v1     = 173;
-int prb_v2     = 51;
-int rfp_v1     = 840;
-int lmr_v1     = 1019;
-int lmr_v2     = 1287;
-int lmr_v3     = 4593;
-int lmr_v4     = 98;
-int lmr_v5     = 98;
-int lmr_v6     = 127;
-int lmr_v7     = 138;
-int lmr_v8     = 15862;
-int fmc_v1     = 293;
-int fmc_v2     = 285;
-int fmc_v3     = 203;
-int asd_v1     = 464;
-int ses_v1     = 323;
-int qsf_v1     = 151;
-int ch_v1      = 1760;
-int ch_v2      = 261;
-int ch_v3      = 292;
-int tempo      = 59;
-int mp_v1      = 67;
-int mp_v2      = 1099;
-int mp_v3      = 3041;
-int mp_v4      = 110;
-int mp_v5      = 209;
-int mp_v6      = 204;
-int mp_v7      = 195;
-int mp_v8      = 107;
-int mp_v9      = 98;
-int mp_v10     = 377;
-int mp_v11     = 251;
-int mg_pawn    = 128;
-int eg_pawn    = 212;
-int mg_knight  = 626;
-int eg_knight  = 911;
-int mg_bishop  = 797;
-int eg_bishop  = 988;
-int mg_rook    = 1263;
-int eg_rook    = 1487;
-int mg_queen   = 2564;
-int eg_queen   = 2740;
-int eval_scale = 95;
+int sfpc_v3    = 151;
+int sfpc_v4    = 250;
+int scsee_v1   = 227;
+int se_v1      = 680;
+int se_v2      = 338;
+int se_v3      = 248;
+int se_v4      = 258;
+int se_v5      = 3822;
+int se_v6      = 108;
+int prb_v1     = 149;
+int prb_v2     = 53;
+int rfp_v1     = 842;
+int lmr_v1     = 954;
+int lmr_v2     = 1207;
+int lmr_v3     = 4446;
+int lmr_v4     = 106;
+int lmr_v5     = 96;
+int lmr_v6     = 126;
+int lmr_v7     = 132;
+int lmr_v8     = 13150;
+int fmc_v1     = 278;
+int fmc_v2     = 248;
+int fmc_v3     = 227;
+int hb_v1      = 585;
+int hb_v2      = 238;
+int hb_v3      = 208;
+int hb_v4      = 1927;
+int hm_v1      = 636;
+int hm_v2      = 218;
+int hm_v3      = 213;
+int hm_v4      = 1854;
+int asd_v1     = 536;
+int ses_v1     = 352;
+int qsf_v1     = 167;
+int ch_v1      = 1863;
+int ch_v2      = 242;
+int ch_v3      = 303;
+int tempo      = 58;
+int mp_v1      = 66;
+int mp_v2      = 1081;
+int mp_v3      = 3181;
+int mp_v4      = 112;
+int mp_v5      = 219;
+int mp_v6      = 203;
+int mp_v7      = 178;
+int mp_v8      = 114;
+int mp_v9      = 96;
+int mp_v10     = 411;
+int mp_v11     = 264;
+int pawn       = 201;
+int knight     = 653;
+int bishop     = 812;
+int rook       = 1379;
+int queen      = 2547;
+int eval_scale = 94;
+
 
 LimitsType Limits;
 
@@ -156,7 +160,10 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
+static Value stat_bonus(Depth d) { return min((hb_v1 / 100 * d + hb_v2) * d - hb_v3, hb_v4); }
+
+// History and stats update malus, based on depth
+static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm_v3, hm_v4); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -592,12 +599,12 @@ Value search(
 
                 // Extra penalty for early quiet moves of the previous ply
                 if ((ss - 1)->moveCount <= 2 && !captured_piece())
-                    update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_bonus(depth + 1));
+                    update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
             }
             // Penalty for a quiet ttMove that fails low
             else if (!is_capture_or_promotion(pos, ttMove))
             {
-                int penalty = -stat_bonus(depth);
+                int penalty = -stat_malus(depth);
                 history_update(*pos->history, stm(), ttMove, penalty);
                 update_cm_stats(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
             }
@@ -837,11 +844,11 @@ moves_loop:  // When in check search starts from here.
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
                     && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
-                    && *PieceValue[MG][type_of_p(movedPiece)]
-                         >= *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                    && *PieceValue[type_of_p(movedPiece)]
+                         >= *PieceValue[type_of_p(piece_on(to_sq(move)))]
                     && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
-                           + *PieceValue[MG][type_of_p(piece_on(to_sq(move)))]
+                           + *PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
                     continue;
 
@@ -926,7 +933,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (*PieceValue[EG][captured_piece()] > eg_pawn && non_pawn_material() <= 2 * mg_rook)
+        else if (*PieceValue[captured_piece()] > pawn && non_pawn_material() <= 2 * rook)
             extension = 1;
 
         // Late irreversible move extension
@@ -1021,7 +1028,7 @@ moves_loop:  // When in check search starts from here.
                 value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_bonus(newDepth);
+                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
 
                     if (move == ss->killers[0])
                         bonus += bonus / 4;
@@ -1157,7 +1164,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + mg_pawn));
+            int bonus = stat_bonus(depth + (bestValue > beta + pawn));
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
@@ -1175,7 +1182,7 @@ moves_loop:  // When in check search starts from here.
         // when it gets refuted
         if (((ss - 1)->moveCount == 1 || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
-            update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_bonus(depth + 1));
+            update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
@@ -1345,7 +1352,7 @@ Value qsearch(Position*  pos,
             if (moveCount > 2)
                 continue;
 
-            futilityValue = futilityBase + *PieceValue[EG][piece_on(to_sq(move))];
+            futilityValue = futilityBase + *PieceValue[piece_on(to_sq(move))];
 
             if (futilityValue <= alpha)
             {

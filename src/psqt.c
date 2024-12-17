@@ -20,22 +20,15 @@
 
 #include "types.h"
 
-extern int mg_pawn;
-extern int eg_pawn;
-extern int mg_knight;
-extern int eg_knight;
-extern int mg_bishop;
-extern int eg_bishop;
-extern int mg_rook;
-extern int eg_rook;
-extern int mg_queen;
-extern int eg_queen;
+extern int pawn;
+extern int knight;
+extern int bishop;
+extern int rook;
+extern int queen;
 
 int zero = 0;
 
-Value* PieceValue[2][16] = {
-  {&zero, &mg_pawn, &mg_knight, &mg_bishop, &mg_rook, &mg_queen, &zero, &zero, &zero, &zero, &zero, &zero },
-  {&zero, &eg_pawn, &eg_knight, &eg_bishop, &eg_rook, &eg_queen, &zero, &zero, &zero, &zero, &zero, &zero }};
+Value* PieceValue[16] = { &zero, &pawn, &knight, &bishop, &rook, &queen, &zero, &zero, &zero, &zero, &zero, &zero };
 
 uint32_t NonPawnPieceValue[16];
 
@@ -47,8 +40,7 @@ uint32_t NonPawnPieceValue[16];
 void psqt_init(void) {
     for (int pt = PAWN; pt <= KING; pt++)
     {
-        PieceValue[MG][make_piece(BLACK, pt)] = PieceValue[MG][pt];
-        PieceValue[EG][make_piece(BLACK, pt)] = PieceValue[EG][pt];
+        PieceValue[make_piece(BLACK, pt)] = PieceValue[pt];
     }
     union {
         uint16_t val[2];
@@ -57,11 +49,11 @@ void psqt_init(void) {
     NonPawnPieceValue[W_PAWN] = NonPawnPieceValue[B_PAWN] = 0;
     for (int pt = KNIGHT; pt < KING; pt++)
     {
-        tmp.val[0]                = *PieceValue[MG][pt];
+        tmp.val[0]                = *PieceValue[pt];
         tmp.val[1]                = 0;
         NonPawnPieceValue[pt]     = tmp.combi;
         tmp.val[0]                = 0;
-        tmp.val[1]                = *PieceValue[MG][pt];
+        tmp.val[1]                = *PieceValue[pt];
         NonPawnPieceValue[pt + 8] = tmp.combi;
     }
 }

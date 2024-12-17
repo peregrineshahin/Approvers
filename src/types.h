@@ -171,11 +171,6 @@ static int make_castling_right(int c, int s) {
 }
 
 enum {
-    MG,
-    EG
-};
-
-enum {
     BOUND_NONE,
     BOUND_UPPER,
     BOUND_LOWER,
@@ -362,7 +357,7 @@ enum {
     SCORE_ZERO
 };
 
-extern Value* PieceValue[2][16];
+extern Value* PieceValue[16];
 
 extern uint32_t NonPawnPieceValue[16];
 
