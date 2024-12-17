@@ -175,6 +175,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 static void check_time(void);
 static void stable_sort(RootMove* rm, int num);
 static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta);
+static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
 // search_init() is called during startup to initialize various lookup tables
 
@@ -281,7 +282,7 @@ void mainthread_search(void) {
 
 #ifdef KAGGLE
     // Start pondering right after the best move has been printed if we can
-    if (pos->rootMoves->move[0].pvSize >= 2)
+    if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
         Threads.ponder = true;
         Threads.stop   = false;
@@ -1644,6 +1645,21 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     printf("\n");
 
     fflush(stdout);
+}
+
+static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
+    do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
+
+    bool ttHit;
+    TTEntry* tte = tt_probe(key(), &ttHit);
+    if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
+    {
+        rm->pv[1] = tte_move(tte);
+        rm->pvSize = 2;
+    }
+
+    undo_move(pos, rm->pv[0]);
+    return rm->pvSize > 1;
 }
 
 // start_thinking() wakes up the main thread to start a new search,
