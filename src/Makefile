@@ -516,19 +516,6 @@ ifeq ($(COMP),gcc)
 	endif
 endif
 
-### On mingw use Windows threads, otherwise POSIX
-ifneq ($(comp),mingw)
-	# On Android Bionic's C library comes with its own pthread implementation bundled in
-	ifneq ($(OS),Android)
-		# Haiku has pthreads in its libroot, so only link it in on other platforms
-		ifneq ($(KERNEL),Haiku)
-			ifneq ($(COMP),ndk)
-				LDFLAGS += -lpthread
-			endif
-		endif
-	endif
-endif
-
 ### 3.2 Debugging
 ifeq ($(debug),no)
 	CFLAGS += -DNDEBUG
