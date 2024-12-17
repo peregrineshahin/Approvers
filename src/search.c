@@ -156,9 +156,7 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth depth) {
-    return min((6 * depth + 229) * depth - 215, 2000);
-}
+static Value stat_bonus(Depth depth) { return min((6 * depth + 229) * depth - 215, 2000); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -661,7 +659,7 @@ Value search(
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
+    if (!ss->ttPv && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
