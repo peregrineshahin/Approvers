@@ -295,7 +295,4 @@ void threads_set_number(int num) {
         cmhTables    = NULL;
         numCmhTables = 0;
     }
-
-    if (num == 0)
-        Threads.searching = false;
 }
