@@ -126,16 +126,6 @@ extern int mp_v8;
 extern int mp_v9;
 extern int mp_v10;
 extern int mp_v11;
-extern int mg_pawn;
-extern int eg_pawn;
-extern int mg_knight;
-extern int eg_knight;
-extern int mg_bishop;
-extern int eg_bishop;
-extern int mg_rook;
-extern int eg_rook;
-extern int mg_queen;
-extern int eg_queen;
 extern int eval_scale;
 
 // FEN string of the initial position, normal chess
@@ -332,16 +322,6 @@ void setoption(char* str) {
     SET(mp_v9)
     SET(mp_v10)
     SET(mp_v11)
-    SET(mg_pawn)
-    SET(eg_pawn)
-    SET(mg_knight)
-    SET(eg_knight)
-    SET(mg_bishop)
-    SET(eg_bishop)
-    SET(mg_rook)
-    SET(eg_rook)
-    SET(mg_queen)
-    SET(eg_queen)
     SET(eval_scale)
 #endif
     if (strcmp("Hash", name) == 0)
@@ -591,16 +571,6 @@ void uci_loop(int argc, char** argv) {
             printf("option name mp_v9 type string\n");
             printf("option name mp_v10 type string\n");
             printf("option name mp_v11 type string\n");
-            printf("option name mg_pawn type string\n");
-            printf("option name eg_pawn type string\n");
-            printf("option name mg_knight type string\n");
-            printf("option name eg_knight type string\n");
-            printf("option name mg_bishop type string\n");
-            printf("option name eg_bishop type string\n");
-            printf("option name mg_rook type string\n");
-            printf("option name eg_rook type string\n");
-            printf("option name mg_queen type string\n");
-            printf("option name eg_queen type string\n");
             printf("option name eval_scale type string\n");
 
             printf("uciok\n");
