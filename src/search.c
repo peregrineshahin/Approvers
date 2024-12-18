@@ -38,7 +38,7 @@ int nmp_v3     = 194;
 int nmp_v4     = 216;
 int nmp_v5     = 24645;
 int nmp_v6     = 30;
-int nmp_v7     = 30;
+int nmp_v7     = 15;
 int nmp_v8     = 92;
 int nmp_v9     = 181;
 int lph_v1     = 1163;
@@ -508,7 +508,7 @@ Value search(
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, improvement;
 
     // Step 1. Initialize node
     inCheck   = checkers();
@@ -598,6 +598,7 @@ Value search(
         // Skip early pruning when in check
         ss->staticEval = eval = rawEval = VALUE_NONE;
         improving                       = false;
+        improvement                     = 0;
         goto moves_loop;
     }
     else if (ttHit)
@@ -633,9 +634,10 @@ Value search(
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    improvement = (ss - 2)->staticEval != VALUE_NONE ? ss->staticEval - (ss - 2)->staticEval
+                : (ss - 4)->staticEval != VALUE_NONE ? ss->staticEval - (ss - 4)->staticEval
+                                                     : 200;
+    improving   = improvement > 0;
 
     if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -652,7 +654,7 @@ Value search(
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
-        && ss->staticEval >= beta - nmp_v6 * depth - nmp_v7 * improving + nmp_v8 * ss->ttPv + nmp_v9
+        && ss->staticEval >= beta - nmp_v6 * depth - improvement / nmp_v7 + nmp_v8 * ss->ttPv + nmp_v9
         && !excludedMove && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
