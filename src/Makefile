@@ -717,8 +717,8 @@ endif
 ### Section 4. Public targets
 ### ==========================================================================
 
-build:
-	$(MAKE) ARCH=$(ARCH) COMP=$(COMP) all
+build: objclean profileclean
+	$(MAKE) CFLAGS="-fcommon -Os -s -ffunction-sections -fdata-sections -flto -mavx2" LDFLAGS="-Wl,--gc-sections -lm -lpthread" ARCH=x86-64-avx2 all
 
 profile-build: net config-sanity objclean profileclean
 	@echo ""
@@ -762,7 +762,7 @@ format:
 	find . -name "*.c" -o -name "*.h" | xargs $(CLANG-FORMAT) -i -style=file
 
 default:
-	$(MAKE) CFLAGS="-fcommon -Os -s -ffunction-sections -fdata-sections -flto" LDFLAGS="-Wl,--gc-sections -lm" ARCH=$(ARCH)
+	help
 
 ### ==========================================================================
 ### Section 5. Private targets
