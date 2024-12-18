@@ -539,21 +539,6 @@ bool is_pseudo_legal(const Position* pos, Move m) {
     return true;
 }
 
-#if 0
-int is_pseudo_legal(Position *pos, Move m)
-{
-  int r1 = is_pseudo_legal_old(pos, m);
-  int r2 = is_pseudo_legal_new(pos, m);
-  if (r1 != r2) {
-    printf("old: %d, new: %d\n", r1, r2);
-    printf("old: %d\n", is_pseudo_legal_old(pos, m));
-    printf("new: %d\n", is_pseudo_legal_new(pos, m));
-exit(1);
-  }
-  return r1;
-}
-#endif
-
 
 // gives_check_special() is invoked by gives_check() if there are
 // discovered check candidates or the move is of a special type
@@ -596,12 +581,8 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
 
 // do_move() makes a move. The move is assumed to be legal.
-#include "evaluate.h"
-void do_move(Position* pos, Move m, int givesCheck) {
-    //if(pos->nodes==7381)
-    //printf("hey\n");
-    //printf("n = %lu, key = %08lx, m = %d, eval = %d\n", pos->nodes, key(), (int)m, !checkers() ? evaluate(pos) : 0);
 
+void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
     // Copy some fields of the old state to our new Stack object except the
@@ -632,13 +613,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
-
-
-        Square rfrom, rto;
-
         int kingSide = to > from;
-        rfrom        = to;  // Castling is encoded as "king captures friendly rook"
-        rto          = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+        Square rfrom = to;  // Castling is encoded as "king captures friendly rook"
+        Square rto   = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
         to           = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
 
         // Remove both pieces first since squares could overlap in Chess960
@@ -657,7 +634,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
-
     else if (captured)
     {
         Square capsq = to;
@@ -669,8 +645,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             if (unlikely(type_of_m(m) == ENPASSANT))
             {
                 capsq ^= 8;
-
-
                 pos->board[capsq] = 0;  // Not done by remove_piece()
             }
 
@@ -762,18 +736,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     st->key = key;
 
     // Calculate checkers bitboard (if move gives check)
-#if 1
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
-#else
-    st->checkersBB = 0;
-    if (givesCheck)
-    {
-        if (type_of_m(m) != NORMAL || ((st - 1)->blockersForKing[them] & sq_bb(from)))
-            st->checkersBB = attackers_to(square_of(them, KING)) & pieces_c(us);
-        else
-            st->checkersBB = (st - 1)->checkSquares[piece & 7] & sq_bb(to);
-    }
-#endif
 
     pos->sideToMove = !pos->sideToMove;
     pos->nodes++;
