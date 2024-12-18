@@ -317,9 +317,8 @@ void mainthread_search(void)
   printf("\n");
   fflush(stdout);
 
-#ifdef KAGGLE
   // Start pondering right after the best move has been printed if we can
-  if (bestThread->rootMoves->move[0].pvSize >= 2) {
+  if (use_time_management() && bestThread->rootMoves->move[0].pvSize >= 2) {
     Threads.ponder = true;
     Threads.stop = false;
 
@@ -340,7 +339,6 @@ void mainthread_search(void)
     Threads.ponder = false;
     Threads.stop = true;
   }
-#endif
 }
 
 
@@ -486,12 +484,6 @@ void thread_search(Position *pos)
 
       // Sort the PV lines searched so far and update the GUI
       stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
-
-#ifndef KAGGLE
-      if (    pos->threadIdx == 0
-          && (Threads.stop || pvIdx + 1 == multiPV || time_elapsed() > 3000))
-        uci_print_pv(pos, pos->rootDepth, alpha, beta);
-#endif
     }
 
     if (!Threads.stop)
