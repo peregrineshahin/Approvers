@@ -120,17 +120,10 @@ int mp_v8      = 114;
 int mp_v9      = 96;
 int mp_v10     = 411;
 int mp_v11     = 264;
-int pawn       = 201;
-int knight     = 653;
-int bishop     = 812;
-int rook       = 1379;
-int queen      = 2547;
 int eval_scale = 94;
 
 
 LimitsType Limits;
-
-static int base_ct;
 
 // Different node types, used as template parameter
 enum {
@@ -843,11 +836,11 @@ moves_loop:  // When in check search starts from here.
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
                     && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
-                    && *PieceValue[type_of_p(movedPiece)]
-                         >= *PieceValue[type_of_p(piece_on(to_sq(move)))]
+                    && PieceValue[type_of_p(movedPiece)]
+                         >= PieceValue[type_of_p(piece_on(to_sq(move)))]
                     && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
-                           + *PieceValue[type_of_p(piece_on(to_sq(move)))]
+                           + PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
                     continue;
 
@@ -932,7 +925,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (*PieceValue[captured_piece()] > pawn && non_pawn_material() <= 2 * rook)
+        else if (PieceValue[captured_piece()] > PawnValue && non_pawn_material() <= 2 * RookValue)
             extension = 1;
 
         // Late irreversible move extension
@@ -1163,7 +1156,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + pawn));
+            int bonus = stat_bonus(depth + (bestValue > beta + PawnValue));
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
@@ -1351,7 +1344,7 @@ Value qsearch(Position*  pos,
             if (moveCount > 2)
                 continue;
 
-            futilityValue = futilityBase + *PieceValue[piece_on(to_sq(move))];
+            futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
 
             if (futilityValue <= alpha)
             {

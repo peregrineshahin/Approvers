@@ -210,6 +210,14 @@ enum {
 };
 
 enum {
+    PawnValue   = 201,
+    KnightValue = 653,
+    BishopValue = 812,
+    RookValue   = 1379,
+    QueenValue  = 2547,
+};
+
+enum {
     PAWN = 1,
     KNIGHT,
     BISHOP,
@@ -363,7 +371,7 @@ enum {
     SCORE_ZERO
 };
 
-extern Value* PieceValue[16];
+extern Value PieceValue[16];
 
 extern uint32_t NonPawnPieceValue[16];
 

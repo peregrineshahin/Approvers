@@ -20,15 +20,7 @@
 
 #include "types.h"
 
-extern int pawn;
-extern int knight;
-extern int bishop;
-extern int rook;
-extern int queen;
-
-int zero = 0;
-
-Value* PieceValue[16] = { &zero, &pawn, &knight, &bishop, &rook, &queen, &zero, &zero, &zero, &zero, &zero, &zero };
+Value PieceValue[16] = { 0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue };
 
 uint32_t NonPawnPieceValue[16];
 
@@ -49,11 +41,11 @@ void psqt_init(void) {
     NonPawnPieceValue[W_PAWN] = NonPawnPieceValue[B_PAWN] = 0;
     for (int pt = KNIGHT; pt < KING; pt++)
     {
-        tmp.val[0]                = *PieceValue[pt];
+        tmp.val[0]                = PieceValue[pt];
         tmp.val[1]                = 0;
         NonPawnPieceValue[pt]     = tmp.combi;
         tmp.val[0]                = 0;
-        tmp.val[1]                = *PieceValue[pt];
+        tmp.val[1]                = PieceValue[pt];
         NonPawnPieceValue[pt + 8] = tmp.combi;
     }
 }
