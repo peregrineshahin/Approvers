@@ -229,7 +229,7 @@ void search_clear(void) {
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
             for (int k = 0; k < 64; k++)
-                (*pos->counterMoveHistory)[c][0][j][k] = -1;
+                (*pos->counterMoveHistory)[c][0][j][k] = CounterMovePruneThreshold - 1;
 
     Thread.previousScore         = VALUE_INFINITE;
     Thread.previousTimeReduction = 1;

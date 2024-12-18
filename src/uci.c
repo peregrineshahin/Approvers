@@ -432,7 +432,7 @@ void uci_loop(int argc, char** argv) {
     pos.st              = pos.stack + 100;
     pos.st[-1].endMoves = pos.moveList;
 
-    char cmd[2048] = {0};
+    char cmd[4096] = {0};
 
     delayedSettings.ttSize     = 1;
 
@@ -656,6 +656,9 @@ char* uci_move(char* str, Move m) {
 // notation (g1f3, a7a8q) to the corresponding legal Move, if any.
 
 Move uci_to_move(const Position* pos, char* str) {
+    if (strlen(str) == 5)
+        str[4] = tolower(str[4]);
+
     ExtMove  list[MAX_MOVES];
     ExtMove* last = generate_legal(pos, list);
 
@@ -669,7 +672,7 @@ Move uci_to_move(const Position* pos, char* str) {
 }
 
 int get_input(char* str) {
-    if (fgets(str, 8192, stdin) == NULL)
+    if (fgets(str, 4096, stdin) == NULL)
         return 0;
 
     char* ptr = strchr(str, '\n');
