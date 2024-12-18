@@ -3,7 +3,6 @@
 
 struct settings {
     size_t ttSize;
-    size_t numThreads;
     bool   clear;
 };
 

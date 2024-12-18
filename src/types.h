@@ -21,8 +21,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "config.h"
-
 // When compiling with provided Makefile (e.g. for Linux and OSX),
 // configuration is done automatically. To get started type 'make help'.
 //
@@ -30,9 +28,6 @@
 // switches need to be set manually:
 //
 // -DNDEBUG      | Disable debugging mode. Always use this for release.
-//
-// -DNO_PREFETCH | Disable use of prefetch asm-instruction. You may need
-//               | this to run on some very old machines.
 //
 // -DUSE_POPCNT  | Add runtime support for use of popcnt asm-instruction.
 //               | Works only in 64-bit mode and requires hardware with
@@ -79,7 +74,6 @@
 
 #if defined(_WIN64) && defined(_MSC_VER)  // No Makefile used
     #include <intrin.h>                   // Microsoft header for _BitScanForward64()
-    #define IS_64BIT
 #endif
 
 #if defined(USE_POPCNT) && (defined(__INTEL_COMPILER) || defined(_MSC_VER))
@@ -109,17 +103,15 @@
     #define HasPext 0
 #endif
 
-#ifdef IS_64BIT
-    #define Is64Bit 1
-#else
-    #define Is64Bit 0
-#endif
-
 #ifdef KAGGLE
     #define IsKaggle 1
 #else
     #define IsKaggle 0
 #endif
+
+#define MAGIC_PLAIN
+// #define MAGIC_FANCY
+//#define AVX2_BITBOARD
 
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
@@ -192,15 +184,9 @@ enum {
     VALUE_NONE      = 32002
 };
 
-#ifdef LONG_MATES
-enum {
-    MAX_MATE_PLY = 600
-};
-#else
 enum {
     MAX_MATE_PLY = MAX_PLY
 };
-#endif
 
 enum {
     VALUE_TB_WIN_IN_MAX_PLY  = VALUE_MATE - 2 * MAX_PLY,
@@ -217,28 +203,12 @@ enum {
     QueenValue  = 2547,
 };
 
-enum {
-    PAWN = 1,
-    KNIGHT,
-    BISHOP,
-    ROOK,
-    QUEEN,
-    KING
-};
+// clang-format off
+enum { PAWN = 1, KNIGHT, BISHOP, ROOK, QUEEN, KING };
 
 enum {
-    W_PAWN = 1,
-    W_KNIGHT,
-    W_BISHOP,
-    W_ROOK,
-    W_QUEEN,
-    W_KING,
-    B_PAWN = 9,
-    B_KNIGHT,
-    B_BISHOP,
-    B_ROOK,
-    B_QUEEN,
-    B_KING
+    W_PAWN = 1, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
+    B_PAWN = 9, B_KNIGHT, B_BISHOP, B_ROOK, B_QUEEN, B_KING
 };
 
 enum {
@@ -250,70 +220,14 @@ enum {
 };
 
 enum {
-    SQ_A1,
-    SQ_B1,
-    SQ_C1,
-    SQ_D1,
-    SQ_E1,
-    SQ_F1,
-    SQ_G1,
-    SQ_H1,
-    SQ_A2,
-    SQ_B2,
-    SQ_C2,
-    SQ_D2,
-    SQ_E2,
-    SQ_F2,
-    SQ_G2,
-    SQ_H2,
-    SQ_A3,
-    SQ_B3,
-    SQ_C3,
-    SQ_D3,
-    SQ_E3,
-    SQ_F3,
-    SQ_G3,
-    SQ_H3,
-    SQ_A4,
-    SQ_B4,
-    SQ_C4,
-    SQ_D4,
-    SQ_E4,
-    SQ_F4,
-    SQ_G4,
-    SQ_H4,
-    SQ_A5,
-    SQ_B5,
-    SQ_C5,
-    SQ_D5,
-    SQ_E5,
-    SQ_F5,
-    SQ_G5,
-    SQ_H5,
-    SQ_A6,
-    SQ_B6,
-    SQ_C6,
-    SQ_D6,
-    SQ_E6,
-    SQ_F6,
-    SQ_G6,
-    SQ_H6,
-    SQ_A7,
-    SQ_B7,
-    SQ_C7,
-    SQ_D7,
-    SQ_E7,
-    SQ_F7,
-    SQ_G7,
-    SQ_H7,
-    SQ_A8,
-    SQ_B8,
-    SQ_C8,
-    SQ_D8,
-    SQ_E8,
-    SQ_F8,
-    SQ_G8,
-    SQ_H8,
+    SQ_A1, SQ_B1, SQ_C1, SQ_D1, SQ_E1, SQ_F1, SQ_G1, SQ_H1,
+    SQ_A2, SQ_B2, SQ_C2, SQ_D2, SQ_E2, SQ_F2, SQ_G2, SQ_H2,
+    SQ_A3, SQ_B3, SQ_C3, SQ_D3, SQ_E3, SQ_F3, SQ_G3, SQ_H3,
+    SQ_A4, SQ_B4, SQ_C4, SQ_D4, SQ_E4, SQ_F4, SQ_G4, SQ_H4,
+    SQ_A5, SQ_B5, SQ_C5, SQ_D5, SQ_E5, SQ_F5, SQ_G5, SQ_H5,
+    SQ_A6, SQ_B6, SQ_C6, SQ_D6, SQ_E6, SQ_F6, SQ_G6, SQ_H6,
+    SQ_A7, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7,
+    SQ_A8, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8,
     SQ_NONE
 };
 
@@ -328,27 +242,10 @@ enum {
     SOUTH_WEST = SOUTH + WEST,
 };
 
-enum {
-    FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H
-};
+enum { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
 
-enum {
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8
-};
+enum { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
+// clang-format on
 
 typedef uint32_t Move;
 typedef int32_t  Phase;

@@ -18,17 +18,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fcntl.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <sys/mman.h>
-#endif
-
 #include "misc.h"
 #include "thread.h"
 
@@ -70,36 +59,3 @@ uint64_t prng_sparse_rand(PRNG* rng) {
     uint64_t r3 = prng_rand(rng);
     return r1 & r2 & r3;
 }
-
-ssize_t getline(char** lineptr, size_t* n, FILE* stream) {
-    if (*n == 0)
-        *lineptr = malloc(*n = 100);
-
-    int    c = 0;
-    size_t i = 0;
-    while ((c = getc(stream)) != EOF)
-    {
-        (*lineptr)[i++] = c;
-        if (i == *n)
-            *lineptr = realloc(*lineptr, *n += 100);
-        if (c == '\n')
-            break;
-    }
-    (*lineptr)[i] = 0;
-    return i;
-}
-
-#ifdef _WIN32
-typedef SIZE_T(WINAPI* GLPM)(void);
-
-// The following two functions were taken from mingw_lock.c
-
-void __cdecl _lock(int locknum);
-void __cdecl _unlock(int locknum);
-    #define _STREAM_LOCKS 16
-    #define _IOLOCKED 0x8000
-typedef struct {
-    FILE             f;
-    CRITICAL_SECTION lock;
-} _FILEX;
-#endif

@@ -31,5 +31,6 @@ char* uci_value(char* str, Value v);
 char* uci_square(char* str, Square s);
 char* uci_move(char* str, Move m);
 Move  uci_to_move(const Position* pos, char* str);
+int   get_input(char* str);
 
 #endif

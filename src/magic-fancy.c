@@ -22,8 +22,7 @@ static void init_magics(Bitboard  table[],
                         uint8_t   shifts[],
                         int       deltas[],
                         Fn        index) {
-    int seeds[][8] = {{8977, 44560, 54343, 38998, 5731, 95205, 104912, 17020},
-                      {728, 10316, 55013, 32803, 12281, 15100, 16645, 255}};
+    int seeds[8] = {728, 10316, 55013, 32803, 12281, 15100, 16645, 255};
 
     Bitboard occupancy[4096], reference[4096], edges, b;
     int      age[4096] = {0}, current = 0, i, size;
@@ -42,7 +41,7 @@ static void init_magics(Bitboard  table[],
         // the number of 1s of the mask. Hence we deduce the size of the shift to
         // apply to the 64 or 32 bits word to get the index.
         masks[s]  = sliding_attack(deltas, s, 0) & ~edges;
-        shifts[s] = (Is64Bit ? 64 : 32) - popcount(masks[s]);
+        shifts[s] = 64 - popcount(masks[s]);
 
         // Use Carry-Rippler trick to enumerate all subsets of masks[s] and
         // store the corresponding sliding attack bitboard in reference[].
@@ -68,7 +67,7 @@ static void init_magics(Bitboard  table[],
             continue;
 
         PRNG rng;
-        prng_init(&rng, seeds[Is64Bit][rank_of(s)]);
+        prng_init(&rng, seeds[rank_of(s)]);
 
         // Find a magic for square 's' picking up an (almost) random number
         // until we find the one that passes the verification test.

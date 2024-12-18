@@ -141,10 +141,6 @@ static unsigned distance_r(Square x, Square y) {
     #include "magic-fancy.h"
 #elif defined(MAGIC_PLAIN)
     #include "magic-plain.h"
-#elif defined(BMI2_FANCY)
-    #include "bmi2-fancy.h"
-#elif defined(BMI2_PLAIN)
-    #include "bmi2-plain.h"
 #elif defined(AVX2_BITBOARD)
     #include "avx2-bitboard.h"
 #endif

@@ -31,7 +31,7 @@
 #include "uci.h"
 
 #ifndef KAGGLE
-extern void benchmark(Position* pos, char* str);
+extern void benchmark();
 #endif
 
 #ifndef KAGGLE
@@ -232,10 +232,8 @@ void position(Position* pos, char* str) {
 // value ("value").
 
 void setoption(char* str) {
-    char *name, *value;
-
-    name = strstr(str, "name") + 5;
-    value = strstr(name, "value");
+    char* name  = strstr(str, "name") + 5;
+    char* value = strstr(name, "value");
     if (value)
     {
         char* p = value - 1;
@@ -346,7 +344,7 @@ void setoption(char* str) {
 
     if (strcmp("Pondering", name) == 0)
     {
-        Threads.testPonder = strcmp("true", value) == 0;
+        Thread.testPonder = strcmp("true", value) == 0;
         return;
     }
 
@@ -359,15 +357,14 @@ void setoption(char* str) {
 // the search.
 
 static void go(Position* pos, char* str) {
-    char* token;
-    bool  ponderMode = false;
+    bool ponderMode = false;
 
     process_delayed_settings();
 
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
-    for (token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
+    for (char* token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
     {
         if (strcmp(token, "wtime") == 0)
             Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
@@ -403,9 +400,16 @@ static void go(Position* pos, char* str) {
 // also some additional debug commands are supported.
 
 void uci_loop(int argc, char** argv) {
+#ifndef KAGGLE
+    if (argc == 2 && strcmp(argv[1], "bench") == 0)
+    {
+        benchmark();
+        return;
+    }
+#endif
+
     Position pos;
     char     fen[strlen(StartFEN) + 1];
-    char*    token;
 
     // Allocate 215 Stack slots.
     // Slots 100-200 form a circular buffer to be filled with game moves.
@@ -418,38 +422,17 @@ void uci_loop(int argc, char** argv) {
     pos.st              = pos.stack + 100;
     pos.st[-1].endMoves = pos.moveList;
 
-    size_t buf_size = 1;
-    for (int i = 1; i < argc; i++)
-        buf_size += strlen(argv[i]) + 1;
+    char cmd[4096] = {0};
 
-    if (buf_size < 1024)
-        buf_size = 1024;
-
-    char* cmd = malloc(buf_size);
-
-    cmd[0] = 0;
-    for (int i = 1; i < argc; i++)
-    {
-        strcat(cmd, argv[i]);
-        strcat(cmd, " ");
-    }
-
-    delayedSettings.ttSize = 1;
-    delayedSettings.numThreads = 1;
+    delayedSettings.ttSize     = 1;
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
     pos.rootKeyFlip = pos.st->key;
 
-    do
+    while (get_input(cmd))
     {
-        if (argc == 1 && !getline(&cmd, &buf_size, stdin))
-            strcpy(cmd, "quit");
-
-        if (cmd[strlen(cmd) - 1] == '\n')
-            cmd[strlen(cmd) - 1] = 0;
-
-        token = cmd;
+        char* token = cmd;
         while (isblank(*token))
             token++;
 
@@ -465,15 +448,15 @@ void uci_loop(int argc, char** argv) {
         }
 
         // At this point we have received a command, so stop pondering
-        Threads.ponder = false;
-        Threads.stop   = true;
+        Thread.ponder = false;
+        Thread.stop   = true;
 
         if (strcmp(token, "quit") == 0)
             break;
 
         if (strcmp(token, "uci") == 0)
         {
-            #ifndef KAGGLE
+#ifndef KAGGLE
             printf("id name\n");
             printf("option name Threads type spin default 1 min 1 max 2\n");
             printf("option name Hash type spin default 1 min 1 max 16\n");
@@ -571,7 +554,7 @@ void uci_loop(int argc, char** argv) {
 
             printf("uciok\n");
             fflush(stdout);
-            #endif
+#endif
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
@@ -590,25 +573,13 @@ void uci_loop(int argc, char** argv) {
             position(&pos, str);
         else if (strcmp(token, "setoption") == 0)
             setoption(str);
-
-        // Additional custom non-UCI commands, useful for debugging
-#ifndef KAGGLE
-        else if (strcmp(token, "eval") == 0)
-        {
-            printf("Evaluation: %d\n", evaluate(&pos));
-            fflush(stdout);
-        }
-        else if (strcmp(token, "bench") == 0)
-            benchmark(&pos, str);
-#endif
         else
         {
             printf("Unknown command: %s %s\n", token, str);
             fflush(stdout);
         }
-    } while (argc == 1 && strcmp(token, "quit") != 0);
+    }
 
-    free(cmd);
     free(pos.stackAllocation);
     free(pos.moveList);
 }
@@ -651,12 +622,6 @@ char* uci_move(char* str, Move m) {
     Square from = from_sq(m);
     Square to   = to_sq(m);
 
-    if (m == 0)
-        return "(none)";
-
-    if (m == MOVE_NULL)
-        return "0000";
-
     if (type_of_m(m) == CASTLING)
         to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
 
@@ -676,7 +641,7 @@ char* uci_move(char* str, Move m) {
 // notation (g1f3, a7a8q) to the corresponding legal Move, if any.
 
 Move uci_to_move(const Position* pos, char* str) {
-    if (strlen(str) == 5)  // Junior could send promotion piece in uppercase
+    if (strlen(str) == 5)
         str[4] = tolower(str[4]);
 
     ExtMove  list[MAX_MOVES];
@@ -689,4 +654,19 @@ Move uci_to_move(const Position* pos, char* str) {
             return m->move;
 
     return 0;
+}
+
+int get_input(char* str) {
+    if (fgets(str, 4096, stdin) == NULL)
+        return 0;
+
+    char* ptr = strchr(str, '\n');
+    if (ptr != NULL)
+        *ptr = '\0';
+
+    ptr = strchr(str, '\r');
+    if (ptr != NULL)
+        *ptr = '\0';
+
+    return 1;
 }

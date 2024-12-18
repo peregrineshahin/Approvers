@@ -8,4 +8,4 @@ enum {
 };
 
 Value evaluate(Position* pos);
-#endif // EVALUATE_H
+#endif  // EVALUATE_H
