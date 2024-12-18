@@ -34,22 +34,7 @@
 // to be loaded from memory, which can be quite slow.
 
 static void prefetch(void* addr) {
-#ifndef NO_PREFETCH
-
-    #if defined(__INTEL_COMPILER)
-    // This hack prevents prefetches from being optimized away by
-    // Intel compiler. Both MSVC and gcc seem not be affected by this.
-    __asm__("");
-    #endif
-
-    #if defined(__INTEL_COMPILER) || defined(_MSC_VER)
-    _mm_prefetch((char*) addr, _MM_HINT_T0);
-    #else
     __builtin_prefetch(addr);
-    #endif
-#else
-    (void) addr;
-#endif
 }
 
 typedef int64_t TimePoint;  // A value in milliseconds
@@ -59,22 +44,6 @@ static TimePoint now(void) {
     gettimeofday(&tv, NULL);
     return 1000 * (uint64_t) tv.tv_sec + (uint64_t) tv.tv_usec / 1000;
 }
-
-#ifdef _WIN32
-
-typedef HANDLE FD;
-    #define FD_ERR INVALID_HANDLE_VALUE
-typedef HANDLE map_t;
-
-#else /* Unix */
-
-typedef int    FD;
-    #define FD_ERR -1
-typedef size_t map_t;
-
-#endif
-
-ssize_t getline(char** lineptr, size_t* n, FILE* stream);
 
 struct PRNG {
     uint64_t s;
