@@ -139,6 +139,10 @@ extern int rook;
 extern int queen;
 extern int eval_scale;
 
+extern int16_t in_biases[L1SIZE];
+extern int16_t l1_weights[L1SIZE * 2];
+extern int16_t l1_biases[OUTSIZE];
+
 // FEN string of the initial position, normal chess
 static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -347,6 +351,28 @@ void setoption(char* str) {
     SET(rook)
     SET(queen)
     SET(eval_scale)
+
+    if (strstr(name, "inb_v"))
+    {
+        int i = atoi(name + 5);
+        in_biases[i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "l1w_v"))
+    {
+        int i = atoi(name + 5);
+        l1_weights[L1SIZE + i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "l1b_v"))
+    {
+        int i = atoi(name + 5);
+        l1_biases[i] = atoi(value);
+        return;
+    }
+
 #endif
     if (strcmp("Hash", name) == 0)
     {
@@ -584,9 +610,25 @@ void uci_loop(int argc, char** argv) {
             printf("option name queen type string\n");
             printf("option name eval_scale type string\n");
 
+            for (int i = 0; i < L1SIZE; i++)
+                printf("option name inb_v%d type string\n", i);
+            for (int i = 0; i < L1SIZE * 2; i++)
+                printf("option name l1w_v%d type string\n", i);
+            for (int i = 0; i < OUTSIZE; i++)
+                printf("option name l1b_v%d type string\n", i);
+
             printf("uciok\n");
             fflush(stdout);
             #endif
+        }
+        else if (strcmp(token, "nnparams") == 0)
+        {
+            for (int i = 0; i < L1SIZE; i++)
+                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i], max(abs(in_biases[i]) / 20.0, 1.0));
+            for (int i = 0; i < L1SIZE * 2; i++)
+                printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i], max(abs(l1_weights[i]) / 20.0, 1.0));
+            for (int i = 0; i < OUTSIZE; i++)
+                printf("l1b_v%d, int, %d, -2047, 2047, %.3f, 0.002\n", i, l1_biases[i], max(abs(l1_biases[i]) / 20.0, 1.0));
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
