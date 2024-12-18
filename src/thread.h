@@ -21,8 +21,6 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include <stdatomic.h>
-
 #include "types.h"
 
 #define MAX_THREADS 1
@@ -49,9 +47,9 @@ void mainthread_search(void);
 // access to threads data is done through this class.
 
 struct ThreadPool {
-    Position*   pos[MAX_THREADS];
-    int         numThreads;
-    atomic_bool ponder, stop, increaseDepth;
+    Position* pos[MAX_THREADS];
+    int       numThreads;
+    bool      ponder, stop, increaseDepth;
 };
 
 typedef struct ThreadPool ThreadPool;
