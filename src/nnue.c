@@ -11,9 +11,21 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2] = {-43, -42, 36, -43, -42, -41, -40, 37, 41, -42, 20, 40, 40, 42, -40, -42, 42, -40, -41, -41, 42, -42, -35, 41, 42, -37, -41, -38, 41, -41, 42, -41, -42, 43, 41, 43, 38, -41, -42, -43, 41, 42, -39, -29, 42, 42, -42, 39, -41, 41, 39, -38, -42, 40, -42, 40, 40, -41, 33, 41, 40, 39, -38, -42, 41, 43, -40, 41, 43, 42, 42, -34, -28, 43, -23, -42, -44, -42, 42, 38, -43, 43, 42, 41, -42, 42, 43, -42, -42, 43, 42, 43, -40, 41, -41, 41, 42, -37, -42, -41, -40, 42, 41, 42, -39, -42, 42, 31, -42, -43, 42, -43, 41, -42, -42, 42, 40, -42, 40, -43, -42, 42, -33, -42, -42, -43, 43, 43};
+alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2] = {
+  -43, -43, 30,  -45, -44, -41, -41, 35,  43,  -43, 19,  39,  36,  41,  -40, -44, 41,  -39, -39,
+  -40, 41,  -42, -35, 41,  41,  -38, -44, -36, 38,  -41, 43,  -40, -41, 41,  42,  40,  39,  -41,
+  -41, -41, 37,  43,  -42, -27, 42,  42,  -42, 37,  -40, 41,  39,  -34, -42, 38,  -41, 39,  39,
+  -41, 33,  43,  38,  39,  -36, -41, 41,  43,  -41, 40,  42,  40,  42,  -33, -28, 42,  -23, -42,
+  -44, -41, 42,  38,  -44, 45,  43,  41,  -44, 41,  43,  -41, -41, 44,  45,  44,  -38, 41,  -41,
+  40,  42,  -37, -41, -41, -39, 44,  42,  44,  -39, -41, 42,  30,  -42, -41, 41,  -43, 42,  -42,
+  -42, 42,  40,  -42, 40,  -42, -40, 43,  -31, -44, -43, -42, 44,  44,
+};
 
-alignas(64) int16_t in_biases[L1SIZE] = {122, 50, 94, -90, -55, 42, 15, 48, -65, 1, 26, 93, 74, 68, 6, -22, 65, 35, 14, 74, 36, -2, 7, 45, -8, 63, 78, 31, 24, 17, 88, 62, 93, 0, 17, 20, 82, 11, 15, 13, -6, 46, -6, 4, -37, 65, 78, 36, 0, -49, -28, 27, 95, 13, -48, -60, -53, 41, 18, 81, 40, 126, 34, 60};
+alignas(64) int16_t in_biases[L1SIZE] = {
+  123, 49, 93, -91, -55, 41,  17,  47, -65, 1,  28,  93,  77,  68, 6,  -23, 67, 35,  14, 74, 34, -2,
+  7,   42, -7, 64,  79,  30,  24,  17, 89,  62, 92,  0,   19,  20, 81, 11,  14, 14,  -7, 48, -6, 4,
+  -37, 65, 79, 37,  0,   -49, -29, 27, 96,  14, -49, -60, -53, 41, 18, 81,  39, 127, 35, 61,
+};
 alignas(64) int16_t l1_biases[OUTSIZE] = {533};
 
 void nnue_init() {
@@ -40,15 +52,16 @@ void nnue_init() {
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {
-    const __m256i min = _mm256_setzero_si256();
-    const __m256i max = _mm256_set1_epi16(QA);
-    __m256i vector = _mm256_setzero_si256();
+    const __m256i min    = _mm256_setzero_si256();
+    const __m256i max    = _mm256_set1_epi16(QA);
+    __m256i       vector = _mm256_setzero_si256();
 
-    for (int i = 0; i < L1SIZE; i += 16) {
-        __m256i v = _mm256_load_si256((__m256i *)(acc + i));
-        v = _mm256_min_epi16(_mm256_max_epi16(v, min), max);
+    for (int i = 0; i < L1SIZE; i += 16)
+    {
+        __m256i v = _mm256_load_si256((__m256i*) (acc + i));
+        v         = _mm256_min_epi16(_mm256_max_epi16(v, min), max);
 
-        const __m256i w = _mm256_load_si256((__m256i *)(weights + i));
+        const __m256i w       = _mm256_load_si256((__m256i*) (weights + i));
         const __m256i product = _mm256_madd_epi16(_mm256_mullo_epi16(v, w), v);
 
         vector = _mm256_add_epi32(vector, product);
@@ -58,10 +71,10 @@ static Value forward(const int16_t* acc, const int16_t* weights) {
     const __m128i lower_half = _mm256_castsi256_si128(vector);
 
     const __m128i sum_128 = _mm_add_epi32(upper_half, lower_half);
-    const __m128i sum_64 = _mm_add_epi32(_mm_unpackhi_epi64(sum_128, sum_128), sum_128);
+    const __m128i sum_64  = _mm_add_epi32(_mm_unpackhi_epi64(sum_128, sum_128), sum_128);
 
     const __m128i shuffled = _mm_shuffle_epi32(sum_64, 1);
-    const __m128i sum = _mm_add_epi32(shuffled, sum_64);
+    const __m128i sum      = _mm_add_epi32(shuffled, sum_64);
 
     return _mm_cvtsi128_si32(sum);
 }
