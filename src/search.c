@@ -286,7 +286,8 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
+    if (pos->rootMoves->move[0].pvSize >= 2
+        || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
         Threads.ponder = true;
         Threads.stop   = false;
@@ -298,8 +299,8 @@ void mainthread_search(void) {
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
         pos->completedDepth = 0;
-        pos->rootDepth = 0;
-        pos->pvLast = 0;
+        pos->rootDepth      = 0;
+        pos->pvLast         = 0;
 
         prepare_for_search(pos, true);
         thread_search(pos);
@@ -539,7 +540,7 @@ Value search(
     if (pos->resetCalls)
     {
         pos->resetCalls = false;
-        pos->callsCnt = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
+        pos->callsCnt   = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
     }
     if (--pos->callsCnt <= 0)
     {
@@ -992,6 +993,9 @@ moves_loop:  // When in check search starts from here.
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r++;
+
+                if (PvNode)
+                    r--;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
@@ -1576,26 +1580,25 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 }
 
-static int peak_stdin()
-{
+static int peak_stdin() {
 #ifndef WIN32
-    fd_set rf = {0};
+    fd_set         rf = {0};
     struct timeval tv = {0, 0};
     FD_SET(fileno(stdin), &rf);
     select(fileno(stdin) + 1, &rf, NULL, NULL, &tv);
     return FD_ISSET(fileno(stdin), &rf);
 #else
     static HANDLE hIn;
-    static int init = 0, pipe = 0;
-    DWORD dw;
+    static int    init = 0, pipe = 0;
+    DWORD         dw;
 
     if (!init++)
     {
-        hIn = GetStdHandle(STD_INPUT_HANDLE);
+        hIn  = GetStdHandle(STD_INPUT_HANDLE);
         pipe = !GetConsoleMode(hIn, &dw);
         if (!pipe)
         {
-            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
+            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
             FlushConsoleInputBuffer(hIn);
         }
     }
@@ -1665,11 +1668,11 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
     do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
 
-    bool ttHit;
+    bool     ttHit;
     TTEntry* tte = tt_probe(key(), &ttHit);
     if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
     {
-        rm->pv[1] = tte_move(tte);
+        rm->pv[1]  = tte_move(tte);
         rm->pvSize = 2;
     }
 
