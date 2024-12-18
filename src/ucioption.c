@@ -51,7 +51,7 @@ static void on_hash_size(Option *opt)
 
 static void on_threads(Option *opt)
 {
-  delayedSettings.numThreads = opt->value;
+  delayedSettings.numThreads = 1;
 }
 
 static void on_large_pages(Option *opt)
