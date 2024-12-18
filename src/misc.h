@@ -56,7 +56,7 @@ uint64_t prng_rand(PRNG* rng);
 uint64_t prng_sparse_rand(PRNG* rng);
 
 static uint64_t mul_hi64(uint64_t a, uint64_t b) {
-#if defined(__GNUC__) && defined(IS_64BIT)
+#if defined(__GNUC__)
     __extension__ typedef unsigned __int128 uint128;
     return ((uint128) a * (uint128) b) >> 64;
 #else

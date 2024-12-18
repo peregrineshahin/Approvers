@@ -21,8 +21,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "config.h"
-
 // When compiling with provided Makefile (e.g. for Linux and OSX),
 // configuration is done automatically. To get started type 'make help'.
 //
@@ -76,7 +74,6 @@
 
 #if defined(_WIN64) && defined(_MSC_VER)  // No Makefile used
     #include <intrin.h>                   // Microsoft header for _BitScanForward64()
-    #define IS_64BIT
 #endif
 
 #if defined(USE_POPCNT) && (defined(__INTEL_COMPILER) || defined(_MSC_VER))
@@ -106,17 +103,15 @@
     #define HasPext 0
 #endif
 
-#ifdef IS_64BIT
-    #define Is64Bit 1
-#else
-    #define Is64Bit 0
-#endif
-
 #ifdef KAGGLE
     #define IsKaggle 1
 #else
     #define IsKaggle 0
 #endif
+
+#define MAGIC_PLAIN
+// #define MAGIC_FANCY
+//#define AVX2_BITBOARD
 
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
@@ -189,15 +184,9 @@ enum {
     VALUE_NONE      = 32002
 };
 
-#ifdef LONG_MATES
-enum {
-    MAX_MATE_PLY = 600
-};
-#else
 enum {
     MAX_MATE_PLY = MAX_PLY
 };
-#endif
 
 enum {
     VALUE_TB_WIN_IN_MAX_PLY  = VALUE_MATE - 2 * MAX_PLY,

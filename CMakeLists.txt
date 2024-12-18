@@ -14,7 +14,6 @@ add_executable(Peregrine
         src/benchmark.c
         src/bitboard.c
         src/bitboard.h
-        src/config.h
         src/evaluate.c
         src/evaluate.h
         src/main.c
