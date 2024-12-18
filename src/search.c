@@ -288,8 +288,8 @@ void mainthread_search(void) {
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
         pos->completedDepth = 0;
-        pos->rootDepth = 0;
-        pos->pvLast = 0;
+        pos->rootDepth      = 0;
+        pos->pvLast         = 0;
 
         prepare_for_search(pos, true);
         thread_search(pos);
@@ -359,27 +359,16 @@ void thread_search(Position* pos) {
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
 
-        int pvFirst = 0, pvLast = 0;
-
         if (!Thread.increaseDepth)
             searchAgainCounter++;
 
-        int pvIdx = 0;
-
-        pos->pvIdx = pvIdx;
-        if (pvIdx == pvLast)
-        {
-            pvFirst = pvLast;
-            for (pvLast++; pvLast < rm->size; pvLast++)
-                if (rm->move[pvLast].tbRank != rm->move[pvFirst].tbRank)
-                    break;
-            pos->pvLast = pvLast;
-        }
+        pos->pvIdx  = 0;
+        pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
-            Value previousScore = rm->move[pvIdx].previousScore;
+            Value previousScore = rm->move[0].previousScore;
             delta               = d_v1;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
@@ -400,7 +389,7 @@ void thread_search(Position* pos) {
             // and we want to keep the same order for all the moves except the
             // new PV that goes to the front. Note that in case of MultiPV
             // search the already searched PV lines are preserved.
-            stable_sort(&rm->move[pvIdx], pvLast - pvIdx);
+            stable_sort(&rm->move[0], pos->pvLast);
 
             // If search has been stopped, we break immediately. Sorting and
             // writing PV back to TT is safe because RootMoves is still
@@ -419,15 +408,12 @@ void thread_search(Position* pos) {
             }
             else
             {
-                rm->move[pvIdx].bestMoveCount++;
+                rm->move[0].bestMoveCount++;
                 break;
             }
 
             delta += delta / 4 + asd_v1 / 100;
         }
-
-        // Sort the PV lines searched so far and update the GUI
-        stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 #ifndef KAGGLE
         if (!Thread.ponder)
@@ -1414,9 +1400,7 @@ Value qsearch(Position*  pos,
 }
 
 #define rm_lt(m1, m2) \
-    ((m1).tbRank != (m2).tbRank ? (m1).tbRank < (m2).tbRank \
-     : (m1).score != (m2).score ? (m1).score < (m2).score \
-                                : (m1).previousScore < (m2).previousScore)
+    ((m1).score != (m2).score ? (m1).score < (m2).score : (m1).previousScore < (m2).previousScore)
 
 // stable_sort() sorts RootMoves from highest-scoring move to lowest-scoring
 // move while preserving order of equal elements.
@@ -1690,7 +1674,6 @@ void prepare_for_search(Position* root, bool ponderMode) {
         rm->move[i].score         = -VALUE_INFINITE;
         rm->move[i].previousScore = -VALUE_INFINITE;
         rm->move[i].bestMoveCount = 0;
-        rm->move[i].tbRank        = moves->move[i].tbRank;
     }
     memcpy(pos, root, offsetof(Position, moveList));
     // Copy enough of the root State buffer.
