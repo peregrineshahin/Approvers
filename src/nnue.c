@@ -11,10 +11,10 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
+alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2] = {-43, -42, 36, -43, -42, -41, -40, 37, 41, -42, 20, 40, 40, 42, -40, -42, 42, -40, -41, -41, 42, -42, -35, 41, 42, -37, -41, -38, 41, -41, 42, -41, -42, 43, 41, 43, 38, -41, -42, -43, 41, 42, -39, -29, 42, 42, -42, 39, -41, 41, 39, -38, -42, 40, -42, 40, 40, -41, 33, 41, 40, 39, -38, -42, 41, 43, -40, 41, 43, 42, 42, -34, -28, 43, -23, -42, -44, -42, 42, 38, -43, 43, 42, 41, -42, 42, 43, -42, -42, 43, 42, 43, -40, 41, -41, 41, 42, -37, -42, -41, -40, 42, 41, 42, -39, -42, 42, 31, -42, -43, 42, -43, 41, -42, -42, 42, 40, -42, 40, -43, -42, 42, -33, -42, -42, -43, 43, 43};
 
-alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_biases[OUTSIZE];
+alignas(64) int16_t in_biases[L1SIZE] = {122, 50, 94, -90, -55, 42, 15, 48, -65, 1, 26, 93, 74, 68, 6, -22, 65, 35, 14, 74, 36, -2, 7, 45, -8, 63, 78, 31, 24, 17, 88, 62, 93, 0, 17, 20, 82, 11, 15, 13, -6, 46, -6, 4, -37, 65, 78, 36, 0, -49, -28, 27, 95, 13, -48, -60, -53, 41, 18, 81, 40, 126, 34, 60};
+alignas(64) int16_t l1_biases[OUTSIZE] = {533};
 
 void nnue_init() {
     int8_t* data8 = (int8_t*) gNetworkData;
@@ -27,16 +27,16 @@ void nnue_init() {
             in_weights[i] = *(data8++);
     }
 
-    int16_t* data16 = (int16_t*) data8;
-
-    for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data16++);
-
-    for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
-        l1_weights[i] = *(data16++);
-
-    for (int i = 0; i < OUTSIZE; i++)
-        l1_biases[i] = *(data16++);
+    // int16_t* data16 = (int16_t*) data8;
+    //
+    // for (int i = 0; i < L1SIZE; i++)
+    //     in_biases[i] = *(data16++);
+    //
+    // for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
+    //     l1_weights[i] = *(data16++);
+    //
+    // for (int i = 0; i < OUTSIZE; i++)
+    //     l1_biases[i] = *(data16++);
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {
