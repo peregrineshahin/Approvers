@@ -31,7 +31,7 @@
 #include "uci.h"
 
 #ifndef KAGGLE
-extern void benchmark(Position* pos, char* str);
+extern void benchmark();
 #endif
 
 #ifndef KAGGLE
@@ -614,7 +614,7 @@ void uci_loop(int argc, char** argv) {
             fflush(stdout);
         }
         else if (strcmp(token, "bench") == 0)
-            benchmark(&pos, str);
+            benchmark();
 #endif
         else
         {
