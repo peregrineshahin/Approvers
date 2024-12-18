@@ -1600,6 +1600,9 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 }
 
 static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
+    if (!rm->pv[0])
+        return 0;
+
     do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
 
     bool     ttHit;
