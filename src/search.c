@@ -924,10 +924,6 @@ moves_loop:  // When in check search starts from here.
             ss->mpKillers[1] = k2;
         }
 
-        // Last capture extension
-        else if (PieceValue[captured_piece()] > PawnValue && non_pawn_material() <= 2 * RookValue)
-            extension = 1;
-
         // Late irreversible move extension
         if (move == ttMove && rule50_count() > 80
             && (captureOrPromotion || type_of_p(movedPiece) == PAWN))
