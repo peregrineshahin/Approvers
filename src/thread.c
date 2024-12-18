@@ -75,7 +75,7 @@ static THREAD_FUNC thread_init(int idx) {
     pos->threadIdx          = idx;
     pos->counterMoveHistory = cmhTables[t];
 
-    atomic_store(&pos->resetCalls, false);
+    pos->resetCalls = false;
 
     Threads.pos[idx] = pos;
 

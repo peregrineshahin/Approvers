@@ -21,7 +21,6 @@
 #ifndef POSITION_H
 #define POSITION_H
 
-#include <stdatomic.h>
 #include <stddef.h>  // For offsetof()
 #include <string.h>
 
@@ -164,11 +163,11 @@ struct Position {
     CounterMoveHistoryStat* counterMoveHistory;
 
     // Thread-control data.
-    uint64_t    bestMoveChanges;
-    atomic_bool resetCalls;
-    int         callsCnt;
-    int         action;
-    int         threadIdx;
+    uint64_t bestMoveChanges;
+    bool     resetCalls;
+    int      callsCnt;
+    int      action;
+    int      threadIdx;
 
     void* stackAllocation;
 };

@@ -32,45 +32,42 @@
 #include "tt.h"
 #include "uci.h"
 
-#define load_rlx(x) atomic_load_explicit(&(x), memory_order_relaxed)
-#define store_rlx(x, y) atomic_store_explicit(&(x), y, memory_order_relaxed)
-
-int nmp_v1     = 779;
-int nmp_v2     = 71;
-int nmp_v3     = 194;
-int nmp_v4     = 216;
-int nmp_v5     = 24645;
-int nmp_v6     = 30;
-int nmp_v7     = 30;
-int nmp_v8     = 92;
-int nmp_v9     = 181;
-int lph_v1     = 1163;
-int lph_v2     = 613;
-int qmo_v1     = 354;
-int qmo_v2     = 1091;
-int qmo_v3     = 1087;
-int rz_v1      = 540;
-int ft_v1      = 210;
-int rd_v1      = 543;
-int rd_v2      = 1140;
-int rd_v3      = 817;
-int sb_v1      = 14;
-int sb_v2      = 33;
-int sb_v3      = 20;
-int sb_v4      = 156;
-int rd_init_v1 = 2530;
-int d_v1       = 20;
-int iir_v1     = 631;
-int iir_v2     = 199;
-int cbp_v1     = 417;
-int cbp_v2     = 7;
-int fpp_v1     = 606;
-int fpp_v2     = 296;
-int fpp_v3     = 173;
-int fpp_v4     = 26148;
-int sqsee_v1   = 3275;
-int sqsee_v2   = 1908;
-int sch_v1     = 97;
+int nmp_v1     = 773;
+int nmp_v2     = 72;
+int nmp_v3     = 193;
+int nmp_v4     = 206;
+int nmp_v5     = 23275;
+int nmp_v6     = 29;
+int nmp_v7     = 26;
+int nmp_v8     = 88;
+int nmp_v9     = 164;
+int lph_v1     = 1149;
+int lph_v2     = 562;
+int qmo_v1     = 380;
+int qmo_v2     = 1081;
+int qmo_v3     = 1040;
+int rz_v1      = 517;
+int ft_v1      = 217;
+int rd_v1      = 538;
+int rd_v2      = 1151;
+int rd_v3      = 888;
+int sb_v1      = 13;
+int sb_v2      = 30;
+int sb_v3      = 17;
+int sb_v4      = 136;
+int rd_init_v1 = 2319;
+int d_v1       = 21;
+int iir_v1     = 614;
+int iir_v2     = 202;
+int cbp_v1     = 428;
+int cbp_v2     = 6;
+int fpp_v1     = 690;
+int fpp_v2     = 298;
+int fpp_v3     = 168;
+int fpp_v4     = 27912;
+int sqsee_v1   = 2937;
+int sqsee_v2   = 1790;
+int sch_v1     = 99;
 int sch_v2     = -1;
 int sfpc_v1    = 641;
 int sfpc_v2    = 179;
@@ -538,21 +535,21 @@ Value search(
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
-    if (load_rlx(pos->resetCalls))
+    if (pos->resetCalls)
     {
-        store_rlx(pos->resetCalls, false);
+        pos->resetCalls = false;
         pos->callsCnt = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
     }
     if (--pos->callsCnt <= 0)
     {
-        store_rlx(Threads.pos[0]->resetCalls, true);
+        Threads.pos[0]->resetCalls = true;
         check_time();
     }
 
     if (!rootNode)
     {
         // Step 2. Check for aborted search and immediate draw
-        if (load_rlx(Threads.stop) || is_draw(pos) || ss->ply >= MAX_PLY)
+        if (Threads.stop || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
     }
 
@@ -1070,7 +1067,7 @@ moves_loop:  // When in check search starts from here.
         // Finished searching the move. If a stop occurred, the return value of
         // the search cannot be trusted, and we return immediately without
         // updating best move, PV and TT.
-        if (load_rlx(Threads.stop))
+        if (Threads.stop)
         {
             return 0;
         }

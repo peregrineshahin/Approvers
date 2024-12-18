@@ -23,7 +23,6 @@
 
 
 #include <stdio.h>
-#include <stdatomic.h>
 #include <sys/time.h>
 #include <unistd.h>
 
