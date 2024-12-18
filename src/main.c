@@ -32,12 +32,12 @@ int main(int argc, char** argv) {
     psqt_init();
     bitboards_init();
     zob_init();
-    threads_init();
+    thread_init();
     search_clear();
 
     uci_loop(argc, argv);
 
-    threads_exit();
+    thread_exit();
     tt_free();
 
     return 0;

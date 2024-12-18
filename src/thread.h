@@ -48,7 +48,6 @@ void mainthread_search(void);
 
 struct ThreadPool {
     Position* pos[MAX_THREADS];
-    int       numThreads;
     bool      ponder, stop, increaseDepth;
     // Flag for testing pondering outside the Kaggle environment
     bool testPonder;
@@ -56,9 +55,8 @@ struct ThreadPool {
 
 typedef struct ThreadPool ThreadPool;
 
-void threads_init(void);
-void threads_exit(void);
-void threads_set_number(int num);
+void thread_init();
+void thread_exit(void);
 
 extern ThreadPool Threads;
 

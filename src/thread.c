@@ -21,24 +21,15 @@
 #include "movegen.h"
 #include "movepick.h"
 #include "search.h"
-#include "settings.h"
 #include "thread.h"
-#include "tt.h"
-#include "uci.h"
-
-#ifndef _WIN32
-    #define THREAD_FUNC void*
-#else
-    #define THREAD_FUNC DWORD WINAPI
-#endif
 
 // Global objects
 ThreadPool               Threads;
 MainThread               mainThread;
 
-// thread_init() is where a search thread starts and initialises itself.
+void thread_init() {
+    Threads.testPonder = 0;
 
-static THREAD_FUNC thread_init(int idx) {
     Position* pos        = calloc(sizeof(Position), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
@@ -56,19 +47,14 @@ static THREAD_FUNC thread_init(int idx) {
             for (int k = 0; k < 64; k++)
                 (*pos->counterMoveHistory)[c][0][j][k] = -1;
 
-    Threads.pos[idx] = pos;
+    Threads.pos[0] = pos;
 
-    return 0;
+    search_init();
 }
 
-// thread_create() launches a new thread.
+void thread_exit() {
+    Position* pos = Threads.pos[0];
 
-static void thread_create(int idx) { thread_init(idx); }
-
-
-// thread_destroy() waits for thread termination before returning.
-
-static void thread_destroy(Position* pos) {
     free(pos->counterMoves);
     free(pos->history);
     free(pos->captureHistory);
@@ -76,37 +62,4 @@ static void thread_destroy(Position* pos) {
     free(pos->stackAllocation);
     free(pos->moveList);
     free(pos);
-}
-
-
-// threads_init() creates and launches requested threads that will go
-// immediately to sleep. We cannot use a constructor because Threads is a
-// static object and we need a fully initialized engine at this point due to
-// allocation of Endgames in the Thread constructor.
-
-void threads_init(void) {
-    Threads.numThreads = 1;
-    Threads.testPonder = 0;
-    thread_create(0);
-}
-
-
-// threads_exit() terminates threads before the program exits. Cannot be
-// done in destructor because threads must be terminated before deleting
-// any static objects while still in main().
-
-void threads_exit(void) { threads_set_number(0); }
-
-
-// threads_set_number() creates/destroys threads to match the requested
-// number.
-
-void threads_set_number(int num) {
-    while (Threads.numThreads < num)
-        thread_create(Threads.numThreads++);
-
-    while (Threads.numThreads > num)
-        thread_destroy(Threads.pos[--Threads.numThreads]);
-
-    search_init();
 }

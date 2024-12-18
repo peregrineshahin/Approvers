@@ -92,7 +92,6 @@ void benchmark() {
     Limits                     = (LimitsType) {0};
     Limits.depth               = 13;
     delayedSettings.ttSize     = 16;
-    delayedSettings.numThreads = 1;
 
     Threads.testPonder = 0;
 
