@@ -139,7 +139,6 @@ struct Position {
     uint8_t  pieceList[256];
     uint8_t  index[64];
     uint8_t  castlingRightsMask[64];
-    uint8_t  castlingRookSquare[16];
     Bitboard castlingPath[16];
     Key      rootKeyFlip;
     uint16_t gamePly;
@@ -213,7 +212,6 @@ PURE bool is_draw(const Position* pos);
 #define can_castle_c(c) can_castle_cr((WHITE_OO | WHITE_OOO) << (2 * (c)))
 #define can_castle_any() (pos->st->castlingRights)
 #define castling_impeded(cr) (pieces() & pos->castlingPath[cr])
-#define castling_rook_square(cr) (pos->castlingRookSquare[cr])
 
 // Checking
 #define checkers() (pos->st->checkersBB)

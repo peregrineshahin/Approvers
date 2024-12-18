@@ -232,10 +232,10 @@ generate_all(const Position* pos, ExtMove* list, Bitboard target, const Color Us
         if (Type != CAPTURES && can_castle_c(Us))
         {
             if (!castling_impeded(OO) && can_castle_cr(OO))
-                (list++)->move = make_castling(ksq, castling_rook_square(OO));
+                (list++)->move = make_castling(ksq, Us == WHITE ? SQ_H1 : SQ_H8);
 
             if (!castling_impeded(OOO) && can_castle_cr(OOO))
-                (list++)->move = make_castling(ksq, castling_rook_square(OOO));
+                (list++)->move = make_castling(ksq, Us == WHITE ? SQ_A1 : SQ_A8);
         }
     }
 
