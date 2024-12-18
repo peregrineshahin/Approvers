@@ -89,7 +89,7 @@ static char* Defaults[] = {
 };
 
 void benchmark() {
-    Limits = (LimitsType){0};
+    Limits                     = (LimitsType) {0};
     Limits.depth               = 13;
     delayedSettings.ttSize     = 16;
     delayedSettings.numThreads = 1;
@@ -99,16 +99,17 @@ void benchmark() {
     process_delayed_settings();
     search_clear();
 
-    const int numFens = sizeof(Defaults) / sizeof(char*);;
+    const int numFens = sizeof(Defaults) / sizeof(char*);
+    ;
 
-    uint64_t nodes = 0;
-    Position pos = {0};
+    uint64_t nodes      = 0;
+    Position pos        = {0};
     pos.stackAllocation = malloc(63 + 217 * sizeof(*pos.stack));
     pos.stack           = (Stack*) (((uintptr_t) pos.stackAllocation + 0x3f) & ~0x3f);
     pos.st              = pos.stack + 7;
     pos.moveList        = malloc(10000 * sizeof(*pos.moveList));
 
-    TimePoint elapsed   = now();
+    TimePoint elapsed = now();
 
     for (int i = 0, j = 0; i < numFens; i++)
     {

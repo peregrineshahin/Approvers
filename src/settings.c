@@ -20,7 +20,7 @@ void process_delayed_settings(void) {
     if (ttChange)
     {
         tt_free();
-        settings.ttSize     = delayedSettings.ttSize;
+        settings.ttSize = delayedSettings.ttSize;
         tt_allocate(settings.ttSize);
     }
 

@@ -237,8 +237,8 @@ void position(Position* pos, char* str) {
 // value ("value").
 
 void setoption(char* str) {
-    char *name = strstr(str, "name") + 5;
-    char *value = strstr(name, "value");
+    char* name  = strstr(str, "name") + 5;
+    char* value = strstr(name, "value");
     if (value)
     {
         char* p = value - 1;
@@ -374,7 +374,7 @@ static void go(Position* pos, char* str) {
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
-    for (char *token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
+    for (char* token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
     {
         if (strcmp(token, "wtime") == 0)
             Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
@@ -434,7 +434,7 @@ void uci_loop(int argc, char** argv) {
 
     char cmd[2048] = {0};
 
-    delayedSettings.ttSize = 1;
+    delayedSettings.ttSize     = 1;
     delayedSettings.numThreads = 1;
 
     strcpy(fen, StartFEN);
@@ -443,7 +443,7 @@ void uci_loop(int argc, char** argv) {
 
     while (get_input(cmd))
     {
-        char *token = cmd;
+        char* token = cmd;
         while (isblank(*token))
             token++;
 
@@ -467,7 +467,7 @@ void uci_loop(int argc, char** argv) {
 
         if (strcmp(token, "uci") == 0)
         {
-            #ifndef KAGGLE
+#ifndef KAGGLE
             printf("id name\n");
             printf("option name Threads type spin default 1 min 1 max 2\n");
             printf("option name Hash type spin default 1 min 1 max 16\n");
@@ -570,7 +570,7 @@ void uci_loop(int argc, char** argv) {
 
             printf("uciok\n");
             fflush(stdout);
-            #endif
+#endif
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
@@ -669,15 +669,17 @@ Move uci_to_move(const Position* pos, char* str) {
     return 0;
 }
 
-int get_input(char *str) {
+int get_input(char* str) {
     if (fgets(str, 8192, stdin) == NULL)
         return 0;
 
-    char *ptr = strchr(str, '\n');
-    if (ptr != NULL) *ptr = '\0';
+    char* ptr = strchr(str, '\n');
+    if (ptr != NULL)
+        *ptr = '\0';
 
     ptr = strchr(str, '\r');
-    if (ptr != NULL) *ptr = '\0';
+    if (ptr != NULL)
+        *ptr = '\0';
 
     return 1;
 }

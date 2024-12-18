@@ -84,9 +84,7 @@ static THREAD_FUNC thread_init(int idx) {
 
 // thread_create() launches a new thread.
 
-static void thread_create(int idx) {
-    thread_init(idx);
-}
+static void thread_create(int idx) { thread_init(idx); }
 
 
 // thread_destroy() waits for thread termination before returning.
@@ -118,9 +116,7 @@ void threads_init(void) {
 // done in destructor because threads must be terminated before deleting
 // any static objects while still in main().
 
-void threads_exit(void) {
-    threads_set_number(0);
-}
+void threads_exit(void) { threads_set_number(0); }
 
 
 // threads_set_number() creates/destroys threads to match the requested
