@@ -282,7 +282,9 @@ void mainthread_search(void) {
     printf("\n");
     fflush(stdout);
 
-#ifdef KAGGLE
+    if (!IsKaggle && !Threads.testPonder)
+        return;
+
     // Start pondering right after the best move has been printed if we can
     if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
@@ -305,7 +307,6 @@ void mainthread_search(void) {
         Threads.ponder = false;
         Threads.stop   = true;
     }
-#endif
 }
 
 

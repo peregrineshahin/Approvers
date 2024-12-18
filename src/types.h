@@ -115,6 +115,12 @@
     #define Is64Bit 0
 #endif
 
+#ifdef KAGGLE
+    #define IsKaggle 1
+#else
+    #define IsKaggle 0
+#endif
+
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
 

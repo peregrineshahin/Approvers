@@ -354,6 +354,12 @@ void setoption(char* str) {
         return;
     }
 
+    if (strcmp("Pondering", name) == 0)
+    {
+        Threads.testPonder = strcmp("true", value) == 0;
+        return;
+    }
+
     fprintf(stderr, "No such option: %s\n", name);
 }
 
@@ -479,6 +485,9 @@ void uci_loop(int argc, char** argv) {
         {
             #ifndef KAGGLE
             printf("id name\n");
+            printf("option name Threads type spin default 1 min 1 max 2\n");
+            printf("option name Hash type spin default 1 min 1 max 16\n");
+            printf("option name Pondering type string\n");
             printf("option name nmp_v1 type string\n");
             printf("option name nmp_v2 type string\n");
             printf("option name nmp_v3 type string\n");
