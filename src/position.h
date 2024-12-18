@@ -167,7 +167,6 @@ struct Position {
     bool     resetCalls;
     int      callsCnt;
     int      action;
-    int      threadIdx;
 
     void* stackAllocation;
 };

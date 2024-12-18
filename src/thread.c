@@ -48,7 +48,6 @@ static THREAD_FUNC thread_init(int idx) {
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
     pos->stack              = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
-    pos->threadIdx          = idx;
     pos->resetCalls         = false;
     pos->counterMoveHistory = calloc(sizeof(CounterMoveHistoryStat), 1);
 

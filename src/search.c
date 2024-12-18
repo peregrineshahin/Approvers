@@ -343,15 +343,12 @@ void thread_search(Position* pos) {
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
 
-    if (pos->threadIdx == 0)
-    {
-        if (mainThread.previousScore == VALUE_INFINITE)
-            for (int i = 0; i < 4; i++)
-                mainThread.iterValue[i] = VALUE_ZERO;
-        else
-            for (int i = 0; i < 4; i++)
-                mainThread.iterValue[i] = mainThread.previousScore;
-    }
+    if (mainThread.previousScore == VALUE_INFINITE)
+        for (int i = 0; i < 4; i++)
+            mainThread.iterValue[i] = VALUE_ZERO;
+    else
+        for (int i = 0; i < 4; i++)
+            mainThread.iterValue[i] = mainThread.previousScore;
 
     RootMoves* rm                 = pos->rootMoves;
     int        searchAgainCounter = 0;
@@ -359,11 +356,10 @@ void thread_search(Position* pos) {
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
     while ((pos->rootDepth += 2) < MAX_PLY && !Threads.stop
-           && !(Limits.depth && pos->threadIdx == 0 && pos->rootDepth > Limits.depth))
+           && !(Limits.depth && pos->rootDepth > Limits.depth))
     {
         // Age out PV variability metric
-        if (pos->threadIdx == 0)
-            totBestMoveChanges /= 2;
+        totBestMoveChanges /= 2;
 
         // Save the last iteration's scores before first PV line is searched and
         // all the move scores except the (new) PV are set to -VALUE_INFINITE.
@@ -454,9 +450,6 @@ void thread_search(Position* pos) {
             lastBestMoveDepth = pos->rootDepth;
         }
 
-        if (pos->threadIdx != 0)
-            continue;
-
         // Do we have time for the next iteration? Can we stop searching now?
         if (use_time_management() && !Threads.stop)
         {
@@ -497,9 +490,6 @@ void thread_search(Position* pos) {
         mainThread.iterValue[iterIdx] = bestValue;
         iterIdx                       = (iterIdx + 1) & 3;
     }
-
-    if (pos->threadIdx != 0)
-        return;
 
     mainThread.previousTimeReduction = timeReduction;
 }
