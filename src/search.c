@@ -239,33 +239,8 @@ void mainthread_search(void) {
     tt_new_search();
     char buf[16];
 
-    if (pos->rootMoves->size > 0)
-    {
-        Move bookMove = 0;
-
-
-        for (int i = 0; i < pos->rootMoves->size; i++)
-            if (pos->rootMoves->move[i].pv[0] == bookMove)
-            {
-                RootMove tmp            = pos->rootMoves->move[0];
-                pos->rootMoves->move[0] = pos->rootMoves->move[i];
-                pos->rootMoves->move[i] = tmp;
-                break;
-            }
-
-        Thread.pos->bestMoveChanges = 0;
-        thread_search(pos);  // Let's start searching!
-    }
-
-    if (pos->rootMoves->size == 0)
-    {
-        pos->rootMoves->move[0].pv[0]  = 0;
-        pos->rootMoves->move[0].pvSize = 1;
-        pos->rootMoves->size++;
-        printf("info depth 0 score %s\n", uci_value(buf, checkers() ? -VALUE_MATE : VALUE_DRAW));
-        fflush(stdout);
-    }
-
+    Thread.pos->bestMoveChanges = 0;
+    thread_search(pos);
     Thread.previousScore = pos->rootMoves->move[0].score;
 
     printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
@@ -276,7 +251,8 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
+    if (pos->rootMoves->move[0].pvSize >= 2
+        || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
         Thread.ponder = true;
         Thread.stop   = false;
@@ -288,8 +264,8 @@ void mainthread_search(void) {
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
         pos->completedDepth = 0;
-        pos->rootDepth = 0;
-        pos->pvLast = 0;
+        pos->rootDepth      = 0;
+        pos->pvLast         = 0;
 
         prepare_for_search(pos, true);
         thread_search(pos);
@@ -359,27 +335,16 @@ void thread_search(Position* pos) {
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
 
-        int pvFirst = 0, pvLast = 0;
-
         if (!Thread.increaseDepth)
             searchAgainCounter++;
 
-        int pvIdx = 0;
-
-        pos->pvIdx = pvIdx;
-        if (pvIdx == pvLast)
-        {
-            pvFirst = pvLast;
-            for (pvLast++; pvLast < rm->size; pvLast++)
-                if (rm->move[pvLast].tbRank != rm->move[pvFirst].tbRank)
-                    break;
-            pos->pvLast = pvLast;
-        }
+        pos->pvIdx  = 0;
+        pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
-            Value previousScore = rm->move[pvIdx].previousScore;
+            Value previousScore = rm->move[0].previousScore;
             delta               = d_v1;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
@@ -400,7 +365,7 @@ void thread_search(Position* pos) {
             // and we want to keep the same order for all the moves except the
             // new PV that goes to the front. Note that in case of MultiPV
             // search the already searched PV lines are preserved.
-            stable_sort(&rm->move[pvIdx], pvLast - pvIdx);
+            stable_sort(&rm->move[0], pos->pvLast);
 
             // If search has been stopped, we break immediately. Sorting and
             // writing PV back to TT is safe because RootMoves is still
@@ -419,15 +384,12 @@ void thread_search(Position* pos) {
             }
             else
             {
-                rm->move[pvIdx].bestMoveCount++;
+                rm->move[0].bestMoveCount++;
                 break;
             }
 
             delta += delta / 4 + asd_v1 / 100;
         }
-
-        // Sort the PV lines searched so far and update the GUI
-        stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 #ifndef KAGGLE
         if (!Thread.ponder)
@@ -470,9 +432,7 @@ void thread_search(Position* pos) {
             {
                 // If we are allowed to ponder do not stop the search now but
                 // keep pondering until the GUI sends "stop".
-                if (Thread.ponder)
-                {}
-                else
+                if (!Thread.ponder)
                     Thread.stop = true;
             }
             else
@@ -481,7 +441,7 @@ void thread_search(Position* pos) {
         }
 
         Thread.iterValue[iterIdx] = bestValue;
-        iterIdx                       = (iterIdx + 1) & 3;
+        iterIdx                   = (iterIdx + 1) & 3;
     }
 
     Thread.previousTimeReduction = timeReduction;
@@ -519,7 +479,7 @@ Value search(
     if (pos->resetCalls)
     {
         pos->resetCalls = false;
-        pos->callsCnt = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
+        pos->callsCnt   = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
     }
     if (--pos->callsCnt <= 0)
     {
@@ -1414,9 +1374,7 @@ Value qsearch(Position*  pos,
 }
 
 #define rm_lt(m1, m2) \
-    ((m1).tbRank != (m2).tbRank ? (m1).tbRank < (m2).tbRank \
-     : (m1).score != (m2).score ? (m1).score < (m2).score \
-                                : (m1).previousScore < (m2).previousScore)
+    ((m1).score != (m2).score ? (m1).score < (m2).score : (m1).previousScore < (m2).previousScore)
 
 // stable_sort() sorts RootMoves from highest-scoring move to lowest-scoring
 // move while preserving order of equal elements.
@@ -1556,26 +1514,25 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 }
 
-static int peak_stdin()
-{
+static int peak_stdin() {
 #ifndef WIN32
-    fd_set rf = {0};
+    fd_set         rf = {0};
     struct timeval tv = {0, 0};
     FD_SET(fileno(stdin), &rf);
     select(fileno(stdin) + 1, &rf, NULL, NULL, &tv);
     return FD_ISSET(fileno(stdin), &rf);
 #else
     static HANDLE hIn;
-    static int init = 0, pipe = 0;
-    DWORD dw;
+    static int    init = 0, pipe = 0;
+    DWORD         dw;
 
     if (!init++)
     {
-        hIn = GetStdHandle(STD_INPUT_HANDLE);
+        hIn  = GetStdHandle(STD_INPUT_HANDLE);
         pipe = !GetConsoleMode(hIn, &dw);
         if (!pipe)
         {
-            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
+            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
             FlushConsoleInputBuffer(hIn);
         }
     }
@@ -1643,13 +1600,16 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 }
 
 static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
+    if (!rm->pv[0])
+        return 0;
+
     do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
 
-    bool ttHit;
+    bool     ttHit;
     TTEntry* tte = tt_probe(key(), &ttHit);
     if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
     {
-        rm->pv[1] = tte_move(tte);
+        rm->pv[1]  = tte_move(tte);
         rm->pvSize = 2;
     }
 
@@ -1690,7 +1650,6 @@ void prepare_for_search(Position* root, bool ponderMode) {
         rm->move[i].score         = -VALUE_INFINITE;
         rm->move[i].previousScore = -VALUE_INFINITE;
         rm->move[i].bestMoveCount = 0;
-        rm->move[i].tbRank        = moves->move[i].tbRank;
     }
     memcpy(pos, root, offsetof(Position, moveList));
     // Copy enough of the root State buffer.

@@ -212,8 +212,6 @@ static ExtMove* generate_moves(const Position* pos,
 
 static ExtMove*
 generate_all(const Position* pos, ExtMove* list, Bitboard target, const Color Us, const int Type) {
-    const int  OO     = make_castling_right(Us, KING_SIDE);
-    const int  OOO    = make_castling_right(Us, QUEEN_SIDE);
     const bool Checks = Type == QUIET_CHECKS;
 
     list = generate_pawn_moves(pos, list, target, Us, Type);
@@ -231,11 +229,17 @@ generate_all(const Position* pos, ExtMove* list, Bitboard target, const Color Us
 
         if (Type != CAPTURES && can_castle_c(Us))
         {
-            if (!castling_impeded(OO) && can_castle_cr(OO))
-                (list++)->move = make_castling(ksq, castling_rook_square(OO));
+            const int king_castle  = make_castling_right(Us, KING_SIDE);
+            const int queen_castle = make_castling_right(Us, QUEEN_SIDE);
 
-            if (!castling_impeded(OOO) && can_castle_cr(OOO))
-                (list++)->move = make_castling(ksq, castling_rook_square(OOO));
+            const int king_rook  = Us == WHITE ? SQ_H1 : SQ_H8;
+            const int queen_rook = Us == WHITE ? SQ_A1 : SQ_A8;
+
+            if (!(BetweenBB[ksq][king_rook] & pieces()) && can_castle_cr(king_castle))
+                (list++)->move = make_castling(ksq, king_rook);
+
+            if (!(BetweenBB[ksq][queen_rook] & pieces()) && can_castle_cr(queen_castle))
+                (list++)->move = make_castling(ksq, queen_rook);
         }
     }
 

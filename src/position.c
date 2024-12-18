@@ -12,16 +12,6 @@
 static void set_castling_right(Position* pos, Color c, Square rfrom);
 static void set_state(Position* pos, Stack* st);
 
-#ifndef NDEBUG
-static int pos_is_ok(Position* pos, int* failedStep);
-static int check_pos(Position* pos);
-#else
-    #define check_pos(p) \
-        do \
-        { \
-        } while (0)
-#endif
-
 struct Zob zob;
 
 Key matKey[16] = {0ULL,
@@ -42,8 +32,6 @@ Key matKey[16] = {0ULL,
                   0ULL};
 
 const char PieceToChar[] = " PNBRQK  pnbrqk";
-
-int failed_step;
 
 static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->board[s] = piece;
@@ -227,22 +215,10 @@ static void set_castling_right(Position* pos, Color c, Square rfrom) {
     int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
     int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
 
-    Square kto = relative_square(c, cs == KING_SIDE ? SQ_G1 : SQ_C1);
-    Square rto = relative_square(c, cs == KING_SIDE ? SQ_F1 : SQ_D1);
-
     pos->st->castlingRights |= cr;
 
     pos->castlingRightsMask[kfrom] |= cr;
     pos->castlingRightsMask[rfrom] |= cr;
-    pos->castlingRookSquare[cr] = rfrom;
-
-    for (Square s = min(rfrom, rto); s <= max(rfrom, rto); s++)
-        if (s != kfrom && s != rfrom)
-            pos->castlingPath[cr] |= sq_bb(s);
-
-    for (Square s = min(kfrom, kto); s <= max(kfrom, kto); s++)
-        if (s != kfrom && s != rfrom)
-            pos->castlingPath[cr] |= sq_bb(s);
 }
 
 
@@ -563,21 +539,6 @@ bool is_pseudo_legal(const Position* pos, Move m) {
     return true;
 }
 
-#if 0
-int is_pseudo_legal(Position *pos, Move m)
-{
-  int r1 = is_pseudo_legal_old(pos, m);
-  int r2 = is_pseudo_legal_new(pos, m);
-  if (r1 != r2) {
-    printf("old: %d, new: %d\n", r1, r2);
-    printf("old: %d\n", is_pseudo_legal_old(pos, m));
-    printf("new: %d\n", is_pseudo_legal_new(pos, m));
-exit(1);
-  }
-  return r1;
-}
-#endif
-
 
 // gives_check_special() is invoked by gives_check() if there are
 // discovered check candidates or the move is of a special type
@@ -620,12 +581,8 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
 
 // do_move() makes a move. The move is assumed to be legal.
-#include "evaluate.h"
-void do_move(Position* pos, Move m, int givesCheck) {
-    //if(pos->nodes==7381)
-    //printf("hey\n");
-    //printf("n = %lu, key = %08lx, m = %d, eval = %d\n", pos->nodes, key(), (int)m, !checkers() ? evaluate(pos) : 0);
 
+void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
     // Copy some fields of the old state to our new Stack object except the
@@ -656,13 +613,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
-
-
-        Square rfrom, rto;
-
         int kingSide = to > from;
-        rfrom        = to;  // Castling is encoded as "king captures friendly rook"
-        rto          = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+        Square rfrom = to;  // Castling is encoded as "king captures friendly rook"
+        Square rto   = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
         to           = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
 
         // Remove both pieces first since squares could overlap in Chess960
@@ -681,7 +634,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
-
     else if (captured)
     {
         Square capsq = to;
@@ -693,8 +645,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             if (unlikely(type_of_m(m) == ENPASSANT))
             {
                 capsq ^= 8;
-
-
                 pos->board[capsq] = 0;  // Not done by remove_piece()
             }
 
@@ -786,18 +736,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     st->key = key;
 
     // Calculate checkers bitboard (if move gives check)
-#if 1
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
-#else
-    st->checkersBB = 0;
-    if (givesCheck)
-    {
-        if (type_of_m(m) != NORMAL || ((st - 1)->blockersForKing[them] & sq_bb(from)))
-            st->checkersBB = attackers_to(square_of(them, KING)) & pieces_c(us);
-        else
-            st->checkersBB = (st - 1)->checkSquares[piece & 7] & sq_bb(to);
-    }
-#endif
 
     pos->sideToMove = !pos->sideToMove;
     pos->nodes++;
@@ -1020,90 +959,3 @@ bool is_draw(const Position* pos) {
 
 
 void pos_set_check_info(Position* pos) { set_check_info(pos); }
-
-// pos_is_ok() performs some consistency checks for the position object.
-// This is meant to be helpful when debugging.
-
-#ifndef NDEBUG
-static int pos_is_ok(Position* pos, int* failedStep) {
-    int Fast = 1;  // Quick (default) or full check?
-
-    enum {
-        Default,
-        King,
-        Bitboards,
-        StackOK,
-        Lists,
-        Castling
-    };
-
-    for (int step = Default; step <= (Fast ? Default : Castling); step++)
-    {
-        if (failedStep)
-            *failedStep = step;
-
-        if (step == Default)
-            if ((stm() != WHITE && stm() != BLACK) || piece_on(square_of(WHITE, KING)) != W_KING
-                || piece_on(square_of(BLACK, KING)) != B_KING
-                || (ep_square() && relative_rank_s(stm(), ep_square()) != RANK_6))
-                return 0;
-
-    #if 0
-    if (step == King)
-      if (   std::count(board, board + SQUARE_NB, W_KING) != 1
-          || std::count(board, board + SQUARE_NB, B_KING) != 1
-          || attackers_to(square_of(!stm(), KING)) & pieces_c(stm()))
-        return 0;
-    #endif
-
-        if (step == Bitboards)
-        {
-            if ((pieces_c(WHITE) & pieces_c(BLACK))
-                || (pieces_c(WHITE) | pieces_c(BLACK)) != pieces())
-                return 0;
-
-            for (int p1 = PAWN; p1 <= KING; p1++)
-                for (int p2 = PAWN; p2 <= KING; p2++)
-                    if (p1 != p2 && (pieces_p(p1) & pieces_p(p2)))
-                        return 0;
-        }
-
-        if (step == StackOK)
-        {
-            Stack si = *(pos->st);
-            set_state(pos, &si);
-            if (memcmp(&si, pos->st, StateSize))
-                return 0;
-        }
-
-        if (step == Lists)
-            for (int c = 0; c < 2; c++)
-                for (int pt = PAWN; pt <= KING; pt++)
-                {
-                    if (piece_count(c, pt) != popcount(pieces_cp(c, pt)))
-                        return 0;
-
-                    for (int i = 0; i < piece_count(c, pt); i++)
-                        if (piece_on(piece_list(c, pt)[i]) != make_piece(c, pt)
-                            || pos->index[piece_list(c, pt)[i]] != i)
-                            return 0;
-                }
-
-        if (step == Castling)
-            for (int c = 0; c < 2; c++)
-                for (int s = 0; s < 2; s++)
-                {
-                    int cr = make_castling_right(c, s);
-                    if (!can_castle_cr(cr))
-                        continue;
-
-                    if (piece_on(pos->castlingRookSquare[cr]) != make_piece(c, ROOK)
-                        || pos->castlingRightsMask[pos->castlingRookSquare[cr]] != cr
-                        || (pos->castlingRightsMask[square_of(c, KING)] & cr) != cr)
-                        return 0;
-                }
-    }
-
-    return 1;
-}
-#endif
