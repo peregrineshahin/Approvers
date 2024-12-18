@@ -331,12 +331,6 @@ struct ExtMove {
 
 typedef struct ExtMove ExtMove;
 
-struct PSQT {
-    Score psq[16][64];
-};
-
-extern struct PSQT psqt;
-
 #undef max
 #undef min
 
