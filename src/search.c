@@ -32,95 +32,100 @@
 #include "tt.h"
 #include "uci.h"
 
-int nmp_v1     = 779;
-int nmp_v2     = 71;
-int nmp_v3     = 194;
-int nmp_v4     = 216;
-int nmp_v5     = 24645;
-int nmp_v6     = 30;
+int nmp_v1     = 842;
+int nmp_v2     = 67;
+int nmp_v3     = 197;
+int nmp_v4     = 220;
+int nmp_v5     = 27022;
+int nmp_v6     = 25;
 int nmp_v7     = 30;
-int nmp_v8     = 92;
-int nmp_v9     = 181;
-int lph_v1     = 1163;
-int lph_v2     = 613;
-int qmo_v1     = 354;
-int qmo_v2     = 1091;
-int qmo_v3     = 1087;
-int rz_v1      = 540;
-int ft_v1      = 210;
-int rd_v1      = 543;
-int rd_v2      = 1140;
-int rd_v3      = 817;
+int nmp_v8     = 96;
+int nmp_v9     = 179;
+int lph_v1     = 1134;
+int lph_v2     = 625;
+int qmo_v1     = 338;
+int qmo_v2     = 1048;
+int qmo_v3     = 1037;
+int rz_v1      = 510;
+int ft_v1      = 209;
+int rd_v1      = 552;
+int rd_v2      = 1060;
+int rd_v3      = 851;
 int sb_v1      = 14;
-int sb_v2      = 33;
-int sb_v3      = 20;
-int sb_v4      = 156;
-int rd_init_v1 = 2530;
-int d_v1       = 20;
-int iir_v1     = 631;
-int iir_v2     = 199;
-int cbp_v1     = 417;
+int sb_v2      = 35;
+int sb_v3      = 19;
+int sb_v4      = 168;
+int rd_init_v1 = 2455;
+int d_v1       = 19;
+int iir_v1     = 594;
+int iir_v2     = 202;
+int cbp_v1     = 413;
 int cbp_v2     = 7;
-int fpp_v1     = 606;
-int fpp_v2     = 296;
-int fpp_v3     = 173;
-int fpp_v4     = 26148;
-int sqsee_v1   = 3275;
-int sqsee_v2   = 1908;
-int sch_v1     = 97;
+int fpp_v1     = 670;
+int fpp_v2     = 276;
+int fpp_v3     = 169;
+int fpp_v4     = 27906;
+int sqsee_v1   = 3425;
+int sqsee_v2   = 1815;
+int sch_v1     = 105;
 int sch_v2     = -1;
-int sfpc_v1    = 641;
+int sfpc_v1    = 613;
 int sfpc_v2    = 179;
-int sfpc_v3    = 151;
+int sfpc_v3    = 162;
 int sfpc_v4    = 250;
-int scsee_v1   = 227;
-int se_v1      = 680;
-int se_v2      = 338;
-int se_v3      = 248;
-int se_v4      = 258;
-int se_v5      = 3822;
-int se_v6      = 108;
-int prb_v1     = 149;
-int prb_v2     = 53;
-int rfp_v1     = 842;
-int lmr_v1     = 954;
-int lmr_v2     = 1207;
-int lmr_v3     = 4446;
-int lmr_v4     = 106;
-int lmr_v5     = 96;
-int lmr_v6     = 126;
-int lmr_v7     = 132;
-int lmr_v8     = 13150;
-int fmc_v1     = 278;
-int fmc_v2     = 248;
-int fmc_v3     = 227;
-int hb_v1      = 585;
-int hb_v2      = 238;
-int hb_v3      = 208;
-int hb_v4      = 1927;
-int hm_v1      = 636;
-int hm_v2      = 218;
-int hm_v3      = 213;
-int hm_v4      = 1854;
-int asd_v1     = 536;
-int ses_v1     = 352;
-int qsf_v1     = 167;
-int ch_v1      = 1863;
-int ch_v2      = 242;
-int ch_v3      = 303;
-int tempo      = 58;
-int mp_v1      = 66;
-int mp_v2      = 1081;
-int mp_v3      = 3181;
-int mp_v4      = 112;
-int mp_v5      = 219;
-int mp_v6      = 203;
-int mp_v7      = 178;
-int mp_v8      = 114;
-int mp_v9      = 96;
-int mp_v10     = 411;
-int mp_v11     = 264;
-int eval_scale = 94;
+int scsee_v1   = 213;
+int se_v1      = 677;
+int se_v2      = 307;
+int se_v3      = 237;
+int se_v4      = 263;
+int se_v5      = 3575;
+int se_v6      = 116;
+int prb_v1     = 151;
+int prb_v2     = 44;
+int rfp_v1     = 839;
+int lmr_v1     = 891;
+int lmr_v2     = 1254;
+int lmr_v3     = 4574;
+int lmr_v4     = 111;
+int lmr_v5     = 91;
+int lmr_v6     = 132;
+int lmr_v7     = 143;
+int lmr_v8     = 13283;
+int fmc_v1     = 292;
+int fmc_v2     = 241;
+int fmc_v3     = 238;
+int hb_v1      = 601;
+int hb_v2      = 231;
+int hb_v3      = 223;
+int hb_v4      = 1953;
+int hm_v1      = 599;
+int hm_v2      = 222;
+int hm_v3      = 218;
+int hm_v4      = 1760;
+int asd_v1     = 546;
+int ses_v1     = 346;
+int qsf_v1     = 165;
+int ch_v1      = 1923;
+int ch_v2      = 239;
+int ch_v3      = 291;
+int tempo      = 50;
+int mp_v1      = 61;
+int mp_v2      = 1019;
+int mp_v3      = 2957;
+int mp_v4      = 114;
+int mp_v5      = 225;
+int mp_v6      = 208;
+int mp_v7      = 167;
+int mp_v8      = 111;
+int mp_v9      = 92;
+int mp_v10     = 416;
+int mp_v11     = 269;
+int pawn       = 205;
+int knight     = 669;
+int bishop     = 830;
+int rook       = 1416;
+int queen      = 2611;
+int eval_scale = 96;
 
 
 LimitsType Limits;
@@ -279,7 +284,8 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
+    if (pos->rootMoves->move[0].pvSize >= 2
+        || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
         Threads.ponder = true;
         Threads.stop   = false;
@@ -291,8 +297,8 @@ void mainthread_search(void) {
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
         pos->completedDepth = 0;
-        pos->rootDepth = 0;
-        pos->pvLast = 0;
+        pos->rootDepth      = 0;
+        pos->pvLast         = 0;
 
         prepare_for_search(pos, true);
         thread_search(pos);
@@ -532,7 +538,7 @@ Value search(
     if (pos->resetCalls)
     {
         pos->resetCalls = false;
-        pos->callsCnt = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
+        pos->callsCnt   = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
     }
     if (--pos->callsCnt <= 0)
     {
@@ -1569,26 +1575,25 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 }
 
-static int peak_stdin()
-{
+static int peak_stdin() {
 #ifndef WIN32
-    fd_set rf = {0};
+    fd_set         rf = {0};
     struct timeval tv = {0, 0};
     FD_SET(fileno(stdin), &rf);
     select(fileno(stdin) + 1, &rf, NULL, NULL, &tv);
     return FD_ISSET(fileno(stdin), &rf);
 #else
     static HANDLE hIn;
-    static int init = 0, pipe = 0;
-    DWORD dw;
+    static int    init = 0, pipe = 0;
+    DWORD         dw;
 
     if (!init++)
     {
-        hIn = GetStdHandle(STD_INPUT_HANDLE);
+        hIn  = GetStdHandle(STD_INPUT_HANDLE);
         pipe = !GetConsoleMode(hIn, &dw);
         if (!pipe)
         {
-            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
+            SetConsoleMode(hIn, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
             FlushConsoleInputBuffer(hIn);
         }
     }
@@ -1658,11 +1663,11 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
     do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
 
-    bool ttHit;
+    bool     ttHit;
     TTEntry* tte = tt_probe(key(), &ttHit);
     if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
     {
-        rm->pv[1] = tte_move(tte);
+        rm->pv[1]  = tte_move(tte);
         rm->pvSize = 2;
     }
 
