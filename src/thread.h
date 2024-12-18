@@ -50,6 +50,8 @@ struct ThreadPool {
     Position* pos[MAX_THREADS];
     int       numThreads;
     bool      ponder, stop, increaseDepth;
+    // Flag for testing pondering outside the Kaggle environment
+    bool      testPonder;
 };
 
 typedef struct ThreadPool ThreadPool;

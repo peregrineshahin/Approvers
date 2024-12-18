@@ -109,6 +109,7 @@ static void thread_destroy(Position* pos) {
 
 void threads_init(void) {
     Threads.numThreads = 1;
+    Threads.testPonder = 0;
     thread_create(0);
 }
 

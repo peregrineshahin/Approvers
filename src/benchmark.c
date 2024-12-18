@@ -114,6 +114,9 @@ void benchmark(Position* current, char* str) {
 
     delayedSettings.ttSize     = ttSize;
     delayedSettings.numThreads = threads;
+
+    Threads.testPonder = 0;
+
     process_delayed_settings();
     search_clear();
 
