@@ -649,8 +649,12 @@ Value search(
     }
 
     // Step 7. Razoring
-    if (!rootNode && depth == 1 && eval <= alpha - rz_v1)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
+    if (eval < alpha - 469 - 307 * depth * depth)
+    {
+        value = qsearch(pos, ss, alpha - 1, alpha, 0, false, false);
+        if (value < alpha)
+            return value;
+    }
 
 
     improving = (ss - 2)->staticEval == VALUE_NONE
