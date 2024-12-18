@@ -23,43 +23,24 @@
 
 #include "types.h"
 
-#define MAX_THREADS 1
-
 void thread_search(Position* pos);
-
-// MainThread struct seems to exist mostly for easy move.
-
-struct MainThread {
-    double previousTimeReduction;
-    Value  previousScore;
-    Value  iterValue[4];
-};
-
-typedef struct MainThread MainThread;
-
-extern MainThread mainThread;
-
 void mainthread_search(void);
 
+typedef struct ThreadStruct ThreadStruct;
 
-// ThreadPool struct handles all the threads-related stuff like init,
-// starting, parking and, most importantly, launching a thread. All the
-// access to threads data is done through this class.
-
-struct ThreadPool {
-    Position* pos[MAX_THREADS];
+struct ThreadStruct {
+    Position* pos;
+    double    previousTimeReduction;
+    Value     previousScore;
+    Value     iterValue[4];
     bool      ponder, stop, increaseDepth;
     // Flag for testing pondering outside the Kaggle environment
     bool testPonder;
 };
 
-typedef struct ThreadPool ThreadPool;
+extern ThreadStruct Thread;
 
 void thread_init();
 void thread_exit(void);
-
-extern ThreadPool Threads;
-
-static Position* threads_main(void) { return Threads.pos[0]; }
 
 #endif

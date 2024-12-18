@@ -219,7 +219,7 @@ void search_clear(void) {
 
     tt_clear();
 
-    Position* pos = Threads.pos[0];
+    Position* pos = Thread.pos;
     stats_clear(pos->counterMoves);
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
@@ -231,8 +231,8 @@ void search_clear(void) {
             for (int k = 0; k < 64; k++)
                 (*pos->counterMoveHistory)[c][0][j][k] = -1;
 
-    mainThread.previousScore         = VALUE_INFINITE;
-    mainThread.previousTimeReduction = 1;
+    Thread.previousScore         = VALUE_INFINITE;
+    Thread.previousTimeReduction = 1;
 }
 
 // mainthread_search() is called by the main thread when the program
@@ -240,7 +240,7 @@ void search_clear(void) {
 // outputs the "bestmove".
 
 void mainthread_search(void) {
-    Position* pos = Threads.pos[0];
+    Position* pos = Thread.pos;
     Color     us  = stm();
     time_init(us, game_ply());
     tt_new_search();
@@ -260,7 +260,7 @@ void mainthread_search(void) {
                 break;
             }
 
-        Threads.pos[0]->bestMoveChanges = 0;
+        Thread.pos->bestMoveChanges = 0;
         thread_search(pos);  // Let's start searching!
     }
 
@@ -273,20 +273,20 @@ void mainthread_search(void) {
         fflush(stdout);
     }
 
-    mainThread.previousScore = pos->rootMoves->move[0].score;
+    Thread.previousScore = pos->rootMoves->move[0].score;
 
     printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
     printf("\n");
     fflush(stdout);
 
-    if (!IsKaggle && !Threads.testPonder)
+    if (!IsKaggle && !Thread.testPonder)
         return;
 
     // Start pondering right after the best move has been printed if we can
     if (pos->rootMoves->move[0].pvSize >= 2 || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
     {
-        Threads.ponder = true;
-        Threads.stop   = false;
+        Thread.ponder = true;
+        Thread.stop   = false;
 
         const Move bestMove = pos->rootMoves->move[0].pv[0];
         const Move ponder   = pos->rootMoves->move[0].pv[1];
@@ -301,8 +301,8 @@ void mainthread_search(void) {
         prepare_for_search(pos, true);
         thread_search(pos);
 
-        Threads.ponder = false;
-        Threads.stop   = true;
+        Thread.ponder = false;
+        Thread.stop   = true;
     }
 }
 
@@ -343,19 +343,19 @@ void thread_search(Position* pos) {
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
 
-    if (mainThread.previousScore == VALUE_INFINITE)
+    if (Thread.previousScore == VALUE_INFINITE)
         for (int i = 0; i < 4; i++)
-            mainThread.iterValue[i] = VALUE_ZERO;
+            Thread.iterValue[i] = VALUE_ZERO;
     else
         for (int i = 0; i < 4; i++)
-            mainThread.iterValue[i] = mainThread.previousScore;
+            Thread.iterValue[i] = Thread.previousScore;
 
     RootMoves* rm                 = pos->rootMoves;
     int        searchAgainCounter = 0;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
-    while ((pos->rootDepth += 2) < MAX_PLY && !Threads.stop
+    while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
            && !(Limits.depth && pos->rootDepth > Limits.depth))
     {
         // Age out PV variability metric
@@ -368,7 +368,7 @@ void thread_search(Position* pos) {
 
         int pvFirst = 0, pvLast = 0;
 
-        if (!Threads.increaseDepth)
+        if (!Thread.increaseDepth)
             searchAgainCounter++;
 
         int pvIdx = 0;
@@ -412,7 +412,7 @@ void thread_search(Position* pos) {
             // If search has been stopped, we break immediately. Sorting and
             // writing PV back to TT is safe because RootMoves is still
             // valid, although it refers to the previous iteration.
-            if (Threads.stop)
+            if (Thread.stop)
                 break;
 
             // In case of failing low/high increase aspiration window and
@@ -437,11 +437,11 @@ void thread_search(Position* pos) {
         stable_sort(&rm->move[pvFirst], pvIdx - pvFirst + 1);
 
 #ifndef KAGGLE
-        if (!Threads.ponder)
+        if (!Thread.ponder)
             uci_print_pv(pos, pos->rootDepth, alpha, beta);
 #endif
 
-        if (!Threads.stop)
+        if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
         if (rm->move[0].pv[0] != lastBestMove)
@@ -451,21 +451,21 @@ void thread_search(Position* pos) {
         }
 
         // Do we have time for the next iteration? Can we stop searching now?
-        if (use_time_management() && !Threads.stop)
+        if (use_time_management() && !Thread.stop)
         {
-            double fallingEval = (318 + 6 * (mainThread.previousScore - bestValue)
-                                  + 6 * (mainThread.iterValue[iterIdx] - bestValue))
+            double fallingEval = (318 + 6 * (Thread.previousScore - bestValue)
+                                  + 6 * (Thread.iterValue[iterIdx] - bestValue))
                                / 825.0;
             fallingEval = clamp(fallingEval, 0.5, 1.5);
 
             // If the best move is stable over several iterations, reduce time
             // accordingly
             timeReduction    = lastBestMoveDepth + 9 < pos->completedDepth ? 1.92 : 0.95;
-            double reduction = (1.47 + mainThread.previousTimeReduction) / (2.32 * timeReduction);
+            double reduction = (1.47 + Thread.previousTimeReduction) / (2.32 * timeReduction);
 
             // Use part of the gained time from a previous stable move for this move
-            totBestMoveChanges += Threads.pos[0]->bestMoveChanges;
-            Threads.pos[0]->bestMoveChanges = 0;
+            totBestMoveChanges += Thread.pos->bestMoveChanges;
+            Thread.pos->bestMoveChanges = 0;
 
             double bestMoveInstability = 1 + totBestMoveChanges;
 
@@ -477,21 +477,21 @@ void thread_search(Position* pos) {
             {
                 // If we are allowed to ponder do not stop the search now but
                 // keep pondering until the GUI sends "stop".
-                if (Threads.ponder)
+                if (Thread.ponder)
                 {}
                 else
-                    Threads.stop = true;
+                    Thread.stop = true;
             }
             else
-                Threads.increaseDepth =
-                  !(Threads.increaseDepth && !Threads.ponder && time_elapsed() > totalTime * 0.58);
+                Thread.increaseDepth =
+                  !(Thread.increaseDepth && !Thread.ponder && time_elapsed() > totalTime * 0.58);
         }
 
-        mainThread.iterValue[iterIdx] = bestValue;
+        Thread.iterValue[iterIdx] = bestValue;
         iterIdx                       = (iterIdx + 1) & 3;
     }
 
-    mainThread.previousTimeReduction = timeReduction;
+    Thread.previousTimeReduction = timeReduction;
 }
 
 // search() is the main search function template for both PV
@@ -530,14 +530,14 @@ Value search(
     }
     if (--pos->callsCnt <= 0)
     {
-        Threads.pos[0]->resetCalls = true;
+        Thread.pos->resetCalls = true;
         check_time();
     }
 
     if (!rootNode)
     {
         // Step 2. Check for aborted search and immediate draw
-        if (Threads.stop || is_draw(pos) || ss->ply >= MAX_PLY)
+        if (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
     }
 
@@ -1055,7 +1055,7 @@ moves_loop:  // When in check search starts from here.
         // Finished searching the move. If a stop occurred, the return value of
         // the search cannot be trusted, and we return immediately without
         // updating best move, PV and TT.
-        if (Threads.stop)
+        if (Thread.stop)
         {
             return 0;
         }
@@ -1598,18 +1598,18 @@ static int peak_stdin()
 // check_time() is used to print debug info and, more importantly, to detect
 // when we are out of available time and thus stop the search.
 static void check_time(void) {
-    if (Threads.ponder)
+    if (Thread.ponder)
     {
         if (peak_stdin())
-            Threads.stop = 1;
+            Thread.stop = 1;
         return;
     }
 
     TimePoint elapsed = time_elapsed();
     if ((use_time_management() && elapsed > time_maximum() - 10)
         || (Limits.movetime && elapsed >= Limits.movetime)
-        || (Limits.nodes && Threads.pos[0]->nodes >= Limits.nodes))
-        Threads.stop = 1;
+        || (Limits.nodes && Thread.pos->nodes >= Limits.nodes))
+        Thread.stop = 1;
 }
 
 // uci_print_pv() prints PV information according to the UCI protocol.
@@ -1620,7 +1620,7 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     TimePoint  elapsed        = time_elapsed() + 1;
     RootMoves* rm             = pos->rootMoves;
     int        pvIdx          = pos->pvIdx;
-    uint64_t   nodes_searched = Threads.pos[0]->nodes;
+    uint64_t   nodes_searched = Thread.pos->nodes;
     char       buf[16];
 
     int i = 0;
@@ -1673,19 +1673,19 @@ void start_thinking(Position* root, bool ponderMode) {
 }
 
 void prepare_for_search(Position* root, bool ponderMode) {
-    Threads.stop          = false;
-    Threads.increaseDepth = true;
-    Threads.ponder        = ponderMode;
+    Thread.stop          = false;
+    Thread.increaseDepth = true;
+    Thread.ponder        = ponderMode;
 
     // Generate all legal moves.
     ExtMove    list[MAX_MOVES];
     ExtMove*   end   = generate_legal(root, list);
-    RootMoves* moves = Threads.pos[0]->rootMoves;
+    RootMoves* moves = Thread.pos->rootMoves;
     moves->size      = end - list;
     for (int i = 0; i < moves->size; i++)
         moves->move[i].pv[0] = list[i].move;
 
-    Position* pos  = Threads.pos[0];
+    Position* pos  = Thread.pos;
     pos->rootDepth = 0;
     pos->nodes     = 0;
     RootMoves* rm  = pos->rootMoves;

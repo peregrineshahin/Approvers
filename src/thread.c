@@ -23,12 +23,10 @@
 #include "search.h"
 #include "thread.h"
 
-// Global objects
-ThreadPool               Threads;
-MainThread               mainThread;
+ThreadStruct Thread = {0};
 
 void thread_init() {
-    Threads.testPonder = 0;
+    Thread.testPonder = 0;
 
     Position* pos        = calloc(sizeof(Position), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
@@ -47,13 +45,13 @@ void thread_init() {
             for (int k = 0; k < 64; k++)
                 (*pos->counterMoveHistory)[c][0][j][k] = -1;
 
-    Threads.pos[0] = pos;
+    Thread.pos = pos;
 
     search_init();
 }
 
 void thread_exit() {
-    Position* pos = Threads.pos[0];
+    Position* pos = Thread.pos;
 
     free(pos->counterMoves);
     free(pos->history);

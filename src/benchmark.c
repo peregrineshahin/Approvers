@@ -93,7 +93,7 @@ void benchmark() {
     Limits.depth               = 13;
     delayedSettings.ttSize     = 16;
 
-    Threads.testPonder = 0;
+    Thread.testPonder = 0;
 
     process_delayed_settings();
     search_clear();
@@ -123,7 +123,7 @@ void benchmark() {
 
         Limits.startTime = now();
         start_thinking(&pos, false);
-        nodes += Threads.pos[0]->nodes;
+        nodes += Thread.pos->nodes;
     }
 
     elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'

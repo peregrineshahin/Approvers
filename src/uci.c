@@ -354,7 +354,7 @@ void setoption(char* str) {
 
     if (strcmp("Pondering", name) == 0)
     {
-        Threads.testPonder = strcmp("true", value) == 0;
+        Thread.testPonder = strcmp("true", value) == 0;
         return;
     }
 
@@ -458,8 +458,8 @@ void uci_loop(int argc, char** argv) {
         }
 
         // At this point we have received a command, so stop pondering
-        Threads.ponder = false;
-        Threads.stop   = true;
+        Thread.ponder = false;
+        Thread.stop   = true;
 
         if (strcmp(token, "quit") == 0)
             break;
