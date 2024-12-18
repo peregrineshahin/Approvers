@@ -239,33 +239,8 @@ void mainthread_search(void) {
     tt_new_search();
     char buf[16];
 
-    if (pos->rootMoves->size > 0)
-    {
-        Move bookMove = 0;
-
-
-        for (int i = 0; i < pos->rootMoves->size; i++)
-            if (pos->rootMoves->move[i].pv[0] == bookMove)
-            {
-                RootMove tmp            = pos->rootMoves->move[0];
-                pos->rootMoves->move[0] = pos->rootMoves->move[i];
-                pos->rootMoves->move[i] = tmp;
-                break;
-            }
-
-        Thread.pos->bestMoveChanges = 0;
-        thread_search(pos);  // Let's start searching!
-    }
-
-    if (pos->rootMoves->size == 0)
-    {
-        pos->rootMoves->move[0].pv[0]  = 0;
-        pos->rootMoves->move[0].pvSize = 1;
-        pos->rootMoves->size++;
-        printf("info depth 0 score %s\n", uci_value(buf, checkers() ? -VALUE_MATE : VALUE_DRAW));
-        fflush(stdout);
-    }
-
+    Thread.pos->bestMoveChanges = 0;
+    thread_search(pos);
     Thread.previousScore = pos->rootMoves->move[0].score;
 
     printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
@@ -457,9 +432,7 @@ void thread_search(Position* pos) {
             {
                 // If we are allowed to ponder do not stop the search now but
                 // keep pondering until the GUI sends "stop".
-                if (Thread.ponder)
-                {}
-                else
+                if (!Thread.ponder)
                     Thread.stop = true;
             }
             else
