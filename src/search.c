@@ -64,7 +64,6 @@ int cbp_v2     = 7;
 int fpp_v1     = 606;
 int fpp_v2     = 296;
 int fpp_v3     = 173;
-int fpp_v4     = 26148;
 int sqsee_v1   = 3275;
 int sqsee_v2   = 1908;
 int sch_v1     = 97;
@@ -798,10 +797,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 / 100 && !inCheck
-                    && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha
-                    && (*cmh)[movedPiece][to_sq(move)] + (*fmh)[movedPiece][to_sq(move)]
-                           + (*fmh2)[movedPiece][to_sq(move)] + (*fmh3)[movedPiece][to_sq(move)] / 2
-                         < fpp_v4)
+                    && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
                     continue;
 
                 // Prune moves with negative SEE at low depths and below a decreasing

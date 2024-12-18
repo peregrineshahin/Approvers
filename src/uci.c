@@ -76,7 +76,6 @@ extern int cbp_v2;
 extern int fpp_v1;
 extern int fpp_v2;
 extern int fpp_v3;
-extern int fpp_v4;
 extern int sqsee_v1;
 extern int sqsee_v2;
 extern int sch_v1;
@@ -278,7 +277,6 @@ void setoption(char* str) {
     SET(fpp_v1)
     SET(fpp_v2)
     SET(fpp_v3)
-    SET(fpp_v4)
     SET(sqsee_v1)
     SET(sqsee_v2)
     SET(sch_v1)
@@ -494,7 +492,6 @@ void uci_loop(int argc, char** argv) {
             printf("option name fpp_v1 type string\n");
             printf("option name fpp_v2 type string\n");
             printf("option name fpp_v3 type string\n");
-            printf("option name fpp_v4 type string\n");
             printf("option name sqsee_v1 type string\n");
             printf("option name sqsee_v2 type string\n");
             printf("option name sch_v1 type string\n");
