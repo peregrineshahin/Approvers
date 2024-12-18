@@ -64,7 +64,4 @@ extern ThreadPool Threads;
 
 static Position* threads_main(void) { return Threads.pos[0]; }
 
-extern CounterMoveHistoryStat** cmhTables;
-extern int                      numCmhTables;
-
 #endif

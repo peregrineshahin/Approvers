@@ -35,34 +35,10 @@
 // Global objects
 ThreadPool               Threads;
 MainThread               mainThread;
-CounterMoveHistoryStat** cmhTables    = NULL;
-int                      numCmhTables = 0;
 
 // thread_init() is where a search thread starts and initialises itself.
 
 static THREAD_FUNC thread_init(int idx) {
-#ifdef PER_THREAD_CMH
-    int t = idx;
-#else
-    int t = 0;
-#endif
-    if (t >= numCmhTables)
-    {
-        int old      = numCmhTables;
-        numCmhTables = t + 16;
-        cmhTables    = realloc(cmhTables, numCmhTables * sizeof(CounterMoveHistoryStat*));
-        while (old < numCmhTables)
-            cmhTables[old++] = NULL;
-    }
-    if (!cmhTables[t])
-    {
-        cmhTables[t] = calloc(sizeof(CounterMoveHistoryStat), 1);
-        for (int c = 0; c < 2; c++)
-            for (int j = 0; j < 16; j++)
-                for (int k = 0; k < 64; k++)
-                    (*cmhTables[t])[c][0][j][k] = -1;
-    }
-
     Position* pos        = calloc(sizeof(Position), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
@@ -73,9 +49,13 @@ static THREAD_FUNC thread_init(int idx) {
 
     pos->stack              = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->threadIdx          = idx;
-    pos->counterMoveHistory = cmhTables[t];
+    pos->resetCalls         = false;
+    pos->counterMoveHistory = calloc(sizeof(CounterMoveHistoryStat), 1);
 
-    pos->resetCalls = false;
+    for (int c = 0; c < 2; c++)
+        for (int j = 0; j < 16; j++)
+            for (int k = 0; k < 64; k++)
+                (*pos->counterMoveHistory)[c][0][j][k] = -1;
 
     Threads.pos[idx] = pos;
 
@@ -130,16 +110,4 @@ void threads_set_number(int num) {
         thread_destroy(Threads.pos[--Threads.numThreads]);
 
     search_init();
-
-    if (num == 0 && numCmhTables > 0)
-    {
-        for (int i = 0; i < numCmhTables; i++)
-            if (cmhTables[i])
-            {
-                free(cmhTables[i]);
-            }
-        free(cmhTables);
-        cmhTables    = NULL;
-        numCmhTables = 0;
-    }
 }

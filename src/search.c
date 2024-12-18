@@ -218,21 +218,18 @@ void search_clear(void) {
     Time.availableNodes = 0;
 
     tt_clear();
-    for (int i = 0; i < numCmhTables; i++)
-        if (cmhTables[i])
-        {
-            stats_clear(cmhTables[i]);
-            for (int c = 0; c < 2; c++)
-                for (int j = 0; j < 16; j++)
-                    for (int k = 0; k < 64; k++)
-                        (*cmhTables[i])[c][0][j][k] = CounterMovePruneThreshold - 1;
-        }
 
     Position* pos = Threads.pos[0];
     stats_clear(pos->counterMoves);
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
     stats_clear(pos->corrHistory);
+    stats_clear(pos->counterMoveHistory);
+
+    for (int c = 0; c < 2; c++)
+        for (int j = 0; j < 16; j++)
+            for (int k = 0; k < 64; k++)
+                (*pos->counterMoveHistory)[c][0][j][k] = -1;
 
     mainThread.previousScore         = VALUE_INFINITE;
     mainThread.previousTimeReduction = 1;
