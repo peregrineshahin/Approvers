@@ -64,7 +64,6 @@ Bitboard PseudoAttacks[8][64];
 Bitboard PawnAttacks[2][64];
 
 #ifndef PEDANTIC
-Bitboard CastlingPath[64];
 int      CastlingRightsMask[64];
 #endif
 

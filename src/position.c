@@ -215,21 +215,10 @@ static void set_castling_right(Position* pos, Color c, Square rfrom) {
     int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
     int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
 
-    Square kto = relative_square(c, cs == KING_SIDE ? SQ_G1 : SQ_C1);
-    Square rto = relative_square(c, cs == KING_SIDE ? SQ_F1 : SQ_D1);
-
     pos->st->castlingRights |= cr;
 
     pos->castlingRightsMask[kfrom] |= cr;
     pos->castlingRightsMask[rfrom] |= cr;
-
-    for (Square s = min(rfrom, rto); s <= max(rfrom, rto); s++)
-        if (s != kfrom && s != rfrom)
-            pos->castlingPath[cr] |= sq_bb(s);
-
-    for (Square s = min(kfrom, kto); s <= max(kfrom, kto); s++)
-        if (s != kfrom && s != rfrom)
-            pos->castlingPath[cr] |= sq_bb(s);
 }
 
 
