@@ -748,17 +748,22 @@ moves_loop:  // When in check search starts from here.
 
             if (!captureOrPromotion && !givesCheck)
             {
-                // Countermoves based pruning
-                if (lmrDepth < cbp_v1 / 100
-                                 + ((ss - 1)->statScore > cbp_v2 / 100 || (ss - 1)->moveCount == 1)
-                    && (*cmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
-                    && (*fmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
+                int history = (*fmh)[movedPiece][to_sq(move)] + (*fmh2)[movedPiece][to_sq(move)];
+
+                // Continuation history based pruning (~2 Elo)
+                if (history < -3884 * depth)
                     continue;
+
+                history += 2 * (*pos->history)[stm()][from_to(move)];
+
+                lmrDepth += history / 3609;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 / 100 && !inCheck
                     && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
                     continue;
+
+                lmrDepth = max(lmrDepth, 0);
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
