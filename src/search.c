@@ -479,7 +479,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
-    bool     ttHit, formerPv, givesCheck, improving;
+    bool     formerPv, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
@@ -532,14 +532,14 @@ Value search(
     // use a different position key in case of an excluded move.
     excludedMove = ss->excludedMove;
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
-    tte          = tt_probe(posKey, &ttHit);
-    ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = rootNode ? pos->rootMoves->move[pos->pvIdx].pv[0] : ttHit ? tte_move(tte) : 0;
+    tte          = tt_probe(posKey, &(ss->ttHit));
+    ttValue      = ss->ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
+    ttMove = rootNode ? pos->rootMoves->move[pos->pvIdx].pv[0] : ss->ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
-        ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
+        ss->ttPv = PvNode || (ss->ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff.
-    if (!PvNode && ttHit && tte_depth(tte) >= depth
+    if (!PvNode && ss->ttHit && tte_depth(tte) >= depth
         && ttValue != VALUE_NONE  // Possible in case of TT access race.
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
     {
@@ -575,7 +575,7 @@ Value search(
         improving                       = false;
         goto moves_loop;
     }
-    else if (ttHit)
+    else if (ss->ttHit)
     {
         // Never assume anything about values stored in TT
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
@@ -651,11 +651,11 @@ Value search(
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move.
     if (!PvNode && depth > 4 && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
-        && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
+        && !(ss->ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && is_capture_or_promotion(pos, ttMove))
+        if (ss->ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
+            && ttValue >= probCutBeta && ttMove && is_capture_or_promotion(pos, ttMove))
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
@@ -685,7 +685,7 @@ Value search(
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
-                    if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
+                    if (!(ss->ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
                         tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
                                  depth - 3, move, rawEval);
                     return value;
@@ -1131,7 +1131,8 @@ moves_loop:  // When in check search starts from here.
 
         // Extra penalty for a quiet TT or main killer move in previous ply
         // when it gets refuted
-        if (((ss - 1)->moveCount == 1 || (ss - 1)->currentMove == (ss - 1)->killers[0])
+        if (((ss - 1)->moveCount == 1 + (ss - 1)->ttHit
+             || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
             update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
@@ -1194,7 +1195,7 @@ Value qsearch(Position*  pos,
     Key      posKey;
     Move     ttMove, move, bestMove;
     Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase, oldAlpha;
-    bool     ttHit, pvHit, givesCheck;
+    bool     pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
 
@@ -1220,12 +1221,12 @@ Value qsearch(Position*  pos,
 
     // Transposition table lookup
     posKey  = key();
-    tte     = tt_probe(posKey, &ttHit);
-    ttValue = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove  = ttHit ? tte_move(tte) : 0;
-    pvHit   = ttHit && tte_is_pv(tte);
+    tte     = tt_probe(posKey, &(ss->ttHit));
+    ttValue = ss->ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
+    ttMove  = ss->ttHit ? tte_move(tte) : 0;
+    pvHit   = ss->ttHit && tte_is_pv(tte);
 
-    if (!PvNode && ttHit && tte_depth(tte) >= ttDepth
+    if (!PvNode && ss->ttHit && tte_depth(tte) >= ttDepth
         && ttValue != VALUE_NONE  // Only in case of TT access race
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
@@ -1239,7 +1240,7 @@ Value qsearch(Position*  pos,
     }
     else
     {
-        if (ttHit)
+        if (ss->ttHit)
         {
             // Never assume anything about values stored in TT
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
@@ -1266,7 +1267,7 @@ Value qsearch(Position*  pos,
         // Stand pat. Return immediately if static value is at least beta
         if (bestValue >= beta)
         {
-            if (!ttHit)
+            if (!ss->ttHit)
                 tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false, BOUND_LOWER,
                          DEPTH_NONE, 0, rawEval);
 

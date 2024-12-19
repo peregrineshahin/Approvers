@@ -51,6 +51,7 @@ struct Stack {
     // Copied when making a move
     Key pawnKey;
     Key materialKey;
+    bool ttHit;
     union {
         struct {
             Score psq;
