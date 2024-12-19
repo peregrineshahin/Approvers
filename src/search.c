@@ -806,7 +806,8 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Step 14. Extensions
-
+        if (move == ttMove || !cutNode || ss->ttPv)
+        {
         // Singular extension search. If all moves but one fail low on a search
         // of (alpha-s, beta-s), and just one fails high on (alpha, beta), then
         // that move is singular and should be extended. To verify this we do a
@@ -887,6 +888,7 @@ moves_loop:  // When in check search starts from here.
         if (move == ttMove && rule50_count() > 80
             && (captureOrPromotion || type_of_p(movedPiece) == PAWN))
             extension = 2;
+        }
 
         // Add extension to new depth
         newDepth += extension;
