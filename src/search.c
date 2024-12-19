@@ -1066,18 +1066,17 @@ moves_loop:  // When in check search starts from here.
             {
                 bestMove = move;
 
-                ss->cutoffCnt += !ttMove + (extension < 2);
-
                 if (PvNode && !rootNode)  // Update pv even in fail-high case
                     update_pv(ss->pv, move, (ss + 1)->pv);
 
-                if (PvNode && value < beta)  // Update alpha! Always alpha < beta
-                    alpha = value;
-                else
+                if (value >= beta)
                 {
+                    ss->cutoffCnt += !ttMove + (extension < 2);
                     ss->statScore = 0;
                     break;
                 }
+
+                alpha = value;
             }
         }
 
