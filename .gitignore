@@ -3,6 +3,8 @@
 *.profraw
 *.s
 *.swp
+*.tar
+*.tar.gz
 cfish*
 TODO
 
