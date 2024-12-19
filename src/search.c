@@ -609,20 +609,17 @@ Value search(
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
     // Step 9. Null move search
-    if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
-        && eval >= beta && eval >= ss->staticEval
-        && ss->staticEval >= beta - nmp_v6 * depth - nmp_v7 * improving + nmp_v8 * ss->ttPv + nmp_v9
-        && !excludedMove && non_pawn_material_c(stm()))
+    if (cutNode && (ss - 1)->currentMove != MOVE_NULL && eval >= beta && eval >= ss->staticEval
+        && ss->staticEval >= beta - 21 * depth + 421 && !excludedMove && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
-
+        Depth R         = min((eval - beta) / 235, 7) + depth / 3 + 5;
         ss->currentMove = MOVE_NULL;
         ss->history     = &(*pos->counterMoveHistory)[0][0];
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
-        Value nullValue = -search(pos, ss + 1, -beta, -beta + 1, depth - R, !cutNode, false);
+        Value nullValue = -search(pos, ss + 1, -beta, -beta + 1, depth - R, false, false);
         undo_null_move(pos);
 
         if (nullValue >= beta)
