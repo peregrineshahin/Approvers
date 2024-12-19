@@ -669,6 +669,9 @@ Value search(
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
+                    cpth_update(*pos->captureHistory, moved_piece(move), to_sq(move),
+                                type_of_p(piece_on(to_sq(move))), 1300);
+
                     if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
                         tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
                                  depth - 3, move, rawEval);
