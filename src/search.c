@@ -91,7 +91,7 @@ PARAM(sfpc_v3, 150)
 PARAM(sfpc_v4, 218)
 PARAM(scsee_v1, 200)
 PARAM(se_v1, 621)
-PARAM(se_v2, 289)
+PARAM(se_v2, 200)
 PARAM(se_v3, 277)
 PARAM(se_v4, 274)
 PARAM(se_v5, 3780)
@@ -479,7 +479,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
-    bool     ttHit, formerPv, givesCheck, improving;
+    bool     ttHit, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
@@ -710,7 +710,6 @@ moves_loop:  // When in check search starts from here.
     value            = bestValue;
     singularQuietLMR = moveCountPruning = false;
     ttCapture                           = ttMove && is_capture_or_promotion(pos, ttMove);
-    formerPv                            = ss->ttPv && !PvNode;
 
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta
@@ -819,8 +818,8 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - ses_v1 / 100)
         {
-            Value singularBeta  = ttValue - ((formerPv + se_v2 / 100) * depth) / (se_v3 / 100);
-            Depth singularDepth = (depth - 1 + se_v4 / 100 * formerPv) / 2;
+            Value singularBeta  = ttValue - se_v2 / 100 * depth;
+            Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move cm             = ss->countermove;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
@@ -909,7 +908,7 @@ moves_loop:  // When in check search starts from here.
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
         if (depth >= 3 && moveCount > 1 + 2 * rootNode
-            && (!captureOrPromotion || cutNode || (!PvNode && !formerPv)))
+            && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
             Depth r = reduction(improving, depth, moveCount);
 
@@ -922,7 +921,7 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= 2;
 
-            if (moveCountPruning && !formerPv)
+            if (moveCountPruning)
                 r++;
 
             // Decrease reduction if opponent's move count is high
@@ -931,7 +930,7 @@ moves_loop:  // When in check search starts from here.
 
             // Decrease reduction if ttMove has been singularly extended
             if (singularQuietLMR)
-                r -= 1 + formerPv;
+                r--;
 
             if (!captureOrPromotion)
             {
