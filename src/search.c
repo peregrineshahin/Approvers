@@ -32,95 +32,111 @@
 #include "tt.h"
 #include "uci.h"
 
-int nmp_v1     = 829;
-int nmp_v2     = 63;
-int nmp_v3     = 189;
-int nmp_v4     = 213;
-int nmp_v5     = 22859;
-int nmp_v6     = 33;
-int nmp_v7     = 29;
-int nmp_v8     = 101;
-int nmp_v9     = 192;
-int lph_v1     = 1041;
-int lph_v2     = 644;
-int qmo_v1     = 381;
-int qmo_v2     = 1136;
-int qmo_v3     = 925;
-int rz_v1      = 525;
-int ft_v1      = 195;
-int rd_v1      = 509;
-int rd_v2      = 1111;
-int rd_v3      = 842;
-int sb_v1      = 14;
-int sb_v2      = 30;
-int sb_v3      = 17;
-int sb_v4      = 156;
-int rd_init_v1 = 2810;
-int d_v1       = 18;
-int iir_v1     = 585;
-int iir_v2     = 208;
-int cbp_v1     = 449;
-int cbp_v2     = 7;
-int fpp_v1     = 646;
-int fpp_v2     = 241;
-int fpp_v3     = 185;
-int sqsee_v1   = 2967;
-int sqsee_v2   = 1770;
-int sch_v1     = 108;
-int sch_v2     = -1;
-int sfpc_v1    = 617;
-int sfpc_v2    = 184;
-int sfpc_v3    = 150;
-int sfpc_v4    = 218;
-int scsee_v1   = 200;
-int se_v1      = 621;
-int se_v2      = 289;
-int se_v3      = 277;
-int se_v4      = 274;
-int se_v5      = 3780;
-int se_v6      = 116;
-int prb_v1     = 147;
-int prb_v2     = 54;
-int rfp_v1     = 913;
-int lmr_v1     = 945;
-int lmr_v2     = 1193;
-int lmr_v3     = 4194;
-int lmr_v4     = 103;
-int lmr_v5     = 90;
-int lmr_v6     = 113;
-int lmr_v7     = 138;
-int lmr_v8     = 13235;
-int fmc_v1     = 269;
-int fmc_v2     = 239;
-int fmc_v3     = 234;
-int hb_v1      = 552;
-int hb_v2      = 228;
-int hb_v3      = 239;
-int hb_v4      = 2187;
-int hm_v1      = 625;
-int hm_v2      = 213;
-int hm_v3      = 216;
-int hm_v4      = 1841;
-int asd_v1     = 497;
-int ses_v1     = 400;
-int qsf_v1     = 159;
-int ch_v1      = 1924;
-int ch_v2      = 210;
-int ch_v3      = 335;
-int tempo      = 57;
-int mp_v1      = 63;
-int mp_v2      = 920;
-int mp_v3      = 2772;
-int mp_v4      = 113;
-int mp_v5      = 235;
-int mp_v6      = 211;
-int mp_v7      = 166;
-int mp_v8      = 103;
-int mp_v9      = 96;
-int mp_v10     = 474;
-int mp_v11     = 280;
-int eval_scale = 88;
+Parameter parameters[255];
+int       parameters_count = 0;
 
+#ifndef KAGGLE
+    #define STRINGIFY(x) #x
+    #define PARAM(Name, Value) \
+        int                                               Name = Value; \
+        __attribute__((constructor(__LINE__ + 100))) void ctor_##Name(void) { \
+            Parameter* param = &parameters[parameters_count++]; \
+            strncpy(param->name, STRINGIFY(Name), sizeof(param->name)); \
+            param->value = &Name; \
+        }
+#else
+    #define PARAM(Name, Value) int Name = Value;
+#endif
+
+
+PARAM(nmp_v1, 829)
+PARAM(nmp_v2, 63)
+PARAM(nmp_v3, 189)
+PARAM(nmp_v4, 213)
+PARAM(nmp_v5, 22859)
+PARAM(nmp_v6, 33)
+PARAM(nmp_v7, 29)
+PARAM(nmp_v8, 101)
+PARAM(nmp_v9, 192)
+PARAM(lph_v1, 1041)
+PARAM(lph_v2, 644)
+PARAM(qmo_v1, 381)
+PARAM(qmo_v2, 1136)
+PARAM(qmo_v3, 925)
+PARAM(rz_v1, 525)
+PARAM(ft_v1, 195)
+PARAM(rd_v1, 509)
+PARAM(rd_v2, 1111)
+PARAM(rd_v3, 842)
+PARAM(sb_v1, 14)
+PARAM(sb_v2, 30)
+PARAM(sb_v3, 17)
+PARAM(sb_v4, 156)
+PARAM(rd_init_v1, 2810)
+PARAM(d_v1, 18)
+PARAM(iir_v1, 585)
+PARAM(iir_v2, 208)
+PARAM(cbp_v1, 449)
+PARAM(cbp_v2, 7)
+PARAM(fpp_v1, 646)
+PARAM(fpp_v2, 241)
+PARAM(fpp_v3, 185)
+PARAM(sqsee_v1, 2967)
+PARAM(sqsee_v2, 1770)
+PARAM(sch_v1, 108)
+PARAM(sch_v2, -1)
+PARAM(sfpc_v1, 617)
+PARAM(sfpc_v2, 184)
+PARAM(sfpc_v3, 150)
+PARAM(sfpc_v4, 218)
+PARAM(scsee_v1, 200)
+PARAM(se_v1, 621)
+PARAM(se_v2, 289)
+PARAM(se_v3, 277)
+PARAM(se_v4, 274)
+PARAM(se_v5, 3780)
+PARAM(se_v6, 116)
+PARAM(prb_v1, 147)
+PARAM(prb_v2, 54)
+PARAM(rfp_v1, 913)
+PARAM(lmr_v1, 945)
+PARAM(lmr_v2, 1193)
+PARAM(lmr_v3, 4194)
+PARAM(lmr_v4, 103)
+PARAM(lmr_v5, 90)
+PARAM(lmr_v6, 113)
+PARAM(lmr_v7, 138)
+PARAM(lmr_v8, 13235)
+PARAM(fmc_v1, 269)
+PARAM(fmc_v2, 239)
+PARAM(fmc_v3, 234)
+PARAM(hb_v1, 552)
+PARAM(hb_v2, 228)
+PARAM(hb_v3, 239)
+PARAM(hb_v4, 2187)
+PARAM(hm_v1, 625)
+PARAM(hm_v2, 213)
+PARAM(hm_v3, 216)
+PARAM(hm_v4, 1841)
+PARAM(asd_v1, 497)
+PARAM(ses_v1, 400)
+PARAM(qsf_v1, 159)
+PARAM(ch_v1, 1924)
+PARAM(ch_v2, 210)
+PARAM(ch_v3, 335)
+PARAM(tempo, 57)
+PARAM(mp_v1, 63)
+PARAM(mp_v2, 920)
+PARAM(mp_v3, 2772)
+PARAM(mp_v4, 113)
+PARAM(mp_v5, 235)
+PARAM(mp_v6, 211)
+PARAM(mp_v7, 166)
+PARAM(mp_v8, 103)
+PARAM(mp_v9, 96)
+PARAM(mp_v10, 474)
+PARAM(mp_v11, 280)
+PARAM(eval_scale, 88)
 
 LimitsType Limits;
 

@@ -111,7 +111,12 @@
 
 #define MAGIC_PLAIN
 // #define MAGIC_FANCY
-//#define AVX2_BITBOARD
+// #define AVX2_BITBOARD
+
+typedef struct Parameter {
+    char name[32];
+    int* value;
+} Parameter;
 
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
