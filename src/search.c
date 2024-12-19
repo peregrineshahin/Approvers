@@ -794,10 +794,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
-                    && !(PvNode && abs(bestValue) < sfpc_v2 / 100)
-                    && PieceValue[type_of_p(movedPiece)]
-                         >= PieceValue[type_of_p(piece_on(to_sq(move)))]
-                    && !inCheck
+                    && !(PvNode && abs(bestValue) < sfpc_v2 / 100) && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
                            + PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
