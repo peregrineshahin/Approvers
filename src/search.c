@@ -816,9 +816,11 @@ moves_loop:  // When in check search starts from here.
 
             if (value < singularBeta)
             {
-                extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 / 100)
-                    extension = 2;
+                int doubleMargin = 249 * PvNode - 194 * !ttCapture;
+                int tripleMargin = 94 + 287 * PvNode - 249 * !ttCapture + 99 * ss->ttPv;
+
+                extension =
+                  1 + (value < singularBeta - doubleMargin) + (value < singularBeta - tripleMargin);
 
                 singularQuietLMR = !ttCapture;
             }
