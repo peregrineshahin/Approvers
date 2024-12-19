@@ -1271,6 +1271,8 @@ Value qsearch(Position*  pos,
     // be generated.
     mp_init_q(pos, ttMove, depth, to_sq((ss - 1)->currentMove));
 
+    int quietCheckEvasions = 0;
+
     // Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
     {
@@ -1324,6 +1326,12 @@ Value qsearch(Position*  pos,
             && (*(ss - 1)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold
             && (*(ss - 2)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold)
             continue;
+
+
+        if (bestValue > VALUE_TB_LOSS_IN_MAX_PLY && quietCheckEvasions > 1)
+            break;
+
+        quietCheckEvasions += !captureOrPromotion && InCheck;
 
         // Make and search the move
         do_move(pos, move, givesCheck);
