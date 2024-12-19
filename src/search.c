@@ -620,7 +620,8 @@ Value search(
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
+    if (!PvNode && depth < rfp_v1 / 100
+        && eval - futility_margin(depth, improving) - (ss - 1)->statScore / 256 >= beta
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
