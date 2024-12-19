@@ -682,6 +682,9 @@ Value search(
     if (PvNode && depth >= max(iir_v1 / 100, 3) && !ttMove)
         depth -= max(iir_v2 / 100, 2);
 
+    if (!ss->ttPv && eval > beta + 16 * depth && !ttMove && depth > 1)
+        depth--;
+
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
     PieceToHistory* cmh  = (ss - 1)->history;
