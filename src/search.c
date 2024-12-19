@@ -776,6 +776,9 @@ moves_loop:  // When in check search starts from here.
                     && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
                     continue;
 
+                if (lmrDepth < 2 && !inCheck && type_of_p(movedPiece) == KING)
+                    continue;
+
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
                 if (!see_test(pos, move,
