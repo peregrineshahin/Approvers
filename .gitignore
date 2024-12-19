@@ -67,3 +67,5 @@ cmake-build-*
 
 # src file to kaggle
 src.zip
+
+*.tmp
