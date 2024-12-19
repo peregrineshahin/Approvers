@@ -483,11 +483,11 @@ Value search(
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, checkCount;
 
     // Step 1. Initialize node
     inCheck   = checkers();
-    moveCount = captureCount = quietCount = ss->moveCount = 0;
+    moveCount = captureCount = quietCount = checkCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
@@ -748,6 +748,7 @@ moves_loop:  // When in check search starts from here.
         movedPiece         = moved_piece(move);
 
         givesCheck = gives_check(pos, ss, move);
+        checkCount += givesCheck;
 
         // Calculate new depth for this move
         newDepth = depth - 1;
@@ -756,7 +757,7 @@ moves_loop:  // When in check search starts from here.
         if (!rootNode && non_pawn_material_c(stm()) && bestValue > VALUE_TB_LOSS_IN_MAX_PLY)
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
-            moveCountPruning = moveCount >= futility_move_count(improving, depth);
+            moveCountPruning = moveCount - checkCount / 2 >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
             int lmrDepth = max(newDepth - reduction(improving, depth, moveCount), 0);
