@@ -176,9 +176,6 @@ static Value   value_to_tt(Value v, int ply);
 static Value   value_from_tt(Value v, int ply, int r50c);
 static void    update_pv(Move* pv, Move move, Move* childPv);
 static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
-static void    add_correction_history(
-     correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
@@ -581,7 +578,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = rawEval;
 
         if (eval == VALUE_DRAW)
             eval = value_draw(pos);
@@ -598,7 +595,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + tempo;
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = rawEval;
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -1159,16 +1156,6 @@ moves_loop:  // When in check search starts from here.
                                       : BOUND_UPPER,
                  depth, bestMove, rawEval);
 
-    // Adjust correction history
-    if (!inCheck && (!bestMove || !is_capture_or_promotion(pos, bestMove))
-        && !(bestValue >= beta && bestValue <= ss->staticEval)
-        && !(!bestMove && bestValue >= ss->staticEval))
-    {
-        add_correction_history(pos->corrHistory, stm(), material_key(), depth,
-                               bestValue - ss->staticEval);
-    }
-
-
     return bestValue;
 }
 
@@ -1240,9 +1227,7 @@ Value qsearch(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
-
+            ss->staticEval = bestValue = rawEval;
 
             // Can ttValue be used as a better position evaluation?
             if (ttValue != VALUE_NONE
@@ -1254,8 +1239,7 @@ Value qsearch(Position*  pos,
             rawEval =
               (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
+            ss->staticEval = bestValue = rawEval;
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1440,22 +1424,6 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
     for (*pv++ = move; childPv && *childPv;)
         *pv++ = *childPv++;
     *pv = 0;
-}
-
-// differential.
-static void add_correction_history(
-  correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff) {
-    int32_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
-    int32_t  scaledDiff = diff * ch_v2;
-    int32_t  update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
-    // Clamp entry in-bounds.
-    *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
-}
-
-// Get the correction history differential for the given side and materialKey.
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
-    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / ch_v2;
 }
 
 // update_cm_stats() updates countermove and follow-up move history.
