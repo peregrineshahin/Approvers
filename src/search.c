@@ -1294,6 +1294,8 @@ Value qsearch(Position*  pos,
         if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
             && !advanced_pawn_push(pos, move))
         {
+            if (bestMove)
+                break;
 
             if (moveCount > 2)
                 continue;
