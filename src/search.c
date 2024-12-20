@@ -76,7 +76,7 @@ PARAM(rd_init_v1, 2810)
 PARAM(d_v1, 18)
 PARAM(iir_v1, 585)
 PARAM(iir_v2, 208)
-PARAM(cbp_v1, 449)
+PARAM(cbp_v1, 500)
 PARAM(cbp_v2, 7)
 PARAM(fpp_v1, 646)
 PARAM(fpp_v2, 241)
@@ -766,7 +766,6 @@ moves_loop:  // When in check search starts from here.
             {
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 / 100
-                                 + ((ss - 1)->statScore > cbp_v2 / 100 || (ss - 1)->moveCount == 1)
                     && (*cmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
                     && (*fmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
                     continue;
