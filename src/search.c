@@ -778,9 +778,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
-                if (!see_test(pos, move,
-                              -(sqsee_v1 / 100 - min(lmrDepth, sqsee_v2 / 100)) * lmrDepth
-                                * lmrDepth))
+                if (!see_test(pos, move, -(sqsee_v1 / 100 * lmrDepth * lmrDepth)))
                     continue;
             }
             else
