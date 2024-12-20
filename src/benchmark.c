@@ -90,8 +90,8 @@ static char* Defaults[] = {
 
 void benchmark() {
     Limits                     = (LimitsType) {0};
-    Limits.depth               = 13;
-    delayedSettings.ttSize     = 16;
+    Limits.depth               = 16;
+    delayedSettings.ttSize     = 1;
 
     Thread.testPonder = 0;
 
