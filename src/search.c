@@ -473,7 +473,7 @@ Value search(
     if (depth <= 0)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, checkers());
 
-    Move     pv[MAX_PLY + 1], capturesSearched[32], quietsSearched[64];
+    Move     pv[MAX_PLY + 1], capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
@@ -1076,12 +1076,11 @@ moves_loop:  // When in check search starts from here.
             }
         }
 
-        if (move != bestMove)
+        if (move != bestMove && moveCount < 32)
         {
-            if (captureOrPromotion && captureCount < 32)
+            if (captureOrPromotion)
                 capturesSearched[captureCount++] = move;
-
-            else if (!captureOrPromotion && quietCount < 64)
+            else
                 quietsSearched[quietCount++] = move;
         }
     }
