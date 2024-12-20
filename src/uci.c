@@ -307,11 +307,6 @@ void uci_loop(int argc, char** argv) {
             position(&pos, str);
         else if (strcmp(token, "setoption") == 0)
             setoption(str);
-        else
-        {
-            printf("Unknown command: %s %s\n", token, str);
-            fflush(stdout);
-        }
     }
 
     free(pos.stackAllocation);
