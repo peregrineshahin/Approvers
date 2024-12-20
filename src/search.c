@@ -1440,7 +1440,7 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 // differential.
 static void add_correction_history(
   correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff) {
-    int32_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
+    int16_t* entry      = &hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB];
     int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
     int32_t  scaledDiff = diff * ch_v2;
     int32_t  update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
