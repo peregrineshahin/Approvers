@@ -14,5 +14,5 @@ jobs:
         uses: Sniddl/discord-commits@v1.6
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          template: "simple-link"
-          include-extras: true
+          message: "New commit on the main branch"
+          embed: '{ "title": "{{ commit.title }}", "description": "{{ commit.description }}", "url": "{{ commit.url }}" }'
