@@ -1105,7 +1105,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + PawnValue));
+            int bonus = stat_bonus(depth);
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
