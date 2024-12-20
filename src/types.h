@@ -109,9 +109,9 @@
     #define IsKaggle 0
 #endif
 
-#define MAGIC_PLAIN
+// #define MAGIC_PLAIN
 // #define MAGIC_FANCY
-// #define AVX2_BITBOARD
+#define AVX2_BITBOARD
 
 typedef struct Parameter {
     char name[32];
