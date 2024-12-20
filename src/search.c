@@ -1271,6 +1271,8 @@ Value qsearch(Position*  pos,
 
     ss->history = &(*pos->counterMoveHistory)[0][0];
 
+    Square prevSq = square_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
+
     // Initialize move picker data for the current position, and prepare
     // to search the moves. Because the depth is <= 0 here, only captures,
     // queen promotions and checks (only if depth >= DEPTH_QS_CHECKS) will
@@ -1286,8 +1288,9 @@ Value qsearch(Position*  pos,
         moveCount++;
 
         // Futility pruning
-        if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
-            && !advanced_pawn_push(pos, move))
+        if (!givesCheck && to_sq(move) != prevSq && type_of_m(move) != PROMOTION
+            && futilityBase > -VALUE_KNOWN_WIN && bestValue > -VALUE_KNOWN_WIN
+            && non_pawn_material_c(stm()))
         {
 
             if (moveCount > 2)

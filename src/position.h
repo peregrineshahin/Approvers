@@ -250,10 +250,6 @@ static bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
     return pos->st->blockersForKing[c] & sq_bb(from_sq(m));
 }
 
-static bool advanced_pawn_push(const Position* pos, Move m) {
-    return type_of_p(moved_piece(m)) == PAWN && relative_rank_s(stm(), from_sq(m)) > RANK_4;
-}
-
 static bool is_capture_or_promotion(const Position* pos, Move m) {
     return type_of_m(m) != NORMAL ? type_of_m(m) != CASTLING : !is_empty(to_sq(m));
 }
