@@ -135,6 +135,30 @@ PARAM(mp_v9, 96)
 PARAM(mp_v10, 474)
 PARAM(mp_v11, 280)
 PARAM(eval_scale, 88)
+PARAM(pcmb_v1, 117)
+PARAM(pcmb_v2, 500)
+PARAM(pcmb_v3, 39)
+PARAM(pcmb_v4, 168)
+PARAM(pcmb_v5, 800)
+PARAM(pcmb_v6, 115)
+PARAM(pcmb_v7, 108)
+PARAM(pcmb_v8, 113)
+PARAM(pcmb_v9, 300)
+PARAM(pcmb_v10, 93)
+PARAM(pcmb_v11, 179)
+PARAM(r_v1, 1000)
+PARAM(r_v2, 2000)
+PARAM(r_v3, 1000)
+PARAM(r_v4, 1000)
+PARAM(r_v5, 1000)
+PARAM(r_v6, 1000)
+PARAM(r_v7, 1000)
+PARAM(r_v8, 2000)
+PARAM(r_v9, 2000)
+PARAM(r_v10, 1000)
+PARAM(r_v11, 1000)
+PARAM(r_v12, 1000)
+PARAM(r_v13, 1000)
 
 LimitsType Limits;
 
@@ -890,37 +914,37 @@ moves_loop:  // When in check search starts from here.
         if (depth >= 3 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-            Depth r = reduction(improving, depth, moveCount);
+            Depth r = r_v1 * reduction(improving, depth, moveCount);
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= 2;
+                r -= r_v2;
 
             if (moveCountPruning)
-                r++;
+                r += r_v3;
 
             // Decrease reduction if ttMove has been singularly extended
             if (singularQuietLMR)
-                r--;
+                r -= r_v5;
 
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r++;
+                    r += r_v6;
 
                 if ((ss + 1)->cutoffCnt > 3)
-                    r++;
+                    r += r_v7;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
-                    r += 2;
+                    r += r_v8;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
                 // hence break make_move().
                 else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= 2 + ss->ttPv - (type_of_p(movedPiece) == PAWN);
+                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
 
                 ss->statScore = (*cmh)[movedPiece][to_sq(move)] + (*fmh)[movedPiece][to_sq(move)]
                               + (*fmh2)[movedPiece][to_sq(move)]
@@ -928,16 +952,16 @@ moves_loop:  // When in check search starts from here.
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
                 if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r--;
+                    r -= r_v11;
 
                 else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r++;
+                    r += r_v12;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8;
+                r -= ss->statScore / lmr_v8 * r_v13;
             }
 
-            Depth d = clamp(newDepth - r, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d != newDepth)
@@ -1101,17 +1125,18 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = (117 * (depth > 5) + 39 * !(PvNode || cutNode) + 168 * ((ss - 1)->moveCount > 8)
-                     + 115 * (!inCheck && bestValue <= ss->staticEval - 108));
+        int bonus = pcmb_v1 * (depth > pcmb_v2 / 100) + pcmb_v3 * !(PvNode || cutNode)
+                  + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5 / 100)
+                  + pcmb_v6 * (!inCheck && bestValue <= ss->staticEval - pcmb_v7);
 
         // Proportional to "how much damage we have to undo"
-        bonus += min(-(ss - 1)->statScore / 113, 300);
+        bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
 
         bonus = max(bonus, 0);
-        update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth) * bonus / 93);
+        update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth) * bonus / pcmb_v10);
 
         history_update(*pos->history, !stm(), (ss - 1)->currentMove,
-                       stat_bonus(depth) * bonus / 179);
+                       stat_bonus(depth) * bonus / pcmb_v11);
     }
 
     // If no good move is found and the previous position was ttPv, then the
@@ -1375,10 +1400,10 @@ static Value value_from_tt(Value v, int ply, int r50c) {
     if (v == VALUE_NONE)
         return VALUE_NONE;
 
-    if (v >= VALUE_MATE_IN_MAX_PLY) 
+    if (v >= VALUE_MATE_IN_MAX_PLY)
         return (VALUE_MATE - v > 99 - r50c) ? VALUE_MATE_IN_MAX_PLY - 1 : v - ply;
 
-    if (v <= VALUE_MATED_IN_MAX_PLY) 
+    if (v <= VALUE_MATED_IN_MAX_PLY)
         return (VALUE_MATE + v > 99 - r50c) ? VALUE_MATED_IN_MAX_PLY + 1 : v + ply;
 
     return v;

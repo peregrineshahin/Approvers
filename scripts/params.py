@@ -2,7 +2,7 @@ import re
 
 file = open("..\src\search.c", "r")
 
-pattern = r'^int\s+(\w+)\s*=\s*(\d+);'
+pattern = r'PARAM\((\w+),\s*(-?\d+)\)'
 
 for line in file.readlines():
     if re.search(pattern, line):
