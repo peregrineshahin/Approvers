@@ -64,6 +64,7 @@ PARAM(qmo_v1, 381)
 PARAM(qmo_v2, 1136)
 PARAM(qmo_v3, 925)
 PARAM(rz_v1, 525)
+PARAM(rz_v2, 100)
 PARAM(ft_v1, 195)
 PARAM(rd_v1, 509)
 PARAM(rd_v2, 1111)
@@ -96,6 +97,8 @@ PARAM(se_v3, 277)
 PARAM(se_v4, 274)
 PARAM(se_v5, 3780)
 PARAM(se_v6, 116)
+PARAM(se_v7, 300)
+PARAM(se_v8, 200)
 PARAM(prb_v1, 147)
 PARAM(prb_v2, 54)
 PARAM(rfp_v1, 913)
@@ -124,6 +127,8 @@ PARAM(qsf_v1, 159)
 PARAM(ch_v1, 1924)
 PARAM(ch_v2, 210)
 PARAM(ch_v3, 335)
+PARAM(ch_v4, 100)
+PARAM(ch_v5, 100)
 PARAM(tempo, 57)
 PARAM(mp_v1, 63)
 PARAM(mp_v2, 920)
@@ -161,6 +166,11 @@ PARAM(r_v10, 1000)
 PARAM(r_v11, 1000)
 PARAM(r_v12, 1000)
 PARAM(r_v13, 1000)
+PARAM(lce_v1, 2758)
+PARAM(qb_v1, 201)
+PARAM(cms_v1, 29952);
+PARAM(hu_v1, 10692)
+PARAM(cpth_v1, 10692)
 
 LimitsType Limits;
 
@@ -629,7 +639,7 @@ Value search(
     }
 
     // Step 7. Razoring
-    if (!rootNode && depth == 1 && eval <= alpha - rz_v1)
+    if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
 
@@ -882,7 +892,8 @@ moves_loop:  // When in check search starts from here.
                 ss->mpKillers[1] = k2;
 
                 ss->excludedMove = move;
-                value            = search(pos, ss, beta - 1, beta, (depth + 3) / 2, cutNode, false);
+                value = search(pos, ss, beta - 1, beta, (depth + se_v7 / 100) / (se_v8 / 100),
+                               cutNode, false);
                 ss->excludedMove = 0;
 
                 if (value >= beta)
@@ -905,7 +916,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (PieceValue[captured_piece()] > PawnValue && non_pawn_material() <= 2 * RookValue)
+        else if (PieceValue[captured_piece()] > PawnValue && non_pawn_material() <= lce_v1)
             extension = 1;
 
         // Late irreversible move extension
@@ -1129,7 +1140,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!is_capture_or_promotion(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + PawnValue));
+            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
@@ -1474,9 +1485,9 @@ add_correction_history(correction_history_t hist, Color side, Key key, Depth dep
 }
 
 Value to_corrected(Position* pos, Value rawEval) {
-    int32_t mch = pos->matCorrHist[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t pch = pos->pawnCorrHist[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
-    Value   v   = rawEval + (pch + mch) / ch_v2;
+    int32_t mch = ch_v4 * pos->matCorrHist[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t pch = ch_v5 * pos->pawnCorrHist[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
+    Value   v   = rawEval + (pch + mch) / 100 / ch_v2;
     v           = clamp(v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
     return v;
 }
