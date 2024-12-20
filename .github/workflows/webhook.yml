@@ -10,18 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Discord
-        run: |
-          curl -X POST -H "Content-Type: application/json" \
-          -d '{
-                "content": "New commit on `main`",
-                "embeds": [
-                  {
-                    "title": "${{ github.event.head_commit.message }}",
-                    "url": "${{ github.event.head_commit.url }}",
-                    "description": "${{ github.event.head_commit.message }}\n\n${{ github.event.head_commit.description }}",
-                    "color": 5814783
-                  }
-                ]
-              }' \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+      - name: Discord Commits
+        uses: Sniddl/discord-commits@v1.6
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          template: "simple-link"
+          include-extras: true
