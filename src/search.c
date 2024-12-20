@@ -622,8 +622,9 @@ Value search(
 
     // Step 8. Futility pruning: child node
     if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
-        && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
-        return eval;                // - futility_margin(depth); (do not do the right thing)
+        && abs(eval) < VALUE_TB_WIN_IN_MAX_PLY && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
+        && abs(alpha) < VALUE_TB_WIN_IN_MAX_PLY)
+        return (eval * depth + beta) / (depth + 1);
 
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
