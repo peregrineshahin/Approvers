@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 CC      = clang
-CFLAGS  = -fcommon -O3 -s -ffunction-sections -fdata-sections -mavx2
+CFLAGS  = -fcommon -O3 -ffunction-sections -fdata-sections -mavx2
 
 ifeq ($(comp),$(filter $(comp),gcc clang icc))
     ifeq ($(KERNEL),Darwin)
@@ -37,6 +37,9 @@ build: clean $(OBJ)
 kaggle: CFLAGS += -DKAGGLE
 kaggle: clean $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(EXE) $(LDFLAGS)
+
+bench: build
+	./$(EXE) bench
 
 clean:
 	@rm -f $(EXE) $(OBJ)
