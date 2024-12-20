@@ -957,10 +957,17 @@ moves_loop:  // When in check search starts from here.
 
                 else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
                     r++;
-
-                // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8;
             }
+            else
+            {
+                ss->statScore = PieceValue[piece_on(to_sq(move))] * 6
+                              + (*pos->captureHistory)[moved_piece(move)][to_sq(move)]
+                                                      [type_of_p(piece_on(to_sq(move)))]
+                              - 5000;
+            }
+
+            // Decrease/increase reduction for moves with a good/bad history.
+            r -= ss->statScore / lmr_v8;
 
             Depth d = clamp(newDepth - r, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
