@@ -318,7 +318,7 @@ typedef struct PawnEntry     PawnEntry;
 typedef struct MaterialEntry MaterialEntry;
 
 enum {
-    CORRECTION_HISTORY_ENTRY_NB = 4096,
+    CORRECTION_HISTORY_ENTRY_NB = 16384,
     CORRECTION_HISTORY_MAX      = 8192,
 };
 

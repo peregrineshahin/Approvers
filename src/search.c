@@ -172,13 +172,13 @@ static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm
 // and to avoid three-fold blindness. (Yucks, ugly hack)
 static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1) - 1; }
 
-static Value   value_to_tt(Value v, int ply);
-static Value   value_from_tt(Value v, int ply, int r50c);
-static void    update_pv(Move* pv, Move move, Move* childPv);
-static void    update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey);
-static void    add_correction_history(
-     correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
+static Value value_to_tt(Value v, int ply);
+static Value value_from_tt(Value v, int ply, int r50c);
+static void  update_pv(Move* pv, Move move, Move* childPv);
+static void  update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
+Value        to_corrected(Position* pos, Value rawEval);
+static void  add_correction_history(
+   correction_history_t hist, Color side, Key materialKey, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
@@ -231,8 +231,9 @@ void search_clear(void) {
     stats_clear(pos->counterMoves);
     stats_clear(pos->history);
     stats_clear(pos->captureHistory);
-    stats_clear(pos->corrHistory);
     stats_clear(pos->counterMoveHistory);
+    stats_clear(pos->matCorrHist);
+    stats_clear(pos->pawnCorrHist);
 
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
@@ -581,7 +582,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = to_corrected(pos, rawEval);
 
         if (eval == VALUE_DRAW)
             eval = value_draw(pos);
@@ -598,7 +599,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + tempo;
 
-        eval = ss->staticEval = rawEval + get_correction(pos->corrHistory, stm(), material_key());
+        eval = ss->staticEval = to_corrected(pos, rawEval);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -1158,7 +1159,9 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        add_correction_history(pos->corrHistory, stm(), material_key(), depth,
+        add_correction_history(pos->matCorrHist, stm(), material_key(), depth,
+                               bestValue - ss->staticEval);
+        add_correction_history(pos->pawnCorrHist, stm(), pawn_key(), depth,
                                bestValue - ss->staticEval);
     }
 
@@ -1234,8 +1237,7 @@ Value qsearch(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
+            ss->staticEval = bestValue = to_corrected(pos, rawEval);
 
 
             // Can ttValue be used as a better position evaluation?
@@ -1248,8 +1250,7 @@ Value qsearch(Position*  pos,
             rawEval =
               (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
 
-            ss->staticEval = bestValue =
-              rawEval + get_correction(pos->corrHistory, stm(), material_key());
+            ss->staticEval = bestValue = to_corrected(pos, rawEval);
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1447,9 +1448,12 @@ static void add_correction_history(
     *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
-// Get the correction history differential for the given side and materialKey.
-static int32_t get_correction(correction_history_t hist, Color side, Key materialKey) {
-    return hist[side][materialKey % CORRECTION_HISTORY_ENTRY_NB] / ch_v2;
+Value to_corrected(Position* pos, Value rawEval) {
+    int32_t mch = pos->matCorrHist[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t pch = pos->pawnCorrHist[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
+    Value   v   = rawEval + (pch + mch) / ch_v2;
+    v           = clamp(v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
+    return v;
 }
 
 // update_cm_stats() updates countermove and follow-up move history.
