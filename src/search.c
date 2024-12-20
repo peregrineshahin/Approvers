@@ -994,10 +994,6 @@ moves_loop:  // When in check search starts from here.
             (ss + 1)->pv    = pv;
             (ss + 1)->pv[0] = 0;
 
-            // Extend move from transposition table if we are about to dive into qsearch.
-            if (move == ttMove && ss->ply <= pos->rootDepth * 2)
-                newDepth = max(newDepth, 1);
-
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
         }
 
