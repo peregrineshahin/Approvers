@@ -909,10 +909,6 @@ moves_loop:  // When in check search starts from here.
             if (moveCountPruning)
                 r++;
 
-            // Decrease reduction if opponent's move count is high
-            if ((ss - 1)->moveCount > lmr_v2 / 100)
-                r--;
-
             // Decrease reduction if ttMove has been singularly extended
             if (singularQuietLMR)
                 r--;
