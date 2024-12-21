@@ -9,7 +9,6 @@
 #include "position.h"
 #include "tt.h"
 
-static void set_castling_right(Position* pos, Color c, Square rfrom);
 static void set_state(Position* pos, Stack* st);
 
 struct Zob zob;
@@ -122,7 +121,7 @@ void zob_init(void) {
 // this is assumed to be the responsibility of the GUI.
 
 void pos_set(Position* pos, char* fen) {
-    unsigned char col, row, token;
+    unsigned char token;
     Square        sq = SQ_A8;
 
     Stack* st = pos->st;
@@ -135,7 +134,7 @@ void pos_set(Position* pos, char* fen) {
         pos->pieceCount[i] = 16 * i;
 
     // Piece placement
-    while ((token = *fen++) && token != ' ')
+    while ((token = *fen++) != ' ')
     {
         if (token >= '0' && token <= '9')
             sq += token - '0';  // Advance the given number of files
@@ -153,45 +152,27 @@ void pos_set(Position* pos, char* fen) {
     }
 
     // Active color
-    token           = *fen++;
-    pos->sideToMove = token == 'w' ? WHITE : BLACK;
+    pos->sideToMove = *fen++ == 'b';
     token           = *fen++;
 
-    // Castling availability. Compatible with 3 standards: Normal FEN
-    // standard, Shredder-FEN that uses the letters of the columns on which
-    // the rooks began the game instead of KQkq and also X-FEN standard
-    // that, in case of Chess960, // if an inner rook is associated with
-    // the castling right, the castling tag is replaced by the file letter
-    // of the involved rook, as for the Shredder-FEN.
-    while ((token = *fen++) && !isspace(token))
+    while (((token = *fen++)) && !isspace(token))
     {
-        Square rsq;
-        int    c    = islower(token) ? BLACK : WHITE;
-        Piece  rook = make_piece(c, ROOK);
+        const Color c = islower(token);
+        if ((token & ~32) > 64)
+        {
+            const int    rights = WHITE_OO << !(token & 2) + 2 * c;
+            const Square rfrom  = relative_square(c, token & 2 ? SQ_H1 : SQ_A1);
+            const Square kfrom  = square_of(c, KING);
 
-        token = toupper(token);
-
-        if (token == 'K')
-            for (rsq = relative_square(c, SQ_H1); piece_on(rsq) != rook; --rsq)
-                ;
-        else if (token == 'Q')
-            for (rsq = relative_square(c, SQ_A1); piece_on(rsq) != rook; ++rsq)
-                ;
-        else
-            continue;
-
-        set_castling_right(pos, c, rsq);
+            pos->st->castlingRights |= rights;
+            pos->castlingRightsMask[kfrom] |= rights;
+            pos->castlingRightsMask[rfrom] |= rights;
+        }
     }
 
     // En passant square. Ignore if no pawn capture is possible.
-    if (((col = *fen++) && (col >= 'a' && col <= 'h'))
-        && ((row = *fen++) && (row == (stm() == WHITE ? '3' : '6'))))
-    {
-        st->epSquare = make_square(col - 'a', row - '1');
-
-        if (!(attackers_to(st->epSquare) & pieces_cp(stm(), PAWN)))
-            st->epSquare = 0;
-    }
+    if ((token = *fen++) != '-')
+        st->epSquare = make_square(token - 'a', *fen++ - '1');
     else
         st->epSquare = 0;
 
@@ -207,21 +188,6 @@ void pos_set(Position* pos, char* fen) {
 }
 
 
-// set_castling_right() is a helper function used to set castling rights
-// given the corresponding color and the rook starting square.
-
-static void set_castling_right(Position* pos, Color c, Square rfrom) {
-    Square kfrom = square_of(c, KING);
-    int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
-    int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
-
-    pos->st->castlingRights |= cr;
-
-    pos->castlingRightsMask[kfrom] |= cr;
-    pos->castlingRightsMask[rfrom] |= cr;
-}
-
-
 // set_state() computes the hash keys of the position, and other data
 // that once computed is updated incrementally as moves are made. The
 // function is only used when a new position is set up, and to verify
@@ -231,7 +197,6 @@ static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
     st->nonPawn               = 0;
-    st->psq                   = 0;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -270,9 +235,6 @@ static void set_state(Position* pos, Stack* st) {
 }
 
 
-// Turning slider_blockers() into an static function was slower, even
-// though it should only add a single slightly optimised copy to evaluate().
-#if 1
 // slider_blockers() returns a bitboard of all pieces that are blocking
 // attacks on the square 's' from 'sliders'. A piece blocks a slider if
 // removing that piece from the board would result in a position where
@@ -285,8 +247,8 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
     *pinners        = 0;
 
     // Snipers are sliders that attack square 's'when a piece removed.
-    snipers = ((PseudoAttacks[ROOK][s] & pieces_pp(QUEEN, ROOK))
-               | (PseudoAttacks[BISHOP][s] & pieces_pp(QUEEN, BISHOP)))
+    snipers = (PseudoAttacks[ROOK][s] & pieces_pp(QUEEN, ROOK)
+               | PseudoAttacks[BISHOP][s] & pieces_pp(QUEEN, BISHOP))
             & sliders;
     Bitboard occupancy = pieces() ^ snipers;
 
@@ -304,23 +266,6 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
     }
     return result;
 }
-#endif
-
-
-#if 0
-// attackers_to() computes a bitboard of all pieces which attack a given
-// square. Slider attacks use the occupied bitboard to indicate occupancy.
-
-Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
-{
-  return  (attacks_from_pawn(s, BLACK)    & pieces_cp(WHITE, PAWN))
-        | (attacks_from_pawn(s, WHITE)    & pieces_cp(BLACK, PAWN))
-        | (attacks_from_knight(s)         & pieces_p(KNIGHT))
-        | (attacks_bb_rook(s, occupied)   & pieces_pp(ROOK,   QUEEN))
-        | (attacks_bb_bishop(s, occupied) & pieces_pp(BISHOP, QUEEN))
-        | (attacks_from_king(s)           & pieces_p(KING));
-}
-#endif
 
 
 // is_legal() tests whether a pseudo-legal move is legal
@@ -372,79 +317,7 @@ bool is_legal(const Position* pos, Move m) {
 
 // is_pseudo_legal() takes a random move and tests whether the move is
 // pseudo legal. It is used to validate moves from TT that can be corrupted
-// due to SMP concurrent access or hash position key aliasing.
-
-#if 0
-int is_pseudo_legal_old(Position *pos, Move m)
-{
-  int us = stm();
-  Square from = from_sq(m);
-  Square to = to_sq(m);
-  Piece pc = moved_piece(m);
-
-  // Use a slower but simpler function for uncommon cases
-  if (type_of_m(m) != NORMAL) {
-    ExtMove list[MAX_MOVES];
-    ExtMove *last = generate_legal(pos, list);
-    for (ExtMove *p = list; p < last; p++)
-      if (p->move == m)
-        return 1;
-    return 0;
-  }
-
-  // Is not a promotion, so promotion piece must be empty
-  if (promotion_type(m) - KNIGHT != 0)
-    return 0;
-
-  // If the 'from' square is not occupied by a piece belonging to the side to
-  // move, the move is obviously not legal.
-  if (pc == 0 || color_of(pc) != us)
-    return 0;
-
-  // The destination square cannot be occupied by a friendly piece
-  if (pieces_c(us) & sq_bb(to))
-    return 0;
-
-  // Handle the special case of a pawn move
-  if (type_of_p(pc) == PAWN) {
-    // We have already handled promotion moves, so destination
-    // cannot be on the 8th/1st rank.
-    if (!((to + 0x08) & 0x30))
-      return 0;
-
-    if (   !(attacks_from_pawn(from, us) & pieces_c(!us) & sq_bb(to)) // Not a capture
-        && !((from + pawn_push(us) == to) && is_empty(to))       // Not a single push
-        && !( (from + 2 * pawn_push(us) == to)              // Not a double push
-           && (rank_of(from) == relative_rank(us, RANK_2))
-           && is_empty(to)
-           && is_empty(to - pawn_push(us))))
-      return 0;
-  }
-  else if (!(attacks_from(pc, from) & sq_bb(to)))
-    return 0;
-
-  // Evasions generator already takes care to avoid some kind of illegal moves
-  // and legal() relies on this. We therefore have to take care that the same
-  // kind of moves are filtered out here.
-  if (checkers()) {
-    if (type_of_p(pc) != KING) {
-      // Double check? In this case a king move is required
-      if (more_than_one(checkers()))
-        return 0;
-
-      // Our move must be a blocking evasion or a capture of the checking piece
-      if (!((between_bb(lsb(checkers()), square_of(us, KING)) | checkers()) & sq_bb(to)))
-        return 0;
-    }
-    // In case of king moves under check we have to remove king so as to catch
-    // invalid moves like b1a1 when opposite queen is on c1.
-    else if (attackers_to_occ(pos, to, pieces() ^ sq_bb(from)) & pieces_c(!us))
-      return 0;
-  }
-
-  return 1;
-}
-#endif
+// due to hash position key aliasing.
 
 bool is_pseudo_legal(const Position* pos, Move m) {
     Color  us   = stm();
@@ -562,9 +435,8 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
     case ENPASSANT : {
         if (st->checkSquares[PAWN] & sq_bb(to))
             return true;
-        Square capsq = make_square(file_of(to), rank_of(from));
-        //    Bitboard b = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
-        Bitboard b = inv_sq(inv_sq(inv_sq(pieces(), from), to), capsq);
+        Square   capsq = make_square(file_of(to), rank_of(from));
+        Bitboard b     = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
         return (attacks_bb_rook(st->ksq, b) & pieces_cpp(stm(), QUEEN, ROOK))
             || (attacks_bb_bishop(st->ksq, b) & pieces_cpp(stm(), QUEEN, BISHOP));
     }
@@ -583,8 +455,6 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 // do_move() makes a move. The move is assumed to be legal.
 
 void do_move(Position* pos, Move m, int givesCheck) {
-    Key key = key() ^ zob.side;
-
     // Copy some fields of the old state to our new Stack object except the
     // ones which are going to be recalculated from scratch anyway and then
     // switch our state pointer to point to the new (ready to be updated)
@@ -592,12 +462,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
-
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
     st->plyCounters += 0x101;  // Increment both rule50 and pliesFromNull
+
+    Accumulator* acc = &st->accumulator;
 
     Color  us       = stm();
     Color  them     = !us;
@@ -613,10 +482,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
-        int kingSide = to > from;
-        Square rfrom = to;  // Castling is encoded as "king captures friendly rook"
-        Square rto   = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
-        to           = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
+        int    kingSide = to > from;
+        Square rfrom    = to;  // Castling is encoded as "king captures friendly rook"
+        Square rto      = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+        to              = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
 
         // Remove both pieces first since squares could overlap in Chess960
         remove_piece(pos, us, piece, from);
@@ -631,7 +500,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         nnue_add_piece(acc, piece, to, wksq, bksq);
         nnue_add_piece(acc, captured, rto, wksq, bksq);
 
-        key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
+        st->key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
     else if (captured)
@@ -659,7 +528,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         remove_piece(pos, them, captured, capsq);
 
         // Update material hash key
-        key ^= zob.psq[captured][capsq];
+        st->key ^= zob.psq[captured][capsq];
         st->materialKey -= matKey[captured];
 
         // Reset ply counters
@@ -670,11 +539,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     st->capturedPiece = captured;
 
     // Update hash key
-    key ^= zob.psq[piece][from] ^ zob.psq[piece][to];
+    st->key ^= zob.side ^ zob.psq[piece][from] ^ zob.psq[piece][to];
 
     // Reset en passant square
     if (unlikely((st - 1)->epSquare != 0))
-        key ^= zob.enpassant[file_of((st - 1)->epSquare)];
+        st->key ^= zob.enpassant[file_of((st - 1)->epSquare)];
     st->epSquare = 0;
 
     // Update castling rights if needed
@@ -683,9 +552,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
         //    uint32_t cr = pos->castlingRightsMask[from] | pos->castlingRightsMask[to];
         //    key ^= zob.castling[st->castlingRights & cr];
         //    st->castlingRights &= ~cr;
-        key ^= zob.castling[st->castlingRights];
+        st->key ^= zob.castling[st->castlingRights];
         st->castlingRights &= ~(pos->castlingRightsMask[from] | pos->castlingRightsMask[to]);
-        key ^= zob.castling[st->castlingRights];
+        st->key ^= zob.castling[st->castlingRights];
     }
 
     // Move the piece. The tricky Chess960 castling is handled earlier.
@@ -704,7 +573,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         if ((to ^ from) == 16 && (attacks_from_pawn(to ^ 8, us) & pieces_cp(them, PAWN)))
         {
             st->epSquare = to ^ 8;
-            key ^= zob.enpassant[file_of(st->epSquare)];
+            st->key ^= zob.enpassant[file_of(st->epSquare)];
         }
         else if (type_of_m(m) == PROMOTION)
         {
@@ -717,7 +586,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
             nnue_add_piece(acc, promotion, to, wksq, bksq);
 
             // Update hash keys
-            key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
+            st->key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
             st->pawnKey ^= zob.psq[piece][to];
             st->materialKey += matKey[promotion] - matKey[piece];
 
@@ -731,9 +600,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Reset ply counters.
         st->plyCounters = 0;
     }
-
-    // Update the key with the final value
-    st->key = key;
 
     // Calculate checkers bitboard (if move gives check)
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
