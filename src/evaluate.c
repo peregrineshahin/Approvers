@@ -26,10 +26,13 @@
 extern int eval_scale;
 
 Value evaluate(Position* pos) {
-    Value v = nnue_evaluate(pos);
+
+    int scale = 1700 + 16 * (piece_count(WHITE, PAWN) + piece_count(BLACK, PAWN));
+
+    Value nnue = nnue_evaluate(pos) * scale / 2048;
 
     // Damp down the evaluation linearly when shuffling
-    v = v * (100 - rule50_count()) / 100;
+    Value v = nnue * (100 - rule50_count()) / 100;
 
     v = eval_scale * v / 100;
     // v = (v / 16) * 16;
