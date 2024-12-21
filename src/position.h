@@ -157,8 +157,8 @@ struct Position {
     CounterMoveStat*        counterMoves;
     ButterflyHistory*       history;
     CapturePieceToHistory*  captureHistory;
-    correction_history_t    matCorrHist;
-    correction_history_t    pawnCorrHist;
+    correction_history_t*   matCorrHist;
+    correction_history_t*   pawnCorrHist;
     CounterMoveHistoryStat* counterMoveHistory;
 
     // Thread-control data.

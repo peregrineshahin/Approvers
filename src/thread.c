@@ -32,6 +32,8 @@ void thread_init() {
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->history         = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
+    pos->matCorrHist     = calloc(sizeof(correction_history_t), 1);
+    pos->pawnCorrHist    = calloc(sizeof(correction_history_t), 1);
     pos->rootMoves       = calloc(sizeof(RootMoves), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
