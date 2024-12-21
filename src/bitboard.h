@@ -24,10 +24,6 @@
 #include "types.h"
 void bitboards_init(void);
 
-#define AllSquares (~0ULL)
-#define DarkSquares 0xAA55AA55AA55AA55ULL
-#define LightSquares (~DarkSquares)
-
 #define FileABB 0x0101010101010101ULL
 #define FileBBB (FileABB << 1)
 #define FileCBB (FileABB << 2)
@@ -46,11 +42,6 @@ void bitboards_init(void);
 #define Rank7BB (Rank1BB << (8 * 6))
 #define Rank8BB (Rank1BB << (8 * 7))
 
-#define QueenSide (FileABB | FileBBB | FileCBB | FileDBB)
-#define CenterFiles (FileCBB | FileDBB | FileEBB | FileFBB)
-#define KingSide (FileEBB | FileFBB | FileGBB | FileHBB)
-#define Center ((FileDBB | FileEBB) & (Rank4BB | Rank5BB))
-
 extern uint8_t SquareDistance[64][64];
 
 extern Bitboard SquareBB[64];
@@ -58,7 +49,6 @@ extern Bitboard FileBB[8];
 extern Bitboard RankBB[8];
 extern Bitboard BetweenBB[64][64];
 extern Bitboard LineBB[64][64];
-extern Bitboard DistanceRingBB[64][8];
 extern Bitboard PseudoAttacks[8][64];
 extern Bitboard PawnAttacks[2][64];
 
@@ -163,95 +153,13 @@ static Bitboard attacks_bb(int pt, Square s, Bitboard occupied) {
 
 // popcount() counts the number of non-zero bits in a bitboard.
 
-static int popcount(Bitboard b) {
-#ifndef USE_POPCNT
-
-    extern uint8_t PopCnt16[1 << 16];
-    union {
-        Bitboard bb;
-        uint16_t u[4];
-    } v = {b};
-    return PopCnt16[v.u[0]] + PopCnt16[v.u[1]] + PopCnt16[v.u[2]] + PopCnt16[v.u[3]];
-
-#elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
-
-    return (int) _mm_popcnt_u64(b);
-
-#else  // Assumed gcc or compatible compiler
-
-    return __builtin_popcountll(b);
-
-#endif
-}
+static int popcount(Bitboard b) { return __builtin_popcountll(b); }
 
 
-// lsb() and msb() return the least/most significant bit in a non-zero
+// lsb() return the least significant bit in a non-zero
 // bitboard.
 
-#if defined(__GNUC__)
-
 static int lsb(Bitboard b) { return __builtin_ctzll(b); }
-
-static int msb(Bitboard b) { return 63 ^ __builtin_clzll(b); }
-
-#elif defined(_MSC_VER)
-
-    #if defined(_WIN64)
-
-static Square lsb(Bitboard b) {
-
-    unsigned long idx;
-    _BitScanForward64(&idx, b);
-    return (Square) idx;
-}
-
-static Square msb(Bitboard b) {
-
-    unsigned long idx;
-    _BitScanReverse64(&idx, b);
-    return (Square) idx;
-}
-
-    #else
-
-static Square lsb(Bitboard b) {
-
-    unsigned long idx;
-    if ((uint32_t) b)
-    {
-        _BitScanForward(&idx, (uint32_t) b);
-        return idx;
-    }
-    else
-    {
-        _BitScanForward(&idx, (uint32_t) (b >> 32));
-        return idx + 32;
-    }
-}
-
-static Square msb(Bitboard b) {
-
-    unsigned long idx;
-    if (b >> 32)
-    {
-        _BitScanReverse(&idx, (uint32_t) (b >> 32));
-        return idx + 32;
-    }
-    else
-    {
-        _BitScanReverse(&idx, (uint32_t) b);
-        return idx;
-    }
-}
-
-    #endif
-
-#else
-
-    #error "Compiler not supported."
-
-#endif
-
 
 // pop_lsb() finds and clears the least significant bit in a non-zero
 // bitboard.

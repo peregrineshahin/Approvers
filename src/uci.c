@@ -200,12 +200,6 @@ static void go(Position* pos, char* str) {
             Limits.depth = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "nodes") == 0)
             Limits.nodes = atoi(strtok(NULL, " \t"));
-        else if (strcmp(token, "movetime") == 0)
-            Limits.movetime = atoi(strtok(NULL, " \t"));
-        else if (strcmp(token, "infinite") == 0)
-            Limits.infinite = true;
-        else if (strcmp(token, "ponder") == 0)
-            ponderMode = true;
 #endif
     }
 

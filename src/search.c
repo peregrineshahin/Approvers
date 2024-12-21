@@ -138,7 +138,6 @@ PARAM(eval_scale, 88)
 
 LimitsType Limits;
 
-// Different node types, used as template parameter
 enum {
     NonPV,
     PV
@@ -185,11 +184,7 @@ static void stable_sort(RootMove* rm, int num);
 static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta);
 static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
-// search_init() is called during startup to initialize various lookup tables
-
 double my_log(double x) {
-    if (x <= 0)
-        return -1e9;  // Handle log(0) or negative input
     double result = 0.0;
     while (x >= 2.0)
     {
@@ -205,6 +200,8 @@ double my_log(double x) {
     }
     return result + sum;
 }
+
+// search_init() is called during startup to initialize various lookup tables
 
 void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
@@ -257,8 +254,7 @@ void mainthread_search(void) {
     thread_search(pos);
     Thread.previousScore = pos->rootMoves->move[0].score;
 
-    printf("bestmove %s", uci_move(buf, pos->rootMoves->move[0].pv[0]));
-    printf("\n");
+    printf("bestmove %s\n", uci_move(buf, pos->rootMoves->move[0].pv[0]));
     fflush(stdout);
 
     if (!IsKaggle && !Thread.testPonder)
@@ -326,12 +322,9 @@ void thread_search(Position* pos) {
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
 
-    if (Thread.previousScore == VALUE_INFINITE)
-        for (int i = 0; i < 4; i++)
-            Thread.iterValue[i] = VALUE_ZERO;
-    else
-        for (int i = 0; i < 4; i++)
-            Thread.iterValue[i] = Thread.previousScore;
+    int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
+    for (int i = 0; i < 4; i++)
+        Thread.iterValue[i] = value;
 
     RootMoves* rm                 = pos->rootMoves;
     int        searchAgainCounter = 0;
@@ -493,7 +486,7 @@ Value search(
     if (pos->resetCalls)
     {
         pos->resetCalls = false;
-        pos->callsCnt   = Limits.nodes ? min(1024, Limits.nodes / 1024) : 1024;
+        pos->callsCnt   = 1024;
     }
     if (--pos->callsCnt <= 0)
     {
@@ -649,7 +642,7 @@ Value search(
     // Step 10. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move.
-    if (!PvNode && depth > 4 && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
+    if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
@@ -665,7 +658,6 @@ Value search(
         while ((move = next_move(pos, 0)) && probCutCount)
             if (move != excludedMove && is_legal(pos, move))
             {
-
                 captureOrPromotion = true;
                 probCutCount--;
 
@@ -702,7 +694,6 @@ moves_loop:  // When in check search starts from here.
     PieceToHistory* cmh  = (ss - 1)->history;
     PieceToHistory* fmh  = (ss - 2)->history;
     PieceToHistory* fmh2 = (ss - 4)->history;
-    PieceToHistory* fmh3 = (ss - 6)->history;
 
     mp_init(pos, ttMove, depth, ss->ply);
 
@@ -715,7 +706,6 @@ moves_loop:  // When in check search starts from here.
     // cutoff occurs
     while ((move = next_move(pos, moveCountPruning)))
     {
-
         if (move == excludedMove)
             continue;
 
@@ -752,7 +742,7 @@ moves_loop:  // When in check search starts from here.
         newDepth = depth - 1;
 
         // Step 13. Pruning at shallow depth
-        if (!rootNode && non_pawn_material_c(stm()) && bestValue > VALUE_TB_LOSS_IN_MAX_PLY)
+        if (!rootNode && non_pawn_material_c(stm()) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
@@ -956,7 +946,6 @@ moves_loop:  // When in check search starts from here.
 
             if (value > alpha && d != newDepth)
             {
-
                 value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
@@ -1022,7 +1011,6 @@ moves_loop:  // When in check search starts from here.
                 rm->score  = value;
                 rm->pvSize = 1;
 
-
                 for (Move* m = (ss + 1)->pv; *m; ++m)
                     rm->pv[rm->pvSize++] = *m;
 
@@ -1079,8 +1067,8 @@ moves_loop:  // When in check search starts from here.
     return VALUE_DRAW;
   */
 
-    if (!PvNode && bestValue >= beta && abs(bestValue) < VALUE_TB_WIN_IN_MAX_PLY
-        && abs(beta) < VALUE_TB_WIN_IN_MAX_PLY && abs(alpha) < VALUE_TB_WIN_IN_MAX_PLY)
+    if (!PvNode && bestValue >= beta && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
+        && abs(beta) < VALUE_MATE_IN_MAX_PLY && abs(alpha) < VALUE_MATE_IN_MAX_PLY)
         bestValue = (bestValue * depth + beta) / (depth + 1);
 
     // Step 20. Check for mate and stalemate
@@ -1154,7 +1142,6 @@ moves_loop:  // When in check search starts from here.
                                bestValue - ss->staticEval);
     }
 
-
     return bestValue;
 }
 
@@ -1192,7 +1179,6 @@ Value qsearch(Position*  pos,
     // Check for an instant draw or if the maximum ply has been reached
     if (is_draw(pos) || ss->ply >= MAX_PLY)
         return ss->ply >= MAX_PLY && !InCheck ? evaluate(pos) : VALUE_DRAW;
-
 
     // Decide whether or not to include checks: this fixes also the type of
     // TT entry depth that we are going to use. Note that in qsearch we use
@@ -1269,16 +1255,13 @@ Value qsearch(Position*  pos,
     // Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
     {
-
         givesCheck = gives_check(pos, ss, move);
-
         moveCount++;
 
         // Futility pruning
         if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
             && !advanced_pawn_push(pos, move))
         {
-
             if (moveCount > 2)
                 continue;
 
@@ -1326,7 +1309,6 @@ Value qsearch(Position*  pos,
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode, givesCheck);
         undo_move(pos, move);
 
-
         // Check for a new best move
         if (value > bestValue)
         {
@@ -1336,13 +1318,10 @@ Value qsearch(Position*  pos,
             {
                 bestMove = move;
 
-                if (PvNode)  // Update pv even in fail-high case
-                    update_pv(ss->pv, move, (ss + 1)->pv);
+                if (value >= beta)
+                    break;
 
-                if (PvNode && value < beta)  // Update alpha here!
-                    alpha = value;
-                else
-                    break;  // Fail high
+                alpha = value;
             }
         }
     }
@@ -1352,7 +1331,7 @@ Value qsearch(Position*  pos,
     if (InCheck && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
-    if (abs(bestValue) < VALUE_TB_WIN_IN_MAX_PLY && bestValue >= beta)
+    if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
         bestValue = (3 * bestValue + beta) / 4;
 
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
@@ -1388,8 +1367,7 @@ static void stable_sort(RootMove* rm, int num) {
 // The function is called before storing a value in the transposition table.
 
 static Value value_to_tt(Value v, int ply) {
-
-    return v >= VALUE_TB_WIN_IN_MAX_PLY ? v + ply : v <= VALUE_TB_LOSS_IN_MAX_PLY ? v - ply : v;
+    return v >= VALUE_MATE_IN_MAX_PLY ? v + ply : v <= VALUE_MATED_IN_MAX_PLY ? v - ply : v;
 }
 
 
@@ -1401,19 +1379,11 @@ static Value value_from_tt(Value v, int ply, int r50c) {
     if (v == VALUE_NONE)
         return VALUE_NONE;
 
-    if (v >= VALUE_TB_WIN_IN_MAX_PLY)
-    {
-        if (v >= VALUE_MATE_IN_MAX_PLY && VALUE_MATE - v > 99 - r50c)
-            return VALUE_MATE_IN_MAX_PLY - 1;
-        return v - ply;
-    }
+    if (v >= VALUE_MATE_IN_MAX_PLY) 
+        return (VALUE_MATE - v > 99 - r50c) ? VALUE_MATE_IN_MAX_PLY - 1 : v - ply;
 
-    if (v <= VALUE_TB_LOSS_IN_MAX_PLY)
-    {
-        if (v <= VALUE_MATED_IN_MAX_PLY && VALUE_MATE + v > 99 - r50c)
-            return VALUE_MATED_IN_MAX_PLY + 1;
-        return v + ply;
-    }
+    if (v <= VALUE_MATED_IN_MAX_PLY) 
+        return (VALUE_MATE + v > 99 - r50c) ? VALUE_MATED_IN_MAX_PLY + 1 : v + ply;
 
     return v;
 }
@@ -1441,7 +1411,7 @@ Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = pos->matCorrHist[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = pos->pawnCorrHist[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / ch_v2;
-    v           = clamp(v, -VALUE_TB_WIN_IN_MAX_PLY, VALUE_TB_WIN_IN_MAX_PLY);
+    v           = clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
     return v;
 }
 
@@ -1551,7 +1521,6 @@ static void check_time(void) {
 
     TimePoint elapsed = time_elapsed();
     if ((use_time_management() && elapsed > time_maximum() - 10)
-        || (Limits.movetime && elapsed >= Limits.movetime)
         || (Limits.nodes && Thread.pos->nodes >= Limits.nodes))
         Thread.stop = 1;
 }
@@ -1563,7 +1532,6 @@ static void check_time(void) {
 static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     TimePoint  elapsed        = time_elapsed() + 1;
     RootMoves* rm             = pos->rootMoves;
-    int        pvIdx          = pos->pvIdx;
     uint64_t   nodes_searched = Thread.pos->nodes;
     char       buf[16];
 
@@ -1577,14 +1545,8 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     if (v == -VALUE_INFINITE)
         v = VALUE_ZERO;
 
-    printf("info depth %d score %s", d, uci_value(buf, v));
-
-    if (i == pvIdx)
-        printf("%s", v >= beta ? " lowerbound" : v <= alpha ? " upperbound" : "");
-
-    printf(" nodes %" PRIu64 " nps %" PRIu64, nodes_searched, nodes_searched * 1000 / elapsed);
-
-    printf(" time %" PRIi64 " pv", elapsed);
+    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv",
+        d, uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
 
     for (int idx = 0; idx < rm->move[i].pvSize; idx++)
         printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
