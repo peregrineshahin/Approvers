@@ -83,8 +83,6 @@ PARAM(fpp_v2, 241)
 PARAM(fpp_v3, 185)
 PARAM(sqsee_v1, 2967)
 PARAM(sqsee_v2, 1770)
-PARAM(sch_v1, 108)
-PARAM(sch_v2, -1)
 PARAM(sfpc_v1, 617)
 PARAM(sfpc_v2, 184)
 PARAM(sfpc_v3, 150)
@@ -783,13 +781,6 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
-                // Capture history based pruning when the move doesn't give check
-                if (!givesCheck && lmrDepth < sch_v1 / 100
-                    && (*pos->captureHistory)[movedPiece][to_sq(move)]
-                                             [type_of_p(piece_on(to_sq(move)))]
-                         < sch_v2)
-                    continue;
-
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 / 100
                     && !(PvNode && abs(bestValue) < sfpc_v2 / 100) && !inCheck
