@@ -21,9 +21,6 @@
 #include "bitboard.h"
 #include "misc.h"
 
-#ifndef USE_POPCNT
-uint8_t PopCnt16[1 << 16];
-#endif
 uint8_t SquareDistance[64][64];
 
 #ifndef AVX2_BITBOARD
@@ -63,30 +60,10 @@ Bitboard DistanceRingBB[64][8];
 Bitboard PseudoAttacks[8][64];
 Bitboard PawnAttacks[2][64];
 
-#ifndef PEDANTIC
-int      CastlingRightsMask[64];
-#endif
-
-#ifndef USE_POPCNT
-// popcount16() counts the non-zero bits using SWAR-Popcount algorithm.
-
-static unsigned popcount16(unsigned u) {
-    u -= (u >> 1) & 0x5555U;
-    u = ((u >> 2) & 0x3333U) + (u & 0x3333U);
-    u = ((u >> 4) + u) & 0x0F0FU;
-    return (u * 0x0101U) >> 8;
-}
-#endif
-
 // bitboards_init() initializes various bitboard tables. It is called at
 // startup and relies on global objects to be already zero-initialized.
 
 void bitboards_init(void) {
-#ifndef USE_POPCNT
-    for (unsigned i = 0; i < (1 << 16); ++i)
-        PopCnt16[i] = popcount16(i);
-#endif
-
     for (Square s = 0; s < 64; s++)
         SquareBB[s] = 1ULL << s;
 

@@ -32,8 +32,6 @@ Value evaluate(Position* pos) {
     v = v * (100 - rule50_count()) / 100;
 
     v = eval_scale * v / 100;
-    // v = (v / 16) * 16;
-    // v = (stm() == WHITE ? v : -v) + Tempo
 
-    return clamp(v, VALUE_TB_LOSS_IN_MAX_PLY + 1, VALUE_TB_WIN_IN_MAX_PLY - 1);
+    return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }

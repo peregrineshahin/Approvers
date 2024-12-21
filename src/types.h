@@ -21,25 +21,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-// When compiling with provided Makefile (e.g. for Linux and OSX),
-// configuration is done automatically. To get started type 'make help'.
-//
-// When Makefile is not used (e.g. with Microsoft Visual Studio) some
-// switches need to be set manually:
-//
-// -DNDEBUG      | Disable debugging mode. Always use this for release.
-//
-// -DUSE_POPCNT  | Add runtime support for use of popcnt asm-instruction.
-//               | Works only in 64-bit mode and requires hardware with
-//               | popcnt support.
-//
-// -DUSE_PEXT    | Add runtime support for use of pext asm-instruction.
-//               | Works only in 64-bit mode and requires hardware with
-//               | pext support.
-
-#ifndef NDEBUG
-
-#endif
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -64,37 +45,11 @@
     #define SMALL
 #endif
 
-// Predefined macros hell:
-//
-// __GNUC__           Compiler is gcc, Clang or Intel on Linux
-// __INTEL_COMPILER   Compiler is Intel
-// _MSC_VER           Compiler is MSVC or Intel on Windows
-// _WIN32             Building on Windows (any)
-// _WIN64             Building on Windows 64 bit
-
-#if defined(_WIN64) && defined(_MSC_VER)  // No Makefile used
-    #include <intrin.h>                   // Microsoft header for _BitScanForward64()
-#endif
-
-#if defined(USE_POPCNT) && (defined(__INTEL_COMPILER) || defined(_MSC_VER))
-    #include <nmmintrin.h>  // Intel and Microsoft header for _mm_popcnt_u64()
-#endif
-
-#if !defined(NO_PREFETCH) && (defined(__INTEL_COMPILER) || defined(_MSC_VER))
-    #include <xmmintrin.h>  // Intel and Microsoft header for _mm_prefetch()
-#endif
-
 #if defined(USE_PEXT)
     #include <immintrin.h>  // Header for _pext_u64() intrinsic
     #define pext(b, m) _pext_u64(b, m)
 #else
     #define pext(b, m) (0)
-#endif
-
-#ifdef USE_POPCNT
-    #define HasPopCnt 1
-#else
-    #define HasPopCnt 0
 #endif
 
 #ifdef USE_PEXT
@@ -194,10 +149,8 @@ enum {
 };
 
 enum {
-    VALUE_TB_WIN_IN_MAX_PLY  = VALUE_MATE - 2 * MAX_PLY,
-    VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_MATE + 2 * MAX_PLY,
-    VALUE_MATE_IN_MAX_PLY    = VALUE_MATE - MAX_PLY,
-    VALUE_MATED_IN_MAX_PLY   = -VALUE_MATE + MAX_PLY
+    VALUE_MATE_IN_MAX_PLY  = VALUE_MATE - MAX_PLY,
+    VALUE_MATED_IN_MAX_PLY = -VALUE_MATE + MAX_PLY
 };
 
 enum {
@@ -253,7 +206,6 @@ enum { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
 // clang-format on
 
 typedef uint32_t Move;
-typedef int32_t  Phase;
 typedef int32_t  Value;
 typedef bool     Color;
 typedef uint32_t Piece;
@@ -268,10 +220,6 @@ typedef uint32_t Rank;
 // the lower 16 bits.
 
 typedef uint32_t Score;
-
-enum {
-    SCORE_ZERO
-};
 
 extern Value PieceValue[16];
 
@@ -314,8 +262,6 @@ typedef struct Position      Position;
 typedef struct LimitsType    LimitsType;
 typedef struct RootMove      RootMove;
 typedef struct RootMoves     RootMoves;
-typedef struct PawnEntry     PawnEntry;
-typedef struct MaterialEntry MaterialEntry;
 
 enum {
     CORRECTION_HISTORY_ENTRY_NB = 16384,
@@ -405,16 +351,6 @@ CLAMP(long)
 #define max(a, b) TEMPLATE(max, a, b)
 #define min(a, b) TEMPLATE(min, a, b)
 #define clamp(a, b, c) TEMPLATE(clamp, a, b, c)
-
-#ifdef NDEBUG
-    #define assume(x) \
-        do \
-        { \
-            if (!(x)) \
-                __builtin_unreachable(); \
-        } while (0)
-#else
-#endif
 
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
