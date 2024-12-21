@@ -37,8 +37,7 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[0] |= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] |= sq_bb(s);
     pos->byColorBB[c] |= sq_bb(s);
-    pos->index[s]                 = pos->pieceCount[piece]++;
-    pos->pieceList[pos->index[s]] = s;
+    pos->pieceCount[piece]++;
 }
 
 static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
@@ -46,11 +45,7 @@ static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[0] ^= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
     pos->byColorBB[c] ^= sq_bb(s);
-    /* board[s] = 0;  Not needed, overwritten by the capturing one */
-    Square lastSquare                      = pos->pieceList[--pos->pieceCount[piece]];
-    pos->index[lastSquare]                 = pos->index[s];
-    pos->pieceList[pos->index[lastSquare]] = lastSquare;
-    pos->pieceList[pos->pieceCount[piece]] = SQ_NONE;
+    --pos->pieceCount[piece];
 }
 
 static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
@@ -60,10 +55,8 @@ static void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
     pos->byTypeBB[0] ^= fromToBB;
     pos->byTypeBB[type_of_p(piece)] ^= fromToBB;
     pos->byColorBB[c] ^= fromToBB;
-    pos->board[from]               = 0;
-    pos->board[to]                 = piece;
-    pos->index[to]                 = pos->index[from];
-    pos->pieceList[pos->index[to]] = to;
+    pos->board[from] = 0;
+    pos->board[to]   = piece;
 }
 
 
@@ -73,12 +66,12 @@ static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
     st->blockersForKing[WHITE] =
-      slider_blockers(pos, pieces_c(BLACK), square_of(WHITE, KING), &st->pinnersForKing[WHITE]);
+      slider_blockers(pos, pieces_c(BLACK), king_sq(WHITE), &st->pinnersForKing[WHITE]);
     st->blockersForKing[BLACK] =
-      slider_blockers(pos, pieces_c(WHITE), square_of(BLACK, KING), &st->pinnersForKing[BLACK]);
+      slider_blockers(pos, pieces_c(WHITE), king_sq(BLACK), &st->pinnersForKing[BLACK]);
 
     Color them = !stm();
-    st->ksq    = square_of(them, KING);
+    st->ksq    = king_sq(them);
 
     st->checkSquares[PAWN]   = attacks_from_pawn(st->ksq, them);
     st->checkSquares[KNIGHT] = attacks_from_knight(st->ksq);
@@ -87,10 +80,6 @@ static void set_check_info(Position* pos) {
     st->checkSquares[QUEEN]  = st->checkSquares[BISHOP] | st->checkSquares[ROOK];
     st->checkSquares[KING]   = 0;
 }
-
-static Key H1(Key h) { return h & 0x1fff; }
-
-static Key H2(Key h) { return (h >> 16) & 0x1fff; }
 
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
@@ -128,8 +117,6 @@ void pos_set(Position* pos, char* fen) {
     memset(pos, 0, offsetof(Position, moveList));
     pos->st = st;
     memset(st, 0, StateSize);
-    for (int i = 0; i < 256; i++)
-        pos->pieceList[i] = SQ_NONE;
     for (int i = 0; i < 16; i++)
         pos->pieceCount[i] = 16 * i;
 
@@ -160,9 +147,9 @@ void pos_set(Position* pos, char* fen) {
         const Color c = islower(token);
         if ((token & ~32) > 64)
         {
-            const int    rights = WHITE_OO << !(token & 2) + 2 * c;
+            const int    rights = WHITE_OO << (!(token & 2) + 2 * c);
             const Square rfrom  = relative_square(c, token & 2 ? SQ_H1 : SQ_A1);
-            const Square kfrom  = square_of(c, KING);
+            const Square kfrom  = king_sq(c);
 
             pos->st->castlingRights |= rights;
             pos->castlingRightsMask[kfrom] |= rights;
@@ -198,7 +185,7 @@ static void set_state(Position* pos, Stack* st) {
     st->pawnKey               = zob.noPawns;
     st->nonPawn               = 0;
 
-    st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
+    st->checkersBB = attackers_to(king_sq(stm())) & pieces_c(!stm());
 
     set_check_info(pos);
 
@@ -281,7 +268,7 @@ bool is_legal(const Position* pos, Move m) {
     // the move is made.
     if (unlikely(type_of_m(m) == ENPASSANT))
     {
-        Square   ksq      = square_of(us, KING);
+        Square   ksq      = king_sq(us);
         Square   capsq    = to ^ 8;
         Bitboard occupied = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
 
@@ -311,7 +298,7 @@ bool is_legal(const Position* pos, Move m) {
 
     // A non-king move is legal if and only if it is not pinned or it
     // is moving along the ray towards or away from the king.
-    return !(blockers_for_king(pos, us) & sq_bb(from)) || aligned(m, square_of(us, KING));
+    return !(blockers_for_king(pos, us) & sq_bb(from)) || aligned(m, king_sq(us));
 }
 
 
@@ -406,7 +393,7 @@ bool is_pseudo_legal(const Position* pos, Move m) {
         // Again we need to be a bit careful.
         if (more_than_one(checkers()))
             return false;
-        if (!((between_bb(lsb(checkers()), square_of(us, KING)) | checkers()) & sq_bb(to)))
+        if (!((between_bb(lsb(checkers()), king_sq(us)) | checkers()) & sq_bb(to)))
             return false;
     }
     return true;
@@ -474,8 +461,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square to       = to_sq(m);
     Piece  piece    = piece_on(from);
     Piece  captured = type_of_m(m) == ENPASSANT ? make_piece(them, PAWN) : piece_on(to);
-    Square wksq     = square_of(WHITE, KING);
-    Square bksq     = square_of(BLACK, KING);
+    Square wksq     = king_sq(WHITE);
+    Square bksq     = king_sq(BLACK);
 
     if (type_of_p(piece) == KING && file_of(from) > 3 != file_of(to) > 3)
         acc->needs_refresh = 1;
@@ -602,7 +589,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     }
 
     // Calculate checkers bitboard (if move gives check)
-    st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
+    st->checkersBB = givesCheck ? attackers_to(king_sq(them)) & pieces_c(us) : 0;
 
     pos->sideToMove = !pos->sideToMove;
     pos->nodes++;

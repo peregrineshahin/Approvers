@@ -99,7 +99,6 @@ void benchmark() {
     search_clear();
 
     const int numFens = sizeof(Defaults) / sizeof(char*);
-    ;
 
     uint64_t nodes      = 0;
     Position pos        = {0};

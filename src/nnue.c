@@ -84,7 +84,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
     memcpy(acc->values[side], in_biases, sizeof(acc->values[side]));
 
-    Square ksq = square_of(side, KING);
+    Square ksq = king_sq(side);
     for (int c = WHITE; c <= BLACK; c++)
     {
         for (int pt = PAWN; pt <= KING; pt++)

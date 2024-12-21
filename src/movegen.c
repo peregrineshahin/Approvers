@@ -183,10 +183,11 @@ static ExtMove* generate_moves(const Position* pos,
                                const int       Pt,
                                const bool      Checks) {
 
-    Square from;
-    const uint8_t* pl = piece_list(Us, Pt);
-    while ((from = *pl++) != SQ_NONE)
+    Bitboard pieces = pieces_cp(Us, Pt);
+    while (pieces)
     {
+        const Square from = pop_lsb(&pieces);
+
         if (Checks)
         {
             if ((Pt == BISHOP || Pt == ROOK || Pt == QUEEN)
@@ -222,7 +223,7 @@ generate_all(const Position* pos, ExtMove* list, Bitboard target, const Color Us
 
     if (Type != QUIET_CHECKS && Type != EVASIONS)
     {
-        Square   ksq = square_of(Us, KING);
+        Square   ksq = king_sq(Us);
         Bitboard b   = attacks_from_king(ksq) & target;
         while (b)
             (list++)->move = make_move(ksq, pop_lsb(&b));
@@ -303,7 +304,7 @@ ExtMove* generate_quiet_checks(const Position* pos, ExtMove* list) {
 ExtMove* generate_evasions(const Position* pos, ExtMove* list) {
 
     Color    us            = stm();
-    Square   ksq           = square_of(us, KING);
+    Square   ksq           = king_sq(us);
     Bitboard sliderAttacks = 0;
     Bitboard sliders       = checkers() & ~pieces_pp(KNIGHT, PAWN);
 
@@ -337,7 +338,7 @@ ExtMove* generate_evasions(const Position* pos, ExtMove* list) {
 ExtMove* generate_legal(const Position* pos, ExtMove* list) {
     Color    us     = stm();
     Bitboard pinned = blockers_for_king(pos, us) & pieces_c(us);
-    Square   ksq    = square_of(us, KING);
+    Square   ksq    = king_sq(us);
     ExtMove* cur    = list;
 
     list = checkers() ? generate_evasions(pos, list) : generate(pos, list, NON_EVASIONS);
