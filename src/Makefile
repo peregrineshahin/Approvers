@@ -45,4 +45,4 @@ clean:
 	@rm -f $(EXE) $(OBJ)
 
 format:
-	find . -name "*.c" -o -name "*.h" | xargs $(CLANG-FORMAT) -i -style=file
+	clang-format -i $(filter-out incbin.h, $(wildcard *.c) $(wildcard *.h))
