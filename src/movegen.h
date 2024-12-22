@@ -39,9 +39,7 @@ enum {
     LEGAL
 };
 
-ExtMove* generate(const Position* pos, ExtMove* list, const int Type);
-ExtMove* generate_quiet_checks(const Position* pos, ExtMove* list);
-ExtMove* generate_evasions(const Position* pos, ExtMove* list);
+ExtMove* generate(const Position* pos, ExtMove* list, int Type);
 ExtMove* generate_legal(const Position* pos, ExtMove* list);
 
 #endif
