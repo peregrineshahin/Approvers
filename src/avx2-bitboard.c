@@ -3,7 +3,7 @@ __m256i bishop_mask_v4[64];
 __m128i rook_mask_NS[64];
 uint8_t rook_attacks_EW[64 * 8];
 
-static void init_sliding_attacks(void) {
+SMALL static void init_sliding_attacks(void) {
     static const int dirs[2][4] = {{EAST, NORTH, NORTH_EAST, NORTH_WEST},
                                    {WEST, SOUTH, SOUTH_WEST, SOUTH_EAST}};
     Bitboard         attacks[4];

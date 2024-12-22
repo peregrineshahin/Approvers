@@ -45,7 +45,7 @@ static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQ
 // string ("fen") or the starting position ("startpos") and then makes
 // the moves given in the following move list ("moves").
 
-void position(Position* pos, char* str) {
+SMALL void position(Position* pos, char* str) {
     char  fen[128];
     char* moves;
 
@@ -214,7 +214,7 @@ static void go(Position* pos, char* str) {
 // executed the function returns immediately. In addition to the UCI ones,
 // also some additional debug commands are supported.
 
-void uci_loop(int argc, char** argv) {
+SMALL void uci_loop(int argc, char** argv) {
 #ifndef KAGGLE
     if (argc == 2 && strcmp(argv[1], "bench") == 0)
     {
