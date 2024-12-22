@@ -687,16 +687,11 @@ Value search(
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
-        int  probCutCount = 2 + 2 * cutNode;
-        bool ttPv         = ss->ttPv;
-        ss->ttPv          = false;
 
-        while ((move = next_move(pos, 0)) && probCutCount)
+        while ((move = next_move(pos, 0)))
             if (move != excludedMove && is_legal(pos, move))
             {
-                captureOrPromotion = true;
-                probCutCount--;
-
+                captureOrPromotion      = true;
                 ss->currentMove         = move;
                 ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
                 givesCheck              = gives_check(pos, ss, move);
@@ -713,12 +708,11 @@ Value search(
                 if (value >= probCutBeta)
                 {
                     if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
-                        tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
+                        tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
                                  depth - 3, move, rawEval);
                     return value;
                 }
             }
-        ss->ttPv = ttPv;
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
@@ -735,7 +729,7 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
-    ttCapture                           = ttMove && is_capture_or_promotion(pos, ttMove);
+    ttCapture        = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta
