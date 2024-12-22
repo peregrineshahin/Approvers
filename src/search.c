@@ -211,7 +211,7 @@ static void  update_pv(Move* pv, Move move, Move* childPv);
 static void  update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value rawEval);
 static void
-add_correction_history(correction_history_t hist, Color side, Key key, Depth depth, int32_t diff);
+add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
@@ -260,16 +260,16 @@ void search_clear(void) {
 
     Position* pos = Thread.pos;
     stats_clear(pos->counterMoves);
-    stats_clear(pos->history);
+    stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
-    stats_clear(pos->counterMoveHistory);
+    stats_clear(pos->contHist);
     stats_clear(pos->matCorrHist);
     stats_clear(pos->pawnCorrHist);
 
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
             for (int k = 0; k < 64; k++)
-                (*pos->counterMoveHistory)[c][0][j][k] = CounterMovePruneThreshold - 1;
+                (*pos->contHist)[c][0][j][k] = CounterMovePruneThreshold - 1;
 
     Thread.previousScore         = VALUE_INFINITE;
     Thread.previousTimeReduction = 1;
@@ -344,8 +344,8 @@ void thread_search(Position* pos) {
 
     for (int i = -7; i < 0; i++)
     {
-        ss[i].history    = &(*pos->counterMoveHistory)[0][0];  // Use as sentinel
-        ss[i].staticEval = VALUE_NONE;
+        ss[i].continuationHistory = &(*pos->contHist)[0][0];  // Use as sentinel
+        ss[i].staticEval          = VALUE_NONE;
     }
 
     for (int i = 0; i <= MAX_PLY; i++)
@@ -587,7 +587,7 @@ Value search(
             else if (!is_capture_or_promotion(pos, ttMove))
             {
                 int penalty = -stat_malus(depth);
-                history_update(*pos->history, stm(), ttMove, penalty);
+                history_update(*pos->mainHistory, stm(), ttMove, penalty);
                 update_cm_stats(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
             }
         }
@@ -644,7 +644,7 @@ Value search(
     {
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
-        history_update(*pos->history, !stm(), (ss - 1)->currentMove, bonus);
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
     // Step 8. Futility pruning: child node
@@ -661,8 +661,8 @@ Value search(
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
 
-        ss->currentMove = MOVE_NULL;
-        ss->history     = &(*pos->counterMoveHistory)[0][0];
+        ss->currentMove         = MOVE_NULL;
+        ss->continuationHistory = &(*pos->contHist)[0][0];
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -697,9 +697,9 @@ Value search(
                 captureOrPromotion = true;
                 probCutCount--;
 
-                ss->currentMove = move;
-                ss->history     = &(*pos->counterMoveHistory)[moved_piece(move)][to_sq(move)];
-                givesCheck      = gives_check(pos, ss, move);
+                ss->currentMove         = move;
+                ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
+                givesCheck              = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
@@ -727,9 +727,9 @@ Value search(
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
-    PieceToHistory* cmh  = (ss - 1)->history;
-    PieceToHistory* fmh  = (ss - 2)->history;
-    PieceToHistory* fmh2 = (ss - 4)->history;
+    PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
+    PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
+    PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
 
     mp_init(pos, ttMove, depth, ss->ply);
 
@@ -791,8 +791,8 @@ moves_loop:  // When in check search starts from here.
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 / 100
                                  + ((ss - 1)->statScore > cbp_v2 / 100 || (ss - 1)->moveCount == 1)
-                    && (*cmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
-                    && (*fmh)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
+                    && (*contHist0)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
+                    && (*contHist1)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
                     continue;
 
                 // Futility pruning: parent node
@@ -913,8 +913,8 @@ moves_loop:  // When in check search starts from here.
 
         // Update the current move (this must be done after singular extension
         // search)
-        ss->currentMove = move;
-        ss->history     = &(*pos->counterMoveHistory)[movedPiece][to_sq(move)];
+        ss->currentMove         = move;
+        ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
 
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
@@ -959,9 +959,10 @@ moves_loop:  // When in check search starts from here.
                 else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
                     r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
 
-                ss->statScore = (*cmh)[movedPiece][to_sq(move)] + (*fmh)[movedPiece][to_sq(move)]
-                              + (*fmh2)[movedPiece][to_sq(move)]
-                              + (*pos->history)[!stm()][from_to(move)] - lmr_v3;
+                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
+                              + (*contHist1)[movedPiece][to_sq(move)]
+                              + (*contHist2)[movedPiece][to_sq(move)]
+                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
                 if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
@@ -1006,7 +1007,7 @@ moves_loop:  // When in check search starts from here.
             (ss + 1)->pv[0] = 0;
 
             // Extend move from transposition table if we are about to dive into qsearch.
-            if (move == ttMove && ss->ply <= pos->rootDepth * 2)
+            if (move == ttMove)
                 newDepth = max(newDepth, 1);
 
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
@@ -1121,7 +1122,7 @@ moves_loop:  // When in check search starts from here.
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
             {
-                history_update(*pos->history, stm(), quietsSearched[i], -bonus);
+                history_update(*pos->mainHistory, stm(), quietsSearched[i], -bonus);
                 update_cm_stats(ss, moved_piece(quietsSearched[i]), to_sq(quietsSearched[i]),
                                 -bonus);
             }
@@ -1148,7 +1149,7 @@ moves_loop:  // When in check search starts from here.
         bonus = max(bonus, 0);
         update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth) * bonus / pcmb_v10);
 
-        history_update(*pos->history, !stm(), (ss - 1)->currentMove,
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
                        stat_bonus(depth) * bonus / pcmb_v11);
     }
 
@@ -1278,7 +1279,7 @@ Value qsearch(Position*  pos,
         futilityBase = bestValue + qsf_v1;
     }
 
-    ss->history = &(*pos->counterMoveHistory)[0][0];
+    ss->continuationHistory = &(*pos->contHist)[0][0];
 
     // Initialize move picker data for the current position, and prepare
     // to search the moves. Because the depth is <= 0 here, only captures,
@@ -1330,11 +1331,13 @@ Value qsearch(Position*  pos,
 
         ss->currentMove         = move;
         bool captureOrPromotion = is_capture_or_promotion(pos, move);
-        ss->history             = &(*pos->counterMoveHistory)[moved_piece(move)][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
 
         if (!captureOrPromotion && moveCount
-            && (*(ss - 1)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold
-            && (*(ss - 2)->history)[moved_piece(move)][to_sq(move)] < CounterMovePruneThreshold)
+            && (*(ss - 1)->continuationHistory)[moved_piece(move)][to_sq(move)]
+                 < CounterMovePruneThreshold
+            && (*(ss - 2)->continuationHistory)[moved_piece(move)][to_sq(move)]
+                 < CounterMovePruneThreshold)
             continue;
 
         // Make and search the move
@@ -1432,7 +1435,7 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 
 // differential.
 static void
-add_correction_history(correction_history_t hist, Color side, Key key, Depth depth, int32_t diff) {
+add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff) {
     int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
     int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
     int32_t  scaledDiff = diff * ch_v2;
@@ -1453,19 +1456,19 @@ Value to_corrected(Position* pos, Value rawEval) {
 
 static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
     if (move_is_ok((ss - 1)->currentMove))
-        cms_update(*(ss - 1)->history, pc, s, bonus);
+        cms_update(*(ss - 1)->continuationHistory, pc, s, bonus);
 
     if (move_is_ok((ss - 2)->currentMove))
-        cms_update(*(ss - 2)->history, pc, s, bonus);
+        cms_update(*(ss - 2)->continuationHistory, pc, s, bonus);
 
     if (ss->checkersBB)
         return;
 
     if (move_is_ok((ss - 4)->currentMove))
-        cms_update(*(ss - 4)->history, pc, s, bonus);
+        cms_update(*(ss - 4)->continuationHistory, pc, s, bonus);
 
     if (move_is_ok((ss - 6)->currentMove))
-        cms_update(*(ss - 6)->history, pc, s, bonus);
+        cms_update(*(ss - 6)->continuationHistory, pc, s, bonus);
 }
 
 // update_capture_stats() updates move sorting heuristics when a new capture
@@ -1499,11 +1502,11 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 
     Color c = stm();
-    history_update(*pos->history, c, move, bonus);
+    history_update(*pos->mainHistory, c, move, bonus);
     update_cm_stats(ss, moved_piece(move), to_sq(move), bonus);
 
     if (type_of_p(moved_piece(move)) != PAWN)
-        history_update(*pos->history, c, reverse_move(move), -bonus);
+        history_update(*pos->mainHistory, c, reverse_move(move), -bonus);
 
     if (move_is_ok((ss - 1)->currentMove))
     {
@@ -1579,8 +1582,8 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     if (v == -VALUE_INFINITE)
         v = VALUE_ZERO;
 
-    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv",
-        d, uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
+    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", d,
+           uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
 
     for (int idx = 0; idx < rm->move[i].pvSize; idx++)
         printf(" %s", uci_move(buf, rm->move[i].pv[idx]));

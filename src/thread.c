@@ -30,22 +30,22 @@ void thread_init() {
 
     Position* pos        = calloc(sizeof(Position), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
-    pos->history         = calloc(sizeof(ButterflyHistory), 1);
+    pos->mainHistory         = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
-    pos->matCorrHist     = calloc(sizeof(correction_history_t), 1);
-    pos->pawnCorrHist    = calloc(sizeof(correction_history_t), 1);
+    pos->matCorrHist     = calloc(sizeof(CorrectionHistory), 1);
+    pos->pawnCorrHist    = calloc(sizeof(CorrectionHistory), 1);
     pos->rootMoves       = calloc(sizeof(RootMoves), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
     pos->stack              = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->resetCalls         = false;
-    pos->counterMoveHistory = calloc(sizeof(CounterMoveHistoryStat), 1);
+    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
 
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
             for (int k = 0; k < 64; k++)
-                (*pos->counterMoveHistory)[c][0][j][k] = CounterMovePruneThreshold - 1;
+                (*pos->contHist)[c][0][j][k] = CounterMovePruneThreshold - 1;
 
     Thread.pos = pos;
 
@@ -56,7 +56,7 @@ void thread_exit() {
     Position* pos = Thread.pos;
 
     free(pos->counterMoves);
-    free(pos->history);
+    free(pos->mainHistory);
     free(pos->captureHistory);
     free(pos->rootMoves);
     free(pos->stackAllocation);

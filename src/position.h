@@ -77,7 +77,7 @@ struct Stack {
 
     // Original search stack data
     Move*           pv;
-    PieceToHistory* history;
+    PieceToHistory* continuationHistory;
     Move            currentMove;
     Move            excludedMove;
     Move            killers[2];
@@ -154,12 +154,12 @@ struct Position {
     Depth      completedDepth;
 
     // Pointers to thread-specific tables.
-    CounterMoveStat*        counterMoves;
-    ButterflyHistory*       history;
-    CapturePieceToHistory*  captureHistory;
-    correction_history_t*   matCorrHist;
-    correction_history_t*   pawnCorrHist;
-    CounterMoveHistoryStat* counterMoveHistory;
+    CounterMoveStat*         counterMoves;
+    ButterflyHistory*        mainHistory;
+    CapturePieceToHistory*   captureHistory;
+    CorrectionHistory*    matCorrHist;
+    CorrectionHistory*    pawnCorrHist;
+    ContinuationHistoryStat* contHist;
 
     // Thread-control data.
     uint64_t bestMoveChanges;
