@@ -24,6 +24,16 @@
 
 int MoveOverhead = 10;
 
+extern int mtg;
+extern int tm_v13;
+extern int tm_v14;
+extern int tm_v15;
+extern int tm_v16;
+extern int tm_v17;
+extern int tm_v18;
+extern int tm_v19;
+extern int tm_v20;
+
 struct TimeManagement Time;  // Our global time management struct
 
 double my_sqrt(double x) {
@@ -44,9 +54,6 @@ void time_init(Color us, int ply) {
 
     Time.startTime = Limits.startTime;
 
-    // Maximum move horizon of 50 moves
-    int mtg = 50;
-
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =
       max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
@@ -55,10 +62,11 @@ void time_init(Color us, int ply) {
 
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(0.008 + my_sqrt(ply + 3.0) / 250.0, 0.2 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(7.0, 4.0 + ply / 12.0);
+    opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
+                    tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
+    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / tm_v19 / 100.0);
 
     // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime = min(0.8 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+    Time.maximumTime = min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
 }
