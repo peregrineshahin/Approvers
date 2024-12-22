@@ -1132,9 +1132,9 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        add_correction_history(pos->matCorrHist, stm(), material_key(), depth,
+        add_correction_history(*pos->matCorrHist, stm(), material_key(), depth,
                                bestValue - ss->staticEval);
-        add_correction_history(pos->pawnCorrHist, stm(), pawn_key(), depth,
+        add_correction_history(*pos->pawnCorrHist, stm(), pawn_key(), depth,
                                bestValue - ss->staticEval);
     }
 
@@ -1404,8 +1404,8 @@ add_correction_history(correction_history_t hist, Color side, Key key, Depth dep
 }
 
 Value to_corrected(Position* pos, Value rawEval) {
-    int32_t mch = pos->matCorrHist[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t pch = pos->pawnCorrHist[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t mch = (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t pch = (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / ch_v2;
     v           = clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
     return v;
