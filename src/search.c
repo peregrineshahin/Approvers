@@ -509,7 +509,7 @@ Value search(
     Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
-    bool     ttCapture, singularQuietLMR;
+    bool     ttCapture;
     Piece    movedPiece;
     int      moveCount, captureCount, quietCount;
 
@@ -734,7 +734,7 @@ moves_loop:  // When in check search starts from here.
     mp_init(pos, ttMove, depth, ss->ply);
 
     value            = bestValue;
-    singularQuietLMR = moveCountPruning = false;
+    moveCountPruning = false;
     ttCapture                           = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 12. Loop through moves
@@ -847,8 +847,6 @@ moves_loop:  // When in check search starts from here.
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5 / 100)
                     extension = 2;
-
-                singularQuietLMR = !ttCapture;
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
@@ -932,13 +930,6 @@ moves_loop:  // When in check search starts from here.
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2;
-
-            if (moveCountPruning)
-                r += r_v3;
-
-            // Decrease reduction if ttMove has been singularly extended
-            if (singularQuietLMR)
-                r -= r_v5;
 
             if (!captureOrPromotion)
             {
