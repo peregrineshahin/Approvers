@@ -28,21 +28,25 @@
 #include "search.h"
 #include "types.h"
 
+extern int cms_v1;
+extern int hu_v1;
+extern int cpth_v1;
+
 #define stats_clear(s) memset(s, 0, sizeof(*s))
 
 static const int CounterMovePruneThreshold = 0;
 
 static void cms_update(PieceToHistory cms, Piece pc, Square to, int v) {
-    cms[pc][to] += v - cms[pc][to] * abs(v) / 29952;
+    cms[pc][to] += v - cms[pc][to] * abs(v) / cms_v1;
 }
 
 static void history_update(ButterflyHistory history, Color c, Move m, int v) {
     m &= 4095;
-    history[c][m] += v - history[c][m] * abs(v) / 10692;
+    history[c][m] += v - history[c][m] * abs(v) / hu_v1;
 }
 
 static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
-    history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / 10692;
+    history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / cpth_v1;
 }
 
 enum {
