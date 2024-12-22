@@ -179,7 +179,12 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
+static int futility_margin(Depth d, bool improving, bool oppWorsening) {
+    Value futilityMult       = ft_v1 * (d - improving);
+    Value worseningDeduction = oppWorsening * futilityMult / 3;
+
+    return futilityMult - worseningDeduction;
+}
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -507,7 +512,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, opponentWorsening;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture, singularQuietLMR;
     Piece    movedPiece;
@@ -640,6 +645,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    opponentWorsening = ss->staticEval + (ss - 1)->staticEval > 2;
+
     if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -648,7 +655,8 @@ Value search(
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
+    if (!PvNode && depth < rfp_v1 / 100
+        && eval - futility_margin(depth, improving, opponentWorsening) >= beta
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
