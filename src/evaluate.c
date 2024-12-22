@@ -35,7 +35,7 @@ Value evaluate(Position* pos) {
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
 
-    // v = (v / 16) * 16;
+    v = (v / 16) * 16 - 1 + (pos->st->key & 0x2);
     // v = (stm() == WHITE ? v : -v) + Tempo
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
