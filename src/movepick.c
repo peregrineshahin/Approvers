@@ -218,7 +218,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
 
     case ST_EVASIONS_INIT :
         st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate_evasions(pos, st->cur);
+        st->endMoves = generate(pos, st->cur, EVASIONS);
         score_evasions(pos);
         st->stage++;
 
@@ -248,7 +248,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         if (st->depth <= DEPTH_QS_NO_CHECKS)
             break;
         st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate_quiet_checks(pos, st->cur);
+        st->endMoves = generate(pos, st->cur, QUIET_CHECKS);
         st->stage++;
         /* fallthrough */
 

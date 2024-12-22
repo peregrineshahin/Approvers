@@ -109,13 +109,14 @@ void bitboards_init(void) {
         for (int pt = BISHOP; pt <= ROOK; pt++)
             for (Square s2 = 0; s2 < 64; s2++)
             {
-                if (!(PseudoAttacks[pt][s1] & sq_bb(s2)))
-                    continue;
-
-                LineBB[s1][s2] =
-                  (attacks_bb(pt, s1, 0) & attacks_bb(pt, s2, 0)) | sq_bb(s1) | sq_bb(s2);
-                BetweenBB[s1][s2] =
-                  attacks_bb(pt, s1, SquareBB[s2]) & attacks_bb(pt, s2, SquareBB[s1]);
+                if (PseudoAttacks[pt][s1] & sq_bb(s2))
+                {
+                    LineBB[s1][s2] =
+                      (attacks_bb(pt, s1, 0) & attacks_bb(pt, s2, 0)) | sq_bb(s1) | sq_bb(s2);
+                    BetweenBB[s1][s2] |=
+                      attacks_bb(pt, s1, sq_bb(s2)) & attacks_bb(pt, s2, sq_bb(s1));
+                }
+                BetweenBB[s1][s2] |= sq_bb(s2);
             }
     }
 }

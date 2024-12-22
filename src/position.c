@@ -281,8 +281,8 @@ static void set_state(Position* pos, Stack* st) {
 // function.
 
 Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
-    Bitboard result = 0, snipers;
-    *pinners        = 0;
+    Bitboard blockers = 0, snipers;
+    *pinners          = 0;
 
     // Snipers are sliders that attack square 's'when a piece removed.
     snipers = ((PseudoAttacks[ROOK][s] & pieces_pp(QUEEN, ROOK))
@@ -295,14 +295,14 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
         Square   sniperSq = pop_lsb(&snipers);
         Bitboard b        = between_bb(s, sniperSq) & occupancy;
 
-        if (!more_than_one(b))
+        if (b && !more_than_one(b))
         {
-            result |= b;
+            blockers |= b;
             if (b & pieces_c(color_of(piece_on(s))))
                 *pinners |= sq_bb(sniperSq);
         }
     }
-    return result;
+    return blockers;
 }
 #endif
 
@@ -326,7 +326,6 @@ Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
 // is_legal() tests whether a pseudo-legal move is legal
 
 bool is_legal(const Position* pos, Move m) {
-
     Color  us   = stm();
     Square from = from_sq(m);
     Square to   = to_sq(m);
@@ -362,7 +361,7 @@ bool is_legal(const Position* pos, Move m) {
     // square is attacked by the opponent. Castling moves are checked
     // for legality during move generation.
     if (pieces_p(KING) & sq_bb(from))
-        return !(attackers_to(to) & pieces_c(!us));
+        return !(attackers_to_occ(pos, to, pieces() ^ sq_bb(from)) & pieces_c(!us));
 
     // A non-king move is legal if and only if it is not pinned or it
     // is moving along the ray towards or away from the king.
@@ -533,7 +532,7 @@ bool is_pseudo_legal(const Position* pos, Move m) {
         // Again we need to be a bit careful.
         if (more_than_one(checkers()))
             return false;
-        if (!((between_bb(lsb(checkers()), square_of(us, KING)) | checkers()) & sq_bb(to)))
+        if (!(between_bb(square_of(us, KING), lsb(checkers())) & sq_bb(to)))
             return false;
     }
     return true;
@@ -613,10 +612,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
-        int kingSide = to > from;
-        Square rfrom = to;  // Castling is encoded as "king captures friendly rook"
-        Square rto   = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
-        to           = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
+        int    kingSide = to > from;
+        Square rfrom    = to;  // Castling is encoded as "king captures friendly rook"
+        Square rto      = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+        to              = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
 
         // Remove both pieces first since squares could overlap in Chess960
         remove_piece(pos, us, piece, from);
