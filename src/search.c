@@ -1452,6 +1452,9 @@ Value to_corrected(Position* pos, Value rawEval) {
 // update_cm_stats() updates countermove and follow-up move history.
 
 static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
+
+    bonus = bonus * (104 * ss->ply + 133) / (165 * ss->ply + 126);
+
     if (move_is_ok((ss - 1)->currentMove))
         cms_update(*(ss - 1)->history, pc, s, bonus);
 
@@ -1579,8 +1582,8 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     if (v == -VALUE_INFINITE)
         v = VALUE_ZERO;
 
-    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv",
-        d, uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
+    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", d,
+           uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
 
     for (int idx = 0; idx < rm->move[i].pvSize; idx++)
         printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
