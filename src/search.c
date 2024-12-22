@@ -596,7 +596,7 @@ Value search(
     }
 
     // Step 7. Razoring
-    if (!rootNode && depth == 1 && eval <= alpha - rz_v1)
+    if (!rootNode && depth == 1 && eval <= alpha - rz_v1 && !ttMove)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
 
