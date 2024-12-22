@@ -33,6 +33,7 @@ Key matKey[16] = {0ULL,
 
 const char PieceToChar[] = " PNBRQK  pnbrqk";
 
+SMALL
 static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->board[s] = piece;
     pos->byTypeBB[0] |= sq_bb(s);
@@ -42,6 +43,7 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->index[s]] = s;
 }
 
+SMALL
 static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     // WARNING: This is not a reversible operation.
     pos->byTypeBB[0] ^= sq_bb(s);
@@ -54,6 +56,7 @@ static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->pieceCount[piece]] = SQ_NONE;
 }
 
+SMALL
 static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
     // index[from] is not updated and becomes stale. This works as long as
     // index[] is accessed just by known occupied squares.
@@ -69,7 +72,7 @@ static void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
 
 
 // Calculate CheckInfo data.
-
+SMALL
 static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
@@ -89,13 +92,15 @@ static void set_check_info(Position* pos) {
     st->checkSquares[KING]   = 0;
 }
 
+SMALL
 static Key H1(Key h) { return h & 0x1fff; }
 
+SMALL
 static Key H2(Key h) { return (h >> 16) & 0x1fff; }
 
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
-
+SMALL
 void zob_init(void) {
 
     PRNG rng;
@@ -120,7 +125,7 @@ void zob_init(void) {
 // pos_set() initializes the position object with the given FEN string.
 // This function is not very robust - make sure that input FENs are correct,
 // this is assumed to be the responsibility of the GUI.
-
+SMALL
 void pos_set(Position* pos, char* fen) {
     unsigned char col, row, token;
     Square        sq = SQ_A8;
@@ -209,7 +214,7 @@ void pos_set(Position* pos, char* fen) {
 
 // set_castling_right() is a helper function used to set castling rights
 // given the corresponding color and the rook starting square.
-
+SMALL
 static void set_castling_right(Position* pos, Color c, Square rfrom) {
     Square kfrom = square_of(c, KING);
     int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
@@ -226,7 +231,7 @@ static void set_castling_right(Position* pos, Color c, Square rfrom) {
 // that once computed is updated incrementally as moves are made. The
 // function is only used when a new position is set up, and to verify
 // the correctness of the Stack data when running in debug mode.
-
+SMALL
 static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
@@ -279,7 +284,7 @@ static void set_state(Position* pos, Stack* st) {
 // square 's' is attacked. Both pinned pieces and discovered check
 // candidates are slider blockers and are calculated by calling this
 // function.
-
+SMALL
 Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
     Bitboard blockers = 0, snipers;
     *pinners          = 0;
@@ -324,7 +329,7 @@ Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
 
 
 // is_legal() tests whether a pseudo-legal move is legal
-
+SMALL
 bool is_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
@@ -444,7 +449,7 @@ int is_pseudo_legal_old(Position *pos, Move m)
   return 1;
 }
 #endif
-
+SMALL
 bool is_pseudo_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
@@ -541,7 +546,7 @@ bool is_pseudo_legal(const Position* pos, Move m) {
 
 // gives_check_special() is invoked by gives_check() if there are
 // discovered check candidates or the move is of a special type
-
+SMALL
 bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
     Square from = from_sq(m);
@@ -580,7 +585,7 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
 
 // do_move() makes a move. The move is assumed to be legal.
-
+SMALL
 void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
@@ -746,7 +751,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
 // undo_move() unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
-
+SMALL
 void undo_move(Position* pos, Move m) {
 
     pos->sideToMove = !pos->sideToMove;
@@ -804,7 +809,7 @@ void undo_move(Position* pos, Move m) {
 
 
 // do_null_move() is used to do a null move
-
+SMALL
 void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
@@ -835,7 +840,7 @@ void do_null_move(Position* pos) {
 // key_after() computes the new hash key after the given move. Needed
 // for speculative prefetch. It does not recognize special moves like
 // castling, en-passant and promotions.
-
+SMALL
 Key key_after(const Position* pos, Move m) {
     Square from     = from_sq(m);
     Square to       = to_sq(m);
@@ -850,6 +855,7 @@ Key key_after(const Position* pos, Move m) {
 }
 
 
+SMALL
 // Test whether SEE >= value.
 bool see_test(const Position* pos, Move m, int value) {
     if (unlikely(type_of_m(m) != NORMAL))
