@@ -172,6 +172,28 @@ PARAM(cms_v1, 29158)
 PARAM(hu_v1, 10602)
 PARAM(cpth_v1, 11201)
 
+PARAM(tm_v1, 318)
+PARAM(tm_v2, 600)
+PARAM(tm_v3, 600)
+PARAM(tm_v4, 825)
+PARAM(tm_v5, 50)
+PARAM(tm_v6, 150)
+PARAM(tm_v7, 900)
+PARAM(tm_v8, 198)
+PARAM(tm_v9, 95)
+PARAM(tm_v10, 147)
+PARAM(tm_v11, 232)
+PARAM(tm_v12, 58)
+PARAM(tm_v13, 80)
+PARAM(tm_v14, 300)
+PARAM(tm_v15, 250)
+PARAM(tm_v16, 20)
+PARAM(tm_v17, 700)
+PARAM(tm_v18, 400)
+PARAM(tm_v19, 1200)
+PARAM(tm_v20, 800)
+PARAM(mtg, 50)
+
 LimitsType Limits;
 
 enum {
@@ -451,15 +473,17 @@ void thread_search(Position* pos) {
         // Do we have time for the next iteration? Can we stop searching now?
         if (use_time_management() && !Thread.stop)
         {
-            double fallingEval = (318 + 6 * (Thread.previousScore - bestValue)
-                                  + 6 * (Thread.iterValue[iterIdx] - bestValue))
-                               / 825.0;
-            fallingEval = clamp(fallingEval, 0.5, 1.5);
+            double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
+                                  + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
+                               / (double) tm_v4;
+            fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
 
             // If the best move is stable over several iterations, reduce time
             // accordingly
-            timeReduction    = lastBestMoveDepth + 9 < pos->completedDepth ? 1.92 : 0.95;
-            double reduction = (1.47 + Thread.previousTimeReduction) / (2.32 * timeReduction);
+            timeReduction =
+              lastBestMoveDepth + tm_v7 / 100 < pos->completedDepth ? tm_v8 / 100.0 : tm_v9 / 100.0;
+            double reduction =
+              (tm_v10 / 100.0 + Thread.previousTimeReduction) / (tm_v11 / 100.0 * timeReduction);
 
             // Use part of the gained time from a previous stable move for this move
             totBestMoveChanges += Thread.pos->bestMoveChanges;
@@ -479,8 +503,8 @@ void thread_search(Position* pos) {
                     Thread.stop = true;
             }
             else
-                Thread.increaseDepth =
-                  !(Thread.increaseDepth && !Thread.ponder && time_elapsed() > totalTime * 0.58);
+                Thread.increaseDepth = !(Thread.increaseDepth && !Thread.ponder
+                                         && time_elapsed() > totalTime * tm_v12 / 100.0);
         }
 
         Thread.iterValue[iterIdx] = bestValue;
