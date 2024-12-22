@@ -87,12 +87,12 @@ static void score_captures(const Position* pos) {
 SMALL
 static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
-    ButterflyHistory* history = pos->history;
+    ButterflyHistory* history = pos->mainHistory;
 
-    PieceToHistory* cmh  = (st - 1)->history;
-    PieceToHistory* fmh  = (st - 2)->history;
-    PieceToHistory* fmh2 = (st - 4)->history;
-    PieceToHistory* fmh3 = (st - 6)->history;
+    PieceToHistory* contHist0 = (st - 1)->continuationHistory;
+    PieceToHistory* contHist1 = (st - 2)->continuationHistory;
+    PieceToHistory* contHist2 = (st - 4)->continuationHistory;
+    PieceToHistory* contHist3 = (st - 6)->continuationHistory;
 
     Color c = stm();
 
@@ -101,11 +101,11 @@ static void score_quiets(const Position* pos) {
         uint32_t move = m->move & 4095;
         Square   to   = move & 63;
         Square   from = move >> 6;
-        m->value = (mp_v4 * (*history)[c][move]
-                 + mp_v5 * (*cmh)[piece_on(from)][to]
-                 + mp_v6 * (*fmh)[piece_on(from)][to]
-                 + mp_v7 * (*fmh2)[piece_on(from)][to]
-                 + mp_v8 * (*fmh3)[piece_on(from)][to]) / 100;
+        m->value =
+          (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
+           + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
+           + mp_v8 * (*contHist3)[piece_on(from)][to])
+          / 100;
     }
 }
 
@@ -114,16 +114,16 @@ static void score_evasions(const Position* pos) {
     // Try captures ordered by MVV/LVA, then non-captures ordered by
     // stats heuristics.
 
-    ButterflyHistory* history = pos->history;
-    PieceToHistory*   cmh     = (st - 1)->history;
-    Color             c       = stm();
+    ButterflyHistory* history   = pos->mainHistory;
+    PieceToHistory*   contHist0 = (st - 1)->continuationHistory;
+    Color             c         = stm();
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         if (is_capture(pos, m->move))
             m->value = PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
-                     + (*cmh)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28);
+                     + (*contHist0)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28);
 }
 
 
