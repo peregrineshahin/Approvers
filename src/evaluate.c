@@ -26,17 +26,36 @@
 extern int eval_scale;
 
 Value evaluate(Position* pos) {
-    Value v = nnue_evaluate(pos);
 
-    v = eval_scale * v / 100;
+    Value v;
+    Color stm        = stm();
+    int   shuffling  = rule50_count();
+    int   simpleEval = simple_eval(pos, stm) + ((int) (key() & 7) - 3);
+    bool  lazy       = abs(simpleEval) >= RookValue + KnightValue + 16 * shuffling * shuffling;
 
-    v = v * (26500 + non_pawn_material()) / 32768;
+    if (lazy)
+        v = (Value) simpleEval;
+    else
+    {
+        v = nnue_evaluate(pos);
+
+        v = eval_scale * v / 100;
+
+        v = v * (26500 + non_pawn_material()) / 32768;
+    }
+
 
     // Damp down the evaluation linearly when shuffling
-    v = v * (100 - rule50_count()) / 100;
+    v = v * (100 - shuffling) / 100;
 
     // v = (v / 16) * 16;
     // v = (stm() == WHITE ? v : -v) + Tempo
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
+}
+
+
+int simple_eval(Position* pos, Color c) {
+    return PawnValue * (piece_count(c, PAWN) - piece_count(c, PAWN))
+         + (non_pawn_material_c(c) - non_pawn_material_c(!c));
 }

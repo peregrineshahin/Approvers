@@ -8,4 +8,5 @@ enum {
 };
 
 Value evaluate(Position* pos);
+int simple_eval(Position* pos, Color c);
 #endif  // EVALUATE_H
