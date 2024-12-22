@@ -31,7 +31,7 @@ Value evaluate(Position* pos) {
     Color stm        = stm();
     int   shuffling  = rule50_count();
     int   simpleEval = simple_eval(pos, stm) + ((int) (key() & 7) - 3);
-    bool  lazy       = abs(simpleEval) >= RookValue + KnightValue + 16 * shuffling * shuffling;
+    bool  lazy       = abs(simpleEval) >= RookValue + PawnValue + 16 * shuffling * shuffling;
 
     if (lazy)
         v = (Value) simpleEval;
