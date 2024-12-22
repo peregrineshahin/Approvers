@@ -1295,7 +1295,7 @@ Value qsearch(Position*  pos,
 
         // Futility pruning
         if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
-            && !advanced_pawn_push(pos, move))
+            && type_of_m(move) != PROMOTION)
         {
             if (moveCount > 2)
                 continue;
