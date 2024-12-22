@@ -28,10 +28,15 @@ extern int eval_scale;
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
 
+    v = eval_scale * v / 100;
+
+    v = v * (26500 + non_pawn_material()) / 32768;
+
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
 
-    v = eval_scale * v / 100;
+    // v = (v / 16) * 16;
+    // v = (stm() == WHITE ? v : -v) + Tempo
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }
