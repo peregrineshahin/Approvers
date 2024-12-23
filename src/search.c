@@ -966,7 +966,12 @@ moves_loop:  // When in check search starts from here.
                     r += r_v12;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                if (!inCheck)
+                    r -= ss->statScore / lmr_v8 * r_v13;
+                else
+                    r -= ((*pos->mainHistory)[!stm()][from_to(move)]
+                          + (*contHist0)[movedPiece][to_sq(move)] - 4333)
+                       / 16384;
             }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
