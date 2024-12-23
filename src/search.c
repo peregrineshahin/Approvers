@@ -968,6 +968,12 @@ moves_loop:  // When in check search starts from here.
                 // Decrease/increase reduction for moves with a good/bad history.
                 r -= ss->statScore / lmr_v8 * r_v13;
             }
+            else
+            {
+                // Increase reduction for cut nodes
+                if (cutNode)
+                    r += r_v8;
+            }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
