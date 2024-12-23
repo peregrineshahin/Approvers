@@ -899,6 +899,8 @@ moves_loop:  // When in check search starts from here.
         // Last capture extension
         else if (PieceValue[captured_piece()] > PawnValue && non_pawn_material() <= lce_v1)
             extension = 1;
+        else if (givesCheck && depth > 6 && abs(ss->staticEval) > 100)
+            extension = 1;
 
         // Late irreversible move extension
         if (move == ttMove && rule50_count() > 80
