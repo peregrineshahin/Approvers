@@ -172,26 +172,29 @@ PARAM(cms_v1, 29158)
 PARAM(hu_v1, 10602)
 PARAM(cpth_v1, 11201)
 
-PARAM(tm_v1, 318)
-PARAM(tm_v2, 600)
-PARAM(tm_v3, 600)
-PARAM(tm_v4, 825)
-PARAM(tm_v5, 50)
-PARAM(tm_v6, 150)
+PARAM(tm_v1, 314)
+PARAM(tm_v2, 598)
+PARAM(tm_v3, 624)
+PARAM(tm_v4, 810)
+PARAM(tm_v5, 56)
+PARAM(tm_v6, 151)
 PARAM(tm_v7, 900)
-PARAM(tm_v8, 198)
-PARAM(tm_v9, 95)
-PARAM(tm_v10, 147)
-PARAM(tm_v11, 232)
-PARAM(tm_v12, 58)
-PARAM(tm_v13, 80)
+PARAM(tm_v8, 199)
+PARAM(tm_v9, 93)
+PARAM(tm_v10, 149)
+PARAM(tm_v11, 224)
+PARAM(tm_v12, 59)
+PARAM(tm_v13, 84)
 PARAM(tm_v14, 300)
-PARAM(tm_v15, 250)
+PARAM(tm_v15, 248)
 PARAM(tm_v16, 20)
-PARAM(tm_v17, 700)
-PARAM(tm_v18, 400)
-PARAM(tm_v19, 1200)
-PARAM(tm_v20, 800)
+PARAM(tm_v17, 698)
+PARAM(tm_v18, 405)
+PARAM(tm_v19, 1198)
+PARAM(tm_v20, 804)
+PARAM(tm_v21, 1073)
+PARAM(tm_v22, 225)
+PARAM(tm_v23, 990)
 PARAM(mtg, 50)
 
 LimitsType Limits;
@@ -490,7 +493,8 @@ void thread_search(Position* pos) {
             Thread.pos->bestMoveChanges = 0;
 
             double bestMoveInstability =
-              1.073 + max(1.0, 2.25 - 9.9 / (pos->rootDepth)) * totBestMoveChanges;
+              tm_v21 / 1000.0
+              + max(1.0, tm_v22 / 100.0 - tm_v23 / 100.0 / (pos->rootDepth)) * totBestMoveChanges;
 
             double totalTime =
               rm->size == 1 ? 0 : time_optimum() * fallingEval * reduction * bestMoveInstability;
