@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../small.nnue");
+INCBIN(Network, "../expr44.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
