@@ -30,7 +30,9 @@ Value evaluate(Position* pos) {
 
     v = eval_scale * v / 100;
 
-    v = v * (26500 + non_pawn_material()) / 32768;
+    Value optimism = (*pos->optimism)[stm()];
+
+    v = (v + optimism) * (26500 + non_pawn_material()) / 32768 - optimism;
 
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;

@@ -35,6 +35,7 @@ void thread_init() {
     pos->matCorrHist     = calloc(sizeof(CorrectionHistory), 1);
     pos->pawnCorrHist    = calloc(sizeof(CorrectionHistory), 1);
     pos->rootMoves       = calloc(sizeof(RootMoves), 1);
+    pos->optimism        = calloc(sizeof(Optimism), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 

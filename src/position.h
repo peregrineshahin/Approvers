@@ -160,6 +160,7 @@ struct Position {
     CorrectionHistory*       matCorrHist;
     CorrectionHistory*       pawnCorrHist;
     ContinuationHistoryStat* contHist;
+    Optimism*                optimism;
 
     // Thread-control data.
     uint64_t bestMoveChanges;

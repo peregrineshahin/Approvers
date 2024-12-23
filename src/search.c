@@ -264,6 +264,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
     stats_clear(pos->matCorrHist);
+    stats_clear(pos->optimism);
     stats_clear(pos->pawnCorrHist);
 
     for (int c = 0; c < 2; c++)
@@ -385,13 +386,15 @@ void thread_search(Position* pos) {
         pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
-        if (pos->rootDepth >= 4)
-        {
-            Value previousScore = rm->move[0].previousScore;
-            delta               = d_v1;
-            alpha               = max(previousScore - delta, -VALUE_INFINITE);
-            beta                = min(previousScore + delta, VALUE_INFINITE);
-        }
+        delta     = d_v1 + abs(rm->move[0].meanSquaredScore) / 13461;
+        Value avg = rm->move[0].averageScore;
+        alpha     = max(avg - delta, -VALUE_INFINITE);
+        beta      = min(avg + delta, VALUE_INFINITE);
+
+        // Adjust optimism based on root move's averageScore (~4 Elo)
+        (*pos->optimism)[stm()]  = 150 * avg / (abs(avg) + 85);
+        (*pos->optimism)[!stm()] = -(*pos->optimism)[stm()];
+
 
         // Start with a small aspiration window and, in the case of a fail
         // high/low, re-search with a bigger window until we're not failing
@@ -1034,6 +1037,13 @@ moves_loop:  // When in check search starts from here.
                     break;
                 }
 
+            rm->averageScore =
+              rm->averageScore != -VALUE_INFINITE ? (value + rm->averageScore) / 2 : value;
+
+            rm->meanSquaredScore = rm->meanSquaredScore != -VALUE_INFINITE * VALUE_INFINITE
+                                   ? (value * abs(value) + rm->meanSquaredScore) / 2
+                                   : value * abs(value);
+
             // PV move or new best move ?
             if (moveCount == 1 || value > alpha)
             {
@@ -1633,11 +1643,13 @@ SMALL void prepare_for_search(Position* root, bool ponderMode) {
     rm->size       = end - list;
     for (int i = 0; i < rm->size; i++)
     {
-        rm->move[i].pvSize        = 1;
-        rm->move[i].pv[0]         = moves->move[i].pv[0];
-        rm->move[i].score         = -VALUE_INFINITE;
-        rm->move[i].previousScore = -VALUE_INFINITE;
-        rm->move[i].bestMoveCount = 0;
+        rm->move[i].pvSize           = 1;
+        rm->move[i].pv[0]            = moves->move[i].pv[0];
+        rm->move[i].score            = -VALUE_INFINITE;
+        rm->move[i].previousScore    = -VALUE_INFINITE;
+        rm->move[i].bestMoveCount    = 0;
+        rm->move[i].averageScore     = -VALUE_INFINITE;
+        rm->move[i].meanSquaredScore = -VALUE_INFINITE * VALUE_INFINITE;
     }
     memcpy(pos, root, offsetof(Position, moveList));
     // Copy enough of the root State buffer.
