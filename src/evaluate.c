@@ -30,7 +30,10 @@ Value evaluate(Position* pos) {
 
     v = eval_scale * v / 100;
 
-    v = v * (26500 + non_pawn_material()) / 32768;
+    v = v
+      * (16666 + non_pawn_material()
+         + 4 * PawnValue * (piece_count(WHITE, PAWN) + piece_count(BLACK, PAWN)))
+      / 32768;
 
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
