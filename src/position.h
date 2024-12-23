@@ -63,8 +63,7 @@ struct Stack {
         };
         uint16_t plyCounters;
     };
-    uint8_t     castlingRights;
-    Accumulator accumulator;
+    uint8_t castlingRights;
 
     // Not copied when making a move
     uint8_t  capturedPiece;
@@ -107,6 +106,8 @@ struct Stack {
         };
     };
     Square ksq;
+
+    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;

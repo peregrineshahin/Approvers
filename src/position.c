@@ -451,11 +451,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
+    Accumulator* acc = &st->accumulator;
+    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
     st->plyCounters += 0x101;  // Increment both rule50 and pliesFromNull
-
-    Accumulator* acc = &st->accumulator;
 
     Color  us       = stm();
     Color  them     = !us;
