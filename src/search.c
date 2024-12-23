@@ -777,6 +777,8 @@ moves_loop:  // When in check search starts from here.
         // Calculate new depth for this move
         newDepth = depth - 1;
 
+        Depth r = reduction(improving, depth, moveCount);
+
         // Step 13. Pruning at shallow depth
         if (!rootNode && non_pawn_material_c(stm()) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
@@ -784,7 +786,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - reduction(improving, depth, moveCount), 0);
+            int lmrDepth = max(newDepth - r, 0);
 
             if (!captureOrPromotion && !givesCheck)
             {
@@ -920,12 +922,13 @@ moves_loop:  // When in check search starts from here.
         if (rootNode)
             pos->st[-1].key ^= pos->rootKeyFlip;
 
+        r = r * r_v1;
+
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
-        if (depth >= 3 && moveCount > 1 + 2 * rootNode
+        if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-            Depth r = r_v1 * reduction(improving, depth, moveCount);
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
@@ -969,7 +972,7 @@ moves_loop:  // When in check search starts from here.
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
-            if (value > alpha && d != newDepth)
+            if (value > alpha && d < newDepth)
             {
                 value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
