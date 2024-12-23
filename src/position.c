@@ -9,7 +9,6 @@
 #include "position.h"
 #include "tt.h"
 
-static void set_castling_right(Position* pos, Color c, Square rfrom);
 static void set_state(Position* pos, Stack* st);
 
 struct Zob zob;
@@ -38,7 +37,6 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[0] |= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] |= sq_bb(s);
     pos->byColorBB[c] |= sq_bb(s);
-    pos->pieceCount[piece]++;
 }
 
 static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
@@ -46,7 +44,6 @@ static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[0] ^= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
     pos->byColorBB[c] ^= sq_bb(s);
-    pos->pieceCount[piece]--;
 }
 
 static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
@@ -116,8 +113,6 @@ SMALL void pos_set(Position* pos, char* fen) {
     memset(pos, 0, offsetof(Position, moveList));
     pos->st = st;
     memset(st, 0, StateSize);
-    for (int i = 0; i < 16; i++)
-        pos->pieceCount[i] = 16 * i;
 
     // Piece placement
     while ((token = *fen++) && token != ' ')
@@ -193,19 +188,27 @@ SMALL void pos_set(Position* pos, char* fen) {
 // the correctness of the Stack data when running in debug mode.
 
 SMALL static void set_state(Position* pos, Stack* st) {
-    st->key = st->materialKey = 0;
-    st->pawnKey               = zob.noPawns;
-    st->nonPawn               = 0;
-
-    st->checkersBB = attackers_to(king_sq(stm())) & pieces_c(!stm());
+    st->key         = 0;
+    st->nonPawn     = 0;
+    st->materialKey = 0;
+    st->pawnKey     = zob.noPawns;
+    st->checkersBB  = attackers_to(king_sq(stm())) & pieces_c(!stm());
 
     set_check_info(pos);
 
     for (Bitboard b = pieces(); b;)
     {
-        Square s  = pop_lsb(&b);
-        Piece  pc = piece_on(s);
+        Square    s  = pop_lsb(&b);
+        Piece     pc = piece_on(s);
+        PieceType pt = type_of_p(pc);
+
         st->key ^= zob.psq[pc][s];
+        st->materialKey += matKey[pc];
+
+        if (pt == PAWN)
+            st->pawnKey ^= zob.psq[pc][s];
+        else
+            st->nonPawn += NonPawnPieceValue[pc];
     }
 
     if (st->epSquare != 0)
@@ -215,22 +218,6 @@ SMALL static void set_state(Position* pos, Stack* st) {
         st->key ^= zob.side;
 
     st->key ^= zob.castling[st->castlingRights];
-
-    for (Bitboard b = pieces_p(PAWN); b;)
-    {
-        Square s = pop_lsb(&b);
-        st->pawnKey ^= zob.psq[piece_on(s)][s];
-    }
-
-    for (PieceType pt = PAWN; pt <= KING; pt++)
-    {
-        st->materialKey += piece_count(WHITE, pt) * matKey[8 * WHITE + pt];
-        st->materialKey += piece_count(BLACK, pt) * matKey[8 * BLACK + pt];
-    }
-
-    for (PieceType pt = KNIGHT; pt <= QUEEN; pt++)
-        for (int c = 0; c < 2; c++)
-            st->nonPawn += piece_count(c, pt) * NonPawnPieceValue[make_piece(c, pt)];
 }
 
 

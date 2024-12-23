@@ -129,7 +129,6 @@ struct Position {
     Bitboard byColorBB[2];
     Color    sideToMove;
     uint8_t  board[64];
-    uint8_t  pieceCount[16];
     uint8_t  castlingRightsMask[64];
     Key      rootKeyFlip;
     uint16_t gamePly;
@@ -193,7 +192,6 @@ PURE bool is_draw(const Position* pos);
 #define piece_on(s) (pos->board[s])
 #define ep_square() (pos->st->epSquare)
 #define is_empty(s) (!piece_on(s))
-#define piece_count(c, p) (pos->pieceCount[8 * (c) + (p)] - (8 * (c) + (p)) * 16)
 #define king_sq(c) (lsb(pieces_cp(c, KING)))
 
 // Castling
