@@ -89,10 +89,6 @@ static void set_check_info(Position* pos) {
     st->checkSquares[KING]   = 0;
 }
 
-static Key H1(Key h) { return h & 0x1fff; }
-
-static Key H2(Key h) { return (h >> 16) & 0x1fff; }
-
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
 
@@ -153,8 +149,7 @@ SMALL void pos_set(Position* pos, char* fen) {
     }
 
     // Active color
-    token           = *fen++;
-    pos->sideToMove = token == 'w' ? WHITE : BLACK;
+    pos->sideToMove = (*fen++) == 'b';
     token           = *fen++;
 
     // Castling availability. Compatible with 3 standards: Normal FEN
@@ -163,29 +158,25 @@ SMALL void pos_set(Position* pos, char* fen) {
     // that, in case of Chess960, // if an inner rook is associated with
     // the castling right, the castling tag is replaced by the file letter
     // of the involved rook, as for the Shredder-FEN.
-    while ((token = *fen++) && !isspace(token))
+    while (((token = *fen++)) && !isspace(token))
     {
-        Square rsq;
-        int    c    = islower(token) ? BLACK : WHITE;
-        Piece  rook = make_piece(c, ROOK);
+        const Color c = islower(token);
 
-        token = toupper(token);
+        if ((token & ~32) > 64)
+        {
+            const int    rights = WHITE_OO << (!(token & 2) + 2 * c);
+            const Square rfrom  = relative_square(c, token & 2 ? SQ_H1 : SQ_A1);
+            const Square kfrom  = square_of(c, KING);
 
-        if (token == 'K')
-            for (rsq = relative_square(c, SQ_H1); piece_on(rsq) != rook; --rsq)
-                ;
-        else if (token == 'Q')
-            for (rsq = relative_square(c, SQ_A1); piece_on(rsq) != rook; ++rsq)
-                ;
-        else
-            continue;
-
-        set_castling_right(pos, c, rsq);
+            pos->st->castlingRights |= rights;
+            pos->castlingRightsMask[kfrom] |= rights;
+            pos->castlingRightsMask[rfrom] |= rights;
+        }
     }
 
     // En passant square. Ignore if no pawn capture is possible.
-    if (((col = *fen++) && (col >= 'a' && col <= 'h'))
-        && ((row = *fen++) && (row == (stm() == WHITE ? '6' : '3'))))
+    if ((col = *fen++) && (col >= 'a' && col <= 'h')
+        && ((row = *fen++) && row == (stm() == WHITE ? '6' : '3')))
     {
         st->epSquare = make_square(col - 'a', row - '1');
 
@@ -207,21 +198,6 @@ SMALL void pos_set(Position* pos, char* fen) {
 }
 
 
-// set_castling_right() is a helper function used to set castling rights
-// given the corresponding color and the rook starting square.
-
-static void set_castling_right(Position* pos, Color c, Square rfrom) {
-    Square kfrom = square_of(c, KING);
-    int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
-    int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
-
-    pos->st->castlingRights |= cr;
-
-    pos->castlingRightsMask[kfrom] |= cr;
-    pos->castlingRightsMask[rfrom] |= cr;
-}
-
-
 // set_state() computes the hash keys of the position, and other data
 // that once computed is updated incrementally as moves are made. The
 // function is only used when a new position is set up, and to verify
@@ -231,7 +207,6 @@ SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
     st->nonPawn               = 0;
-    st->psq                   = 0;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -303,22 +278,6 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
         }
     }
     return blockers;
-}
-#endif
-
-
-#if 0
-// attackers_to() computes a bitboard of all pieces which attack a given
-// square. Slider attacks use the occupied bitboard to indicate occupancy.
-
-Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
-{
-  return  (attacks_from_pawn(s, BLACK)    & pieces_cp(WHITE, PAWN))
-        | (attacks_from_pawn(s, WHITE)    & pieces_cp(BLACK, PAWN))
-        | (attacks_from_knight(s)         & pieces_p(KNIGHT))
-        | (attacks_bb_rook(s, occupied)   & pieces_pp(ROOK,   QUEEN))
-        | (attacks_bb_bishop(s, occupied) & pieces_pp(BISHOP, QUEEN))
-        | (attacks_from_king(s)           & pieces_p(KING));
 }
 #endif
 
@@ -561,9 +520,8 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
     case ENPASSANT : {
         if (st->checkSquares[PAWN] & sq_bb(to))
             return true;
-        Square capsq = make_square(file_of(to), rank_of(from));
-        //    Bitboard b = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
-        Bitboard b = inv_sq(inv_sq(inv_sq(pieces(), from), to), capsq);
+        Square   capsq = make_square(file_of(to), rank_of(from));
+        Bitboard b     = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
         return (attacks_bb_rook(st->ksq, b) & pieces_cpp(stm(), QUEEN, ROOK))
             || (attacks_bb_bishop(st->ksq, b) & pieces_cpp(stm(), QUEEN, BISHOP));
     }
@@ -582,8 +540,6 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 // do_move() makes a move. The move is assumed to be legal.
 
 void do_move(Position* pos, Move m, int givesCheck) {
-    Key key = key() ^ zob.side;
-
     // Copy some fields of the old state to our new Stack object except the
     // ones which are going to be recalculated from scratch anyway and then
     // switch our state pointer to point to the new (ready to be updated)
@@ -591,12 +547,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
-
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
     st->plyCounters += 0x101;  // Increment both rule50 and pliesFromNull
+
+    Accumulator* acc = &st->accumulator;
 
     Color  us       = stm();
     Color  them     = !us;
@@ -630,7 +585,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         nnue_add_piece(acc, piece, to, wksq, bksq);
         nnue_add_piece(acc, captured, rto, wksq, bksq);
 
-        key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
+        st->key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
     else if (captured)
@@ -658,7 +613,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         remove_piece(pos, them, captured, capsq);
 
         // Update material hash key
-        key ^= zob.psq[captured][capsq];
+        st->key ^= zob.psq[captured][capsq];
         st->materialKey -= matKey[captured];
 
         // Reset ply counters
@@ -669,11 +624,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     st->capturedPiece = captured;
 
     // Update hash key
-    key ^= zob.psq[piece][from] ^ zob.psq[piece][to];
+    st->key ^= zob.side ^ zob.psq[piece][from] ^ zob.psq[piece][to];
 
     // Reset en passant square
     if (unlikely((st - 1)->epSquare != 0))
-        key ^= zob.enpassant[file_of((st - 1)->epSquare)];
+        st->key ^= zob.enpassant[file_of((st - 1)->epSquare)];
     st->epSquare = 0;
 
     // Update castling rights if needed
@@ -682,9 +637,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
         //    uint32_t cr = pos->castlingRightsMask[from] | pos->castlingRightsMask[to];
         //    key ^= zob.castling[st->castlingRights & cr];
         //    st->castlingRights &= ~cr;
-        key ^= zob.castling[st->castlingRights];
+        st->key ^= zob.castling[st->castlingRights];
         st->castlingRights &= ~(pos->castlingRightsMask[from] | pos->castlingRightsMask[to]);
-        key ^= zob.castling[st->castlingRights];
+        st->key ^= zob.castling[st->castlingRights];
     }
 
     // Move the piece. The tricky Chess960 castling is handled earlier.
@@ -703,7 +658,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         if ((to ^ from) == 16 && (attacks_from_pawn(to ^ 8, us) & pieces_cp(them, PAWN)))
         {
             st->epSquare = to ^ 8;
-            key ^= zob.enpassant[file_of(st->epSquare)];
+            st->key ^= zob.enpassant[file_of(st->epSquare)];
         }
         else if (type_of_m(m) == PROMOTION)
         {
@@ -716,7 +671,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
             nnue_add_piece(acc, promotion, to, wksq, bksq);
 
             // Update hash keys
-            key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
+            st->key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
             st->pawnKey ^= zob.psq[piece][to];
             st->materialKey += matKey[promotion] - matKey[piece];
 
@@ -730,9 +685,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Reset ply counters.
         st->plyCounters = 0;
     }
-
-    // Update the key with the final value
-    st->key = key;
 
     // Calculate checkers bitboard (if move gives check)
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;

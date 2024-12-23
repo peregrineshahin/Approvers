@@ -49,16 +49,12 @@ void zob_init(void);
 
 struct Stack {
     // Copied when making a move
+    Key key;
     Key pawnKey;
     Key materialKey;
     union {
-        struct {
-            Score psq;
-            union {
-                uint16_t nonPawnMaterial[2];
-                uint32_t nonPawn;
-            };
-        };
+        uint16_t nonPawnMaterial[2];
+        uint32_t nonPawn;
     };
     union {
         struct {
@@ -67,12 +63,12 @@ struct Stack {
         };
         uint16_t plyCounters;
     };
-    uint8_t castlingRights;
+    uint8_t     castlingRights;
+    Accumulator accumulator;
 
     // Not copied when making a move
     uint8_t  capturedPiece;
     uint8_t  epSquare;
-    Key      key;
     Bitboard checkersBB;
 
     // Original search stack data
@@ -111,8 +107,6 @@ struct Stack {
         };
     };
     Square ksq;
-
-    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;
@@ -173,7 +167,6 @@ struct Position {
 // FEN string input/output
 void pos_set(Position* pos, char* fen);
 
-//PURE Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied);
 PURE Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners);
 
 PURE bool is_legal(const Position* pos, Move m);
