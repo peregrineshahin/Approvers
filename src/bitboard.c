@@ -63,7 +63,7 @@ Bitboard PawnAttacks[2][64];
 // bitboards_init() initializes various bitboard tables. It is called at
 // startup and relies on global objects to be already zero-initialized.
 
-void bitboards_init(void) {
+SMALL void bitboards_init(void) {
     for (Square s = 0; s < 64; s++)
         SquareBB[s] = 1ULL << s;
 

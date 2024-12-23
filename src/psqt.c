@@ -29,7 +29,7 @@ uint32_t NonPawnPieceValue[16];
 // of the tables are initialized by flipping and changing the sign of the
 // white scores.
 
-void psqt_init(void) {
+SMALL void psqt_init(void) {
     for (int pt = PAWN; pt <= KING; pt++)
     {
         PieceValue[make_piece(BLACK, pt)] = PieceValue[pt];

@@ -220,7 +220,7 @@ static void stable_sort(RootMove* rm, int num);
 static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta);
 static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
-double my_log(double x) {
+SMALL double my_log(double x) {
     double result = 0.0;
     while (x >= 2.0)
     {
@@ -239,7 +239,7 @@ double my_log(double x) {
 
 // search_init() is called during startup to initialize various lookup tables
 
-void search_init(void) {
+SMALL void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
         Reductions[i] = rd_init_v1 / 100.0 * my_log(i);
 }
@@ -247,7 +247,7 @@ void search_init(void) {
 
 // search_clear() resets search state to zero, to obtain reproducible results
 
-void search_clear(void) {
+SMALL void search_clear(void) {
     if (!settings.ttSize)
     {
         delayedSettings.clear = true;
@@ -1609,7 +1609,7 @@ void start_thinking(Position* root, bool ponderMode) {
     mainthread_search();
 }
 
-void prepare_for_search(Position* root, bool ponderMode) {
+SMALL void prepare_for_search(Position* root, bool ponderMode) {
     Thread.stop          = false;
     Thread.increaseDepth = true;
     Thread.ponder        = ponderMode;

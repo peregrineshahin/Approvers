@@ -16,7 +16,7 @@ alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
 alignas(64) int16_t in_biases[L1SIZE];
 alignas(64) int16_t l1_biases[OUTSIZE];
 
-void nnue_init() {
+SMALL void nnue_init() {
     int8_t* data8 = (int8_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)

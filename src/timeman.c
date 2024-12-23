@@ -26,7 +26,7 @@ int MoveOverhead = 10;
 
 struct TimeManagement Time;  // Our global time management struct
 
-double my_sqrt(double x) {
+SMALL double my_sqrt(double x) {
     if (x <= 0)
         return 0;
     double guess = x / 2.0;

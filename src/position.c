@@ -96,7 +96,7 @@ static Key H2(Key h) { return (h >> 16) & 0x1fff; }
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
 
-void zob_init(void) {
+SMALL void zob_init(void) {
 
     PRNG rng;
     prng_init(&rng, 1070372);
@@ -121,7 +121,7 @@ void zob_init(void) {
 // This function is not very robust - make sure that input FENs are correct,
 // this is assumed to be the responsibility of the GUI.
 
-void pos_set(Position* pos, char* fen) {
+SMALL void pos_set(Position* pos, char* fen) {
     unsigned char col, row, token;
     Square        sq = SQ_A8;
 
@@ -227,7 +227,7 @@ static void set_castling_right(Position* pos, Color c, Square rfrom) {
 // function is only used when a new position is set up, and to verify
 // the correctness of the Stack data when running in debug mode.
 
-static void set_state(Position* pos, Stack* st) {
+SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
     st->nonPawn               = 0;
