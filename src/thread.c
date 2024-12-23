@@ -30,7 +30,7 @@ void thread_init() {
 
     Position* pos        = calloc(sizeof(Position), 1);
     pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
-    pos->mainHistory         = calloc(sizeof(ButterflyHistory), 1);
+    pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
     pos->matCorrHist     = calloc(sizeof(CorrectionHistory), 1);
     pos->pawnCorrHist    = calloc(sizeof(CorrectionHistory), 1);
@@ -38,9 +38,9 @@ void thread_init() {
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
-    pos->stack              = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
-    pos->resetCalls         = false;
-    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
+    pos->stack      = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    pos->resetCalls = false;
+    pos->contHist   = calloc(sizeof(ContinuationHistoryStat), 1);
 
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)

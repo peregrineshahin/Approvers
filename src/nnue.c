@@ -40,15 +40,16 @@ SMALL void nnue_init() {
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {
-    const __m256i min = _mm256_setzero_si256();
-    const __m256i max = _mm256_set1_epi16(QA);
-    __m256i vector = _mm256_setzero_si256();
+    const __m256i min    = _mm256_setzero_si256();
+    const __m256i max    = _mm256_set1_epi16(QA);
+    __m256i       vector = _mm256_setzero_si256();
 
-    for (int i = 0; i < L1SIZE; i += 16) {
-        __m256i v = _mm256_load_si256((__m256i *)(acc + i));
-        v = _mm256_min_epi16(_mm256_max_epi16(v, min), max);
+    for (int i = 0; i < L1SIZE; i += 16)
+    {
+        __m256i v = _mm256_load_si256((__m256i*) (acc + i));
+        v         = _mm256_min_epi16(_mm256_max_epi16(v, min), max);
 
-        const __m256i w = _mm256_load_si256((__m256i *)(weights + i));
+        const __m256i w       = _mm256_load_si256((__m256i*) (weights + i));
         const __m256i product = _mm256_madd_epi16(_mm256_mullo_epi16(v, w), v);
 
         vector = _mm256_add_epi32(vector, product);
@@ -58,10 +59,10 @@ static Value forward(const int16_t* acc, const int16_t* weights) {
     const __m128i lower_half = _mm256_castsi256_si128(vector);
 
     const __m128i sum_128 = _mm_add_epi32(upper_half, lower_half);
-    const __m128i sum_64 = _mm_add_epi32(_mm_unpackhi_epi64(sum_128, sum_128), sum_128);
+    const __m128i sum_64  = _mm_add_epi32(_mm_unpackhi_epi64(sum_128, sum_128), sum_128);
 
     const __m128i shuffled = _mm_shuffle_epi32(sum_64, 1);
-    const __m128i sum = _mm_add_epi32(shuffled, sum_64);
+    const __m128i sum      = _mm_add_epi32(shuffled, sum_64);
 
     return _mm_cvtsi128_si32(sum);
 }

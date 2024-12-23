@@ -735,7 +735,7 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
-    ttCapture                           = ttMove && is_capture_or_promotion(pos, ttMove);
+    ttCapture        = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta

@@ -20,7 +20,7 @@
 
 #include "types.h"
 
-Value PieceValue[16] = { 0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue };
+Value PieceValue[16] = {0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue};
 
 uint32_t NonPawnPieceValue[16];
 

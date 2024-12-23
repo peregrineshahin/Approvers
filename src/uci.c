@@ -149,8 +149,10 @@ void setoption(char* str) {
     }
 
 #ifndef KAGGLE
-    for (int i = 0; i < parameters_count; i++) {
-        if (strcmp(parameters[i].name, name) == 0) {
+    for (int i = 0; i < parameters_count; i++)
+    {
+        if (strcmp(parameters[i].name, name) == 0)
+        {
             *parameters[i].value = atoi(value);
             return;
         }
@@ -239,7 +241,7 @@ SMALL void uci_loop(int argc, char** argv) {
 
     char cmd[4096] = {0};
 
-    delayedSettings.ttSize     = 1;
+    delayedSettings.ttSize = 1;
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);

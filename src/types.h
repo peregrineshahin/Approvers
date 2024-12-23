@@ -258,10 +258,10 @@ static Key make_key(uint64_t seed) {
     return seed * 6364136223846793005ULL + 1442695040888963407ULL;
 }
 
-typedef struct Position      Position;
-typedef struct LimitsType    LimitsType;
-typedef struct RootMove      RootMove;
-typedef struct RootMoves     RootMoves;
+typedef struct Position   Position;
+typedef struct LimitsType LimitsType;
+typedef struct RootMove   RootMove;
+typedef struct RootMoves  RootMoves;
 
 enum {
     CORRECTION_HISTORY_ENTRY_NB = 16384,
