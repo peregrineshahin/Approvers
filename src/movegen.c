@@ -181,7 +181,7 @@ static ExtMove* generate_moves(const Position* pos,
 
 static ExtMove* generate_all(const Position* pos, ExtMove* list, const Color Us, const int Type) {
     const bool   Checks = Type == QUIET_CHECKS;
-    const Square ksq    = square_of(Us, KING);
+    const Square ksq    = king_sq(Us);
 
     if (Type == EVASIONS && more_than_one(checkers()))
         goto kingMoves;
@@ -203,7 +203,7 @@ kingMoves:
     {
         Bitboard b = attacks_from(KING, ksq) & (Type == EVASIONS ? ~pieces_c(Us) : target);
         if (Checks)
-            b &= ~PseudoAttacks[QUEEN][square_of(!Us, KING)];
+            b &= ~PseudoAttacks[QUEEN][king_sq(!Us)];
 
         while (b)
             (list++)->move = make_move(ksq, pop_lsb(&b));
@@ -238,7 +238,7 @@ ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
 ExtMove* generate_legal(const Position* pos, ExtMove* list) {
     Color    us     = stm();
     Bitboard pinned = blockers_for_king(pos, us) & pieces_c(us);
-    Square   ksq    = square_of(us, KING);
+    Square   ksq    = king_sq(us);
     ExtMove* cur    = list;
 
     list = checkers() ? generate(pos, list, EVASIONS) : generate(pos, list, NON_EVASIONS);
