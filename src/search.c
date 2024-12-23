@@ -1159,8 +1159,8 @@ moves_loop:  // When in check search starts from here.
 
     // Adjust correction history
     if (!inCheck && (!bestMove || !is_capture_or_promotion(pos, bestMove))
-        && !(bestValue >= beta && bestValue <= ss->staticEval)
-        && !(!bestMove && bestValue >= ss->staticEval))
+        && !(bestValue >= beta && bestValue <= rawEval)
+        && !(!bestMove && bestValue >= rawEval))
     {
         add_correction_history(*pos->matCorrHist, stm(), material_key(), depth,
                                bestValue - ss->staticEval);
