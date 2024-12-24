@@ -540,12 +540,12 @@ Value search(
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, complexity;
 
     // Step 1. Initialize node
     inCheck   = checkers();
-    moveCount = captureCount = quietCount = ss->moveCount = 0;
-    bestValue                                             = -VALUE_INFINITE;
+    moveCount = captureCount = quietCount = complexity = ss->moveCount = 0;
+    bestValue                                                          = -VALUE_INFINITE;
 
     // Check for the available remaining time
     if (pos->resetCalls)
@@ -664,6 +664,7 @@ Value search(
     if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
+    complexity = eval != 0 && rawEval != 0 ? 100 * abs(eval - rawEval) / abs(eval) : 0;
 
     improving = (ss - 2)->staticEval == VALUE_NONE
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
@@ -971,6 +972,9 @@ moves_loop:  // When in check search starts from here.
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
+
+                if (complexity > 50)
+                    r -= 1000;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
