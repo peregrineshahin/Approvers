@@ -20,7 +20,6 @@
 
 
 #include "movepick.h"
-#include "thread.h"
 
 extern int mp_v1;
 extern int mp_v2;

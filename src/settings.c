@@ -1,7 +1,6 @@
 #include "search.h"
 #include "settings.h"
 #include "tt.h"
-#include "types.h"
 
 struct settings settings, delayedSettings;
 

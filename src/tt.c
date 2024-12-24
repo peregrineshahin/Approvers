@@ -28,12 +28,8 @@
     #include <sys/mman.h>
 #endif
 
-#include "bitboard.h"
-#include "settings.h"
-#include "thread.h"
 #include "tt.h"
 #include "types.h"
-#include "uci.h"
 
 TranspositionTable TT;  // Our global transposition table
 

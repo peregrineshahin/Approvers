@@ -20,14 +20,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "evaluate.h"
 #include "misc.h"
 #include "movegen.h"
 #include "position.h"
 #include "search.h"
 #include "settings.h"
 #include "thread.h"
-#include "timeman.h"
 #include "uci.h"
 
 #ifndef KAGGLE
@@ -38,7 +36,7 @@ extern int       parameters_count;
 #endif
 
 // FEN string of the initial position, normal chess
-static const char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // position() is called when the engine receives the "position" UCI
 // command. The function sets up the position described in the given FEN

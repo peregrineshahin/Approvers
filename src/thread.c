@@ -18,7 +18,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "movegen.h"
 #include "movepick.h"
 #include "search.h"
 #include "thread.h"

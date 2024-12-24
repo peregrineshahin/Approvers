@@ -31,6 +31,7 @@
 
 // Declaring pure functions as pure seems not to help. (Investigate later.)
 //#define PURE __attribute__((pure))
+#undef PURE
 #define PURE
 
 #if defined __has_attribute
@@ -252,7 +253,7 @@ extern uint32_t NonPawnPieceValue[16];
     ((Move) ((to) | ((from) << 6) | (PROMOTION << 14) | (((pt) - KNIGHT) << 12)))
 #define make_enpassant(from, to) ((Move) ((to) | ((from) << 6) | (ENPASSANT << 14)))
 #define make_castling(from, to) ((Move) ((to) | ((from) << 6) | (CASTLING << 14)))
-#define move_is_ok(m) (from_sq(m) != to_sq(m))
+#define move_is_ok(m) (m && m != MOVE_NULL)
 
 static Key make_key(uint64_t seed) {
     return seed * 6364136223846793005ULL + 1442695040888963407ULL;

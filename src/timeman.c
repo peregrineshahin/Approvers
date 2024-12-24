@@ -64,9 +64,10 @@ void time_init(Color us, int ply) {
     // game time for the current move, so also cap to 20% of available game time.
     opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
                     tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / tm_v19 / 100.0);
+    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
 
     // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime = min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+    Time.maximumTime =
+      min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
 }

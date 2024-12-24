@@ -18,7 +18,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bitboard.h"
 #include "evaluate.h"
 #include "nnue.h"
 #include "position.h"
