@@ -392,7 +392,7 @@ void thread_search(Position* pos) {
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
-    while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
+    while ((pos->rootDepth += 2 + (popcount(pieces()) < 12)) < MAX_PLY && !Thread.stop
            && !(Limits.depth && pos->rootDepth > Limits.depth))
     {
         // Age out PV variability metric
