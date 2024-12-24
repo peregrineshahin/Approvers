@@ -571,7 +571,7 @@ Value search(
     (ss + 1)->excludedMove = bestMove = 0;
     (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
     (ss + 2)->cutoffCnt                         = 0;
-    Square prevSq                               = to_sq((ss - 1)->currentMove);
+    Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
     // Initialize statScore to zero for the grandchildren of the current
     // position. So the statScore is shared between all grandchildren and only
@@ -609,7 +609,7 @@ Value search(
                     update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
 
                 // Extra penalty for early quiet moves of the previous ply
-                if ((ss - 1)->moveCount <= 2 && !captured_piece())
+                if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                     update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
             }
             // Penalty for a quiet ttMove that fails low
@@ -669,7 +669,7 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    if (move_is_ok((ss - 1)->currentMove) && !(ss - 1)->checkersBB && !captured_piece())
+    if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
@@ -1155,7 +1155,8 @@ moves_loop:  // When in check search starts from here.
 
         // Extra penalty for a quiet TT or main killer move in previous ply
         // when it gets refuted
-        if (((ss - 1)->moveCount == 1 || (ss - 1)->currentMove == (ss - 1)->killers[0])
+        if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
+             || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
             update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
@@ -1308,7 +1309,10 @@ Value qsearch(Position*  pos,
     // to search the moves. Because the depth is <= 0 here, only captures,
     // queen promotions and checks (only if depth >= DEPTH_QS_CHECKS) will
     // be generated.
-    mp_init_q(pos, ttMove, depth, to_sq((ss - 1)->currentMove));
+
+    Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
+
+    mp_init_q(pos, ttMove, depth, prevSq);
 
     // Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
