@@ -1321,7 +1321,7 @@ Value qsearch(Position*  pos,
         moveCount++;
 
         // Futility pruning
-        if (!InCheck && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
             && !advanced_pawn_push(pos, move))
         {
             if (moveCount > 2)
@@ -1343,7 +1343,7 @@ Value qsearch(Position*  pos,
         }
 
         // Do not search moves with negative SEE values
-        if (!InCheck && !see_test(pos, move, 0))
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && !see_test(pos, move, 0))
             continue;
 
         // Speculative prefetch as early as possible
