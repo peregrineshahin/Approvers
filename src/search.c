@@ -987,13 +987,6 @@ moves_loop:  // When in check search starts from here.
                               + (*contHist2)[movedPiece][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
 
-                // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
-
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
-
                 // Decrease/increase reduction for moves with a good/bad history.
                 r -= ss->statScore / lmr_v8 * r_v13;
             }
