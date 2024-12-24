@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../small.nnue");
+INCBIN(Network, "../ciekce.bin");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
@@ -17,17 +17,10 @@ alignas(64) int16_t in_biases[L1SIZE];
 alignas(64) int16_t l1_biases[OUTSIZE];
 
 SMALL void nnue_init() {
-    int8_t* data8 = (int8_t*) gNetworkData;
+    int16_t* data16 = (int16_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data8++);
-    }
-
-    int16_t* data16 = (int16_t*) data8;
+        in_weights[i] = *(data16++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data16++);
@@ -68,8 +61,8 @@ static Value forward(const int16_t* acc, const int16_t* weights) {
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
-    if (file_of(ksq) > 3)
-        sq ^= 7;
+    // if (file_of(ksq) > 3)
+    //     sq ^= 7;
 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
