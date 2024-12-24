@@ -234,7 +234,7 @@ static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_pv(Move* pv, Move move, Move* childPv);
 static void  update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
-Value        to_corrected(Position* pos, Value rawEval);
+Value        to_corrected(Position* pos, Value rawEval, int* corrDelta);
 static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
@@ -624,6 +624,7 @@ Value search(
             return ttValue;
     }
 
+    int complexity = 0;
     // Step 6. Static evaluation of the position
     if (inCheck)
     {
@@ -638,7 +639,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval, &complexity);
 
         if (eval == VALUE_DRAW)
             eval = value_draw(pos);
@@ -655,7 +656,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + tempo;
 
-        eval = ss->staticEval = to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval, &complexity);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -963,6 +964,8 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v2;
 
+            r -= 1000 * (complexity > 70);
+
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
@@ -1256,6 +1259,7 @@ Value qsearch(Position*  pos,
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
 
+    int complexity = 0;
     // Evaluate the position statically
     if (InCheck)
     {
@@ -1271,7 +1275,7 @@ Value qsearch(Position*  pos,
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue = to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval, &complexity);
 
 
             // Can ttValue be used as a better position evaluation?
@@ -1284,7 +1288,7 @@ Value qsearch(Position*  pos,
             rawEval =
               (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
 
-            ss->staticEval = bestValue = to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval, &complexity);
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1471,11 +1475,12 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
     *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
-Value to_corrected(Position* pos, Value rawEval) {
+Value to_corrected(Position* pos, Value rawEval, int* corrDelta) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / 100 / ch_v2;
     v           = clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
+    *corrDelta  = abs(v - rawEval);
     return v;
 }
 
