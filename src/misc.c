@@ -42,7 +42,7 @@ char Version[] = "";
 
 void prng_init(PRNG* rng, uint64_t seed) { rng->s = seed; }
 
-uint64_t prng_rand(PRNG* rng) {
+SMALL uint64_t prng_rand(PRNG* rng) {
     uint64_t s = rng->s;
 
     s ^= s >> 12;
@@ -53,7 +53,7 @@ uint64_t prng_rand(PRNG* rng) {
     return s * 2685821657736338717LL;
 }
 
-uint64_t prng_sparse_rand(PRNG* rng) {
+SMALL uint64_t prng_sparse_rand(PRNG* rng) {
     uint64_t r1 = prng_rand(rng);
     uint64_t r2 = prng_rand(rng);
     uint64_t r3 = prng_rand(rng);

@@ -184,7 +184,7 @@ PURE bool gives_check_special(const Position* pos, Stack* st, Move m);
 void        do_move(Position* pos, Move m, int givesCheck);
 void        undo_move(Position* pos, Move m);
 void        do_null_move(Position* pos);
-static void undo_null_move(Position* pos);
+SMALL static void undo_null_move(Position* pos);
 
 // Static exchange evaluation
 PURE bool see_test(const Position* pos, Move m, int value);
@@ -273,7 +273,7 @@ void pos_set_check_info(Position* pos);
 
 // undo_null_move is used to undo a null move.
 
-static void undo_null_move(Position* pos) {
+SMALL static void undo_null_move(Position* pos) {
 
     pos->st--;
     pos->sideToMove = !pos->sideToMove;

@@ -97,7 +97,7 @@ static void init_magics(Bitboard  table[],
     }
 }
 
-static void init_sliding_attacks(void) {
+SMALL static void init_sliding_attacks(void) {
     init_magics(RookTable, RookAttacks, RookMagics, RookMasks, RookShifts, RookDirs,
                 magic_index_rook);
     init_magics(BishopTable, BishopAttacks, BishopMagics, BishopMasks, BishopShifts, BishopDirs,

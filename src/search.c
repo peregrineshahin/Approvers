@@ -204,31 +204,31 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
+SMALL static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
-static Depth reduction(int i, Depth d, int mn) {
+SMALL static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
     return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
 }
 
-static int futility_move_count(bool improving, Depth depth) {
+SMALL static int futility_move_count(bool improving, Depth depth) {
     //  return (3 + depth * depth) / (2 - improving);
     return improving ? fmc_v1 / 100 + depth * depth
                      : (fmc_v2 / 100 + depth * depth) / (fmc_v3 / 100);
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth d) { return min((hb_v1 / 100 * d + hb_v2) * d - hb_v3, hb_v4); }
+SMALL static Value stat_bonus(Depth d) { return min((hb_v1 / 100 * d + hb_v2) * d - hb_v3, hb_v4); }
 
 // History and stats update malus, based on depth
-static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm_v3, hm_v4); }
+SMALL static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm_v3, hm_v4); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
-static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1) - 1; }
+SMALL static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1) - 1; }
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
@@ -304,7 +304,7 @@ SMALL void search_clear(void) {
 // receives the UCI 'go' command. It searches from the root position and
 // outputs the "bestmove".
 
-void mainthread_search(void) {
+SMALL void mainthread_search(void) {
     Position* pos = Thread.pos;
     Color     us  = stm();
     time_init(us, game_ply());
@@ -352,7 +352,7 @@ void mainthread_search(void) {
 // been consumed, the user stops the search, or the maximum search depth is
 // reached.
 
-void thread_search(Position* pos) {
+SMALL void thread_search(Position* pos) {
     Value  bestValue, alpha, beta, delta;
     Move   pv[MAX_PLY + 1];
     Move   lastBestMove      = 0;
@@ -521,7 +521,7 @@ void thread_search(Position* pos) {
 
 // search() is the main search function template for both PV
 // and non-PV nodes
-Value search(
+SMALL Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
@@ -1206,7 +1206,7 @@ moves_loop:  // When in check search starts from here.
 // qsearch() is the quiescence search function template, which is
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
-Value qsearch(Position*  pos,
+SMALL Value qsearch(Position*  pos,
               Stack*     ss,
               Value      alpha,
               Value      beta,
@@ -1408,7 +1408,7 @@ Value qsearch(Position*  pos,
 
 // stable_sort() sorts RootMoves from highest-scoring move to lowest-scoring
 // move while preserving order of equal elements.
-static void stable_sort(RootMove* rm, int num) {
+SMALL static void stable_sort(RootMove* rm, int num) {
     int i, j;
 
     for (i = 1; i < num; i++)
@@ -1426,7 +1426,7 @@ static void stable_sort(RootMove* rm, int num) {
 // "plies to mate from the current position". Non-mate scores are unchanged.
 // The function is called before storing a value in the transposition table.
 
-static Value value_to_tt(Value v, int ply) {
+SMALL static Value value_to_tt(Value v, int ply) {
     return v >= VALUE_MATE_IN_MAX_PLY ? v + ply : v <= VALUE_MATED_IN_MAX_PLY ? v - ply : v;
 }
 
@@ -1435,7 +1435,7 @@ static Value value_to_tt(Value v, int ply) {
 // from the transposition table (which refers to the plies to mate/be mated
 // from current position) to "plies to mate/be mated from the root".
 
-static Value value_from_tt(Value v, int ply, int r50c) {
+SMALL static Value value_from_tt(Value v, int ply, int r50c) {
     if (v == VALUE_NONE)
         return VALUE_NONE;
 
@@ -1450,14 +1450,14 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 // update_pv() adds current move and appends child pv[]
 
-static void update_pv(Move* pv, Move move, Move* childPv) {
+SMALL static void update_pv(Move* pv, Move move, Move* childPv) {
     for (*pv++ = move; childPv && *childPv;)
         *pv++ = *childPv++;
     *pv = 0;
 }
 
 // differential.
-static void
+SMALL static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff) {
     int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
     int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
@@ -1467,7 +1467,7 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
     *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
-Value to_corrected(Position* pos, Value rawEval) {
+SMALL Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / 100 / ch_v2;
@@ -1477,7 +1477,7 @@ Value to_corrected(Position* pos, Value rawEval) {
 
 // update_cm_stats() updates countermove and follow-up move history.
 
-static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
+SMALL static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
     if (move_is_ok((ss - 1)->currentMove))
         cms_update(*(ss - 1)->continuationHistory, pc, s, bonus);
 
@@ -1497,7 +1497,7 @@ static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
 // update_capture_stats() updates move sorting heuristics when a new capture
 // best move is found
 
-static void
+SMALL static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus) {
     Piece moved_piece = moved_piece(move);
     int   captured    = type_of_p(piece_on(to_sq(move)));
@@ -1517,7 +1517,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 // update_quiet_stats() updates killers, history, countermove and countermove
 // plus follow-up move history when a new quiet best move is found.
 
-static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
+SMALL static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
     if (ss->killers[0] != move)
     {
         ss->killers[1] = ss->killers[0];
@@ -1538,7 +1538,7 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 }
 
-static int peak_stdin() {
+SMALL static int peak_stdin() {
 #ifndef WIN32
     fd_set         rf = {0};
     struct timeval tv = {0, 0};
@@ -1571,7 +1571,7 @@ static int peak_stdin() {
 
 // check_time() is used to print debug info and, more importantly, to detect
 // when we are out of available time and thus stop the search.
-static void check_time(void) {
+SMALL static void check_time(void) {
     if (Thread.ponder)
     {
         if (peak_stdin())
@@ -1589,7 +1589,7 @@ static void check_time(void) {
 // UCI requires that all (if any) unsearched PV lines are sent with a
 // previous search score.
 
-static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
+SMALL static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     TimePoint  elapsed        = time_elapsed() + 1;
     RootMoves* rm             = pos->rootMoves;
     uint64_t   nodes_searched = Thread.pos->nodes;
@@ -1615,7 +1615,7 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
     fflush(stdout);
 }
 
-static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
+SMALL static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
     if (!rm->pv[0])
         return 0;
 
@@ -1636,7 +1636,7 @@ static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
 // start_thinking() wakes up the main thread to start a new search,
 // then returns immediately.
 
-void start_thinking(Position* root, bool ponderMode) {
+SMALL void start_thinking(Position* root, bool ponderMode) {
     prepare_for_search(root, ponderMode);
     mainthread_search();
 }

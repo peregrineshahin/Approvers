@@ -134,7 +134,7 @@ SMALL void position(Position* pos, char* str) {
 // command. The function updates the UCI option ("name") to the given
 // value ("value").
 
-void setoption(char* str) {
+SMALL void setoption(char* str) {
     char* name  = strstr(str, "name") + 5;
     char* value = strstr(name, "value");
     if (value)
@@ -179,7 +179,7 @@ void setoption(char* str) {
 // the thinking time and other parameters from the input string, then starts
 // the search.
 
-static void go(Position* pos, char* str) {
+SMALL static void go(Position* pos, char* str) {
     bool ponderMode = false;
 
     process_delayed_settings();
@@ -317,7 +317,7 @@ SMALL void uci_loop(int argc, char** argv) {
 // mate <y>  Mate in y moves, not plies. If the engine is getting mated
 //           use negative values for y.
 
-char* uci_value(char* str, Value v) {
+SMALL char* uci_value(char* str, Value v) {
     if (abs(v) < VALUE_MATE_IN_MAX_PLY)
         sprintf(str, "cp %d", v);
     else
@@ -330,7 +330,7 @@ char* uci_value(char* str, Value v) {
 // uci_square() converts a Square to a string in algebraic notation
 // (g1, a7, etc.)
 
-char* uci_square(char* str, Square s) {
+SMALL char* uci_square(char* str, Square s) {
     str[0] = 'a' + file_of(s);
     str[1] = '1' + rank_of(s);
     str[2] = 0;
@@ -342,7 +342,7 @@ char* uci_square(char* str, Square s) {
 // uci_move() converts a Move to a string in coordinate notation (g1f3, a7a8q).
 // Internally all castling moves are always encoded as 'king captures rook'.
 
-char* uci_move(char* str, Move m) {
+SMALL char* uci_move(char* str, Move m) {
     char   buf1[8], buf2[8];
     Square from = from_sq(m);
     Square to   = to_sq(m);
@@ -365,7 +365,7 @@ char* uci_move(char* str, Move m) {
 // uci_to_move() converts a string representing a move in coordinate
 // notation (g1f3, a7a8q) to the corresponding legal Move, if any.
 
-Move uci_to_move(const Position* pos, char* str) {
+SMALL Move uci_to_move(const Position* pos, char* str) {
     if (strlen(str) == 5)
         str[4] = tolower(str[4]);
 
@@ -381,7 +381,7 @@ Move uci_to_move(const Position* pos, char* str) {
     return 0;
 }
 
-int get_input(char* str) {
+SMALL int get_input(char* str) {
     if (fgets(str, 4096, stdin) == NULL)
         return 0;
 

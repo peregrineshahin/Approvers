@@ -5,7 +5,7 @@
 
 struct settings settings, delayedSettings;
 
-void process_delayed_settings(void) {
+SMALL void process_delayed_settings(void) {
     if (delayedSettings.ttSize != settings.ttSize)
     {
         tt_free();

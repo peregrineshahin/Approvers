@@ -47,7 +47,7 @@ SMALL double my_sqrt(double x) {
 
 // tm_init() is called at the beginning of the search and calculates
 // the time bounds allowed for the current game ply.
-void time_init(Color us, int ply) {
+SMALL void time_init(Color us, int ply) {
     // opt_scale is a percentage of available time to use for the current move.
     // max_scale is a multiplier applied to optimumTime.
     double opt_scale, max_scale;

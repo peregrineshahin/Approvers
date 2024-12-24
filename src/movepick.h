@@ -36,16 +36,16 @@ extern int cpth_v1;
 
 static const int CounterMovePruneThreshold = 0;
 
-static void cms_update(PieceToHistory cms, Piece pc, Square to, int v) {
+SMALL static void cms_update(PieceToHistory cms, Piece pc, Square to, int v) {
     cms[pc][to] += v - cms[pc][to] * abs(v) / cms_v1;
 }
 
-static void history_update(ButterflyHistory history, Color c, Move m, int v) {
+SMALL static void history_update(ButterflyHistory history, Color c, Move m, int v) {
     m &= 4095;
     history[c][m] += v - history[c][m] * abs(v) / hu_v1;
 }
 
-static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
+SMALL static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
     history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / cpth_v1;
 }
 
@@ -77,7 +77,7 @@ Move next_move(const Position* pos, bool skipQuiets);
 
 // Initialisation of move picker data.
 
-static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
+SMALL static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
 
     Stack* st = pos->st;
 
@@ -95,7 +95,7 @@ static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
         st->stage++;
 }
 
-static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
+SMALL static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
 
     Stack* st = pos->st;
 
@@ -109,7 +109,7 @@ static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
     st->recaptureSquare = s;
 }
 
-static void mp_init_pc(const Position* pos, Move ttm, Value th) {
+SMALL static void mp_init_pc(const Position* pos, Move ttm, Value th) {
 
     Stack* st = pos->st;
 

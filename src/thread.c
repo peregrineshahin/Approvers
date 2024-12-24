@@ -25,7 +25,7 @@
 
 ThreadStruct Thread = {0};
 
-void thread_init() {
+SMALL void thread_init() {
     Thread.testPonder = 0;
 
     Position* pos        = calloc(sizeof(Position), 1);
@@ -52,7 +52,7 @@ void thread_init() {
     search_init();
 }
 
-void thread_exit() {
+SMALL void thread_exit() {
     Position* pos = Thread.pos;
 
     free(pos->counterMoves);

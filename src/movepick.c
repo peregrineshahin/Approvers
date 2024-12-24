@@ -38,7 +38,7 @@ extern int mp_v11;
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.
 
-static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
+SMALL static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
     for (ExtMove *sortedEnd = begin, *p = begin + 1; p < end; p++)
         if (p->value >= limit)
         {
@@ -53,7 +53,7 @@ static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
 
 // pick_best() finds the best move in the range (begin, end).
 
-static Move pick_best(ExtMove* begin, ExtMove* end) {
+SMALL static Move pick_best(ExtMove* begin, ExtMove* end) {
     ExtMove *p, *q;
 
     for (p = begin, q = begin + 1; q < end; q++)
@@ -71,7 +71,7 @@ static Move pick_best(ExtMove* begin, ExtMove* end) {
 // score() assigns a numerical value to each move in a move list. The moves with
 // highest values will be picked first.
 
-static void score_captures(const Position* pos) {
+SMALL static void score_captures(const Position* pos) {
     Stack*                 st      = pos->st;
     CapturePieceToHistory* history = pos->captureHistory;
 
@@ -84,8 +84,7 @@ static void score_captures(const Position* pos) {
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
-SMALL
-static void score_quiets(const Position* pos) {
+SMALL static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->mainHistory;
 
@@ -109,7 +108,7 @@ static void score_quiets(const Position* pos) {
     }
 }
 
-static void score_evasions(const Position* pos) {
+SMALL static void score_evasions(const Position* pos) {
     Stack* st = pos->st;
     // Try captures ordered by MVV/LVA, then non-captures ordered by
     // stats heuristics.
@@ -129,7 +128,7 @@ static void score_evasions(const Position* pos) {
 
 // next_move() returns the next pseudo-legal move to be searched.
 
-Move next_move(const Position* pos, bool skipQuiets) {
+SMALL Move next_move(const Position* pos, bool skipQuiets) {
     Stack* st = pos->st;
     Move   move;
 

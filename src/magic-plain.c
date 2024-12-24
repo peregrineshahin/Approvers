@@ -66,7 +66,7 @@ static struct MagicInit rook_init[64] = {
 
 typedef unsigned(Fn)(Square, Bitboard);
 
-static void init_magics(struct MagicInit* magic_init,
+SMALL static void init_magics(struct MagicInit* magic_init,
                         Bitboard*         attacks[],
                         Bitboard          magics[],
                         Bitboard          masks[],
@@ -95,7 +95,7 @@ static void init_magics(struct MagicInit* magic_init,
     }
 }
 
-static void init_sliding_attacks(void) {
+SMALL static void init_sliding_attacks(void) {
     init_magics(rook_init, RookAttacks, RookMagics, RookMasks, RookDirs, magic_index_rook);
     init_magics(bishop_init, BishopAttacks, BishopMagics, BishopMasks, BishopDirs,
                 magic_index_bishop);

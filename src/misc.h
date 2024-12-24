@@ -33,7 +33,7 @@
 // a non-blocking function that doesn't stall the CPU waiting for data
 // to be loaded from memory, which can be quite slow.
 
-static void prefetch(void* addr) { __builtin_prefetch(addr); }
+SMALL static void prefetch(void* addr) { __builtin_prefetch(addr); }
 
 typedef int64_t TimePoint;  // A value in milliseconds
 

@@ -9,8 +9,8 @@
 #include "position.h"
 #include "tt.h"
 
-static void set_castling_right(Position* pos, Color c, Square rfrom);
-static void set_state(Position* pos, Stack* st);
+SMALL static void set_castling_right(Position* pos, Color c, Square rfrom);
+SMALL static void set_state(Position* pos, Stack* st);
 
 struct Zob zob;
 
@@ -33,7 +33,7 @@ Key matKey[16] = {0ULL,
 
 const char PieceToChar[] = " PNBRQK  pnbrqk";
 
-static void put_piece(Position* pos, Color c, Piece piece, Square s) {
+SMALL static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->board[s] = piece;
     pos->byTypeBB[0] |= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] |= sq_bb(s);
@@ -42,7 +42,7 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->index[s]] = s;
 }
 
-static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
+SMALL static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     // WARNING: This is not a reversible operation.
     pos->byTypeBB[0] ^= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
@@ -54,7 +54,7 @@ static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->pieceList[pos->pieceCount[piece]] = SQ_NONE;
 }
 
-static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
+SMALL static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
     // index[from] is not updated and becomes stale. This works as long as
     // index[] is accessed just by known occupied squares.
     Bitboard fromToBB = sq_bb(from) ^ sq_bb(to);
@@ -70,7 +70,7 @@ static void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
 
 // Calculate CheckInfo data.
 
-static void set_check_info(Position* pos) {
+SMALL static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
     st->blockersForKing[WHITE] =
@@ -210,7 +210,7 @@ SMALL void pos_set(Position* pos, char* fen) {
 // set_castling_right() is a helper function used to set castling rights
 // given the corresponding color and the rook starting square.
 
-static void set_castling_right(Position* pos, Color c, Square rfrom) {
+SMALL static void set_castling_right(Position* pos, Color c, Square rfrom) {
     Square kfrom = square_of(c, KING);
     int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
     int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
@@ -280,7 +280,7 @@ SMALL static void set_state(Position* pos, Stack* st) {
 // candidates are slider blockers and are calculated by calling this
 // function.
 
-Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
+SMALL Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
     Bitboard blockers = 0, snipers;
     *pinners          = 0;
 
@@ -325,7 +325,7 @@ Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
 
 // is_legal() tests whether a pseudo-legal move is legal
 
-bool is_legal(const Position* pos, Move m) {
+SMALL bool is_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
     Square to   = to_sq(m);
@@ -445,7 +445,7 @@ int is_pseudo_legal_old(Position *pos, Move m)
 }
 #endif
 
-bool is_pseudo_legal(const Position* pos, Move m) {
+SMALL bool is_pseudo_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
 
@@ -542,7 +542,7 @@ bool is_pseudo_legal(const Position* pos, Move m) {
 // gives_check_special() is invoked by gives_check() if there are
 // discovered check candidates or the move is of a special type
 
-bool gives_check_special(const Position* pos, Stack* st, Move m) {
+SMALL bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
     Square from = from_sq(m);
     Square to   = to_sq(m);
@@ -581,7 +581,7 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
 // do_move() makes a move. The move is assumed to be legal.
 
-void do_move(Position* pos, Move m, int givesCheck) {
+SMALL void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
     // Copy some fields of the old state to our new Stack object except the
@@ -747,7 +747,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 // undo_move() unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
 
-void undo_move(Position* pos, Move m) {
+SMALL void undo_move(Position* pos, Move m) {
 
     pos->sideToMove = !pos->sideToMove;
 
@@ -805,7 +805,7 @@ void undo_move(Position* pos, Move m) {
 
 // do_null_move() is used to do a null move
 
-void do_null_move(Position* pos) {
+SMALL void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
@@ -836,7 +836,7 @@ void do_null_move(Position* pos) {
 // for speculative prefetch. It does not recognize special moves like
 // castling, en-passant and promotions.
 
-Key key_after(const Position* pos, Move m) {
+SMALL Key key_after(const Position* pos, Move m) {
     Square from     = from_sq(m);
     Square to       = to_sq(m);
     Piece  pc       = piece_on(from);
@@ -851,7 +851,7 @@ Key key_after(const Position* pos, Move m) {
 
 
 // Test whether SEE >= value.
-bool see_test(const Position* pos, Move m, int value) {
+SMALL bool see_test(const Position* pos, Move m, int value) {
     if (unlikely(type_of_m(m) != NORMAL))
         return 0 >= value;
 
@@ -957,4 +957,4 @@ bool is_draw(const Position* pos) {
 }
 
 
-void pos_set_check_info(Position* pos) { set_check_info(pos); }
+SMALL void pos_set_check_info(Position* pos) { set_check_info(pos); }

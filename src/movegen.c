@@ -24,7 +24,7 @@
 #include "types.h"
 
 
-static ExtMove* make_promotions(ExtMove* list, Square to, Square ksq, const int Type, const int D) {
+SMALL static ExtMove* make_promotions(ExtMove* list, Square to, Square ksq, const int Type, const int D) {
     if (Type == CAPTURES || Type == EVASIONS || Type == NON_EVASIONS)
     {
         (list++)->move = make_promotion(to - D, to, QUEEN);
@@ -44,7 +44,7 @@ static ExtMove* make_promotions(ExtMove* list, Square to, Square ksq, const int 
 }
 
 
-static ExtMove* generate_pawn_moves(
+SMALL static ExtMove* generate_pawn_moves(
   const Position* pos, ExtMove* list, Bitboard target, const Color Us, const int Type) {
     // Compute our parametrized parameters at compile time, named according to
     // the point of view of white side.
@@ -156,7 +156,7 @@ static ExtMove* generate_pawn_moves(
 }
 
 
-static ExtMove* generate_moves(const Position* pos,
+SMALL static ExtMove* generate_moves(const Position* pos,
                                ExtMove*        list,
                                Bitboard        target,
                                const Color     Us,
@@ -179,7 +179,7 @@ static ExtMove* generate_moves(const Position* pos,
 }
 
 
-static ExtMove* generate_all(const Position* pos, ExtMove* list, const Color Us, const int Type) {
+SMALL static ExtMove* generate_all(const Position* pos, ExtMove* list, const Color Us, const int Type) {
     const bool   Checks = Type == QUIET_CHECKS;
     const Square ksq    = square_of(Us, KING);
 
@@ -230,12 +230,12 @@ kingMoves:
 }
 
 
-ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
+SMALL ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
     return generate_all(pos, list, stm(), Type);
 }
 
 // generate_legal() generates all the legal moves in the given position
-ExtMove* generate_legal(const Position* pos, ExtMove* list) {
+SMALL ExtMove* generate_legal(const Position* pos, ExtMove* list) {
     Color    us     = stm();
     Bitboard pinned = blockers_for_king(pos, us) & pieces_c(us);
     Square   ksq    = square_of(us, KING);

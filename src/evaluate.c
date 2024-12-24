@@ -25,7 +25,7 @@
 
 extern int eval_scale;
 
-Value evaluate(Position* pos) {
+SMALL Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
 
     v = eval_scale * v / 100;

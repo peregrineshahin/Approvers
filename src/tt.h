@@ -77,7 +77,7 @@ typedef struct TranspositionTable TranspositionTable;
 
 extern TranspositionTable TT;
 
-static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
+SMALL static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
     // Preserve any existing move for the same position
     if (m || (uint16_t) k != tte->key16)
         tte->move16 = (uint16_t) m;
@@ -108,7 +108,7 @@ static int tte_bound(TTEntry* tte) { return tte->genBound8 & 0x3; }
 
 void tt_free(void);
 
-static void tt_new_search(void) {
+SMALL static void tt_new_search(void) {
     TT.generation8 += 8;  // Lower 3 bits are used by PvNode and Bound
 }
 

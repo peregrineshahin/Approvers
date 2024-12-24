@@ -39,7 +39,7 @@ SMALL void nnue_init() {
         l1_biases[i] = *(data16++);
 }
 
-static Value forward(const int16_t* acc, const int16_t* weights) {
+SMALL static Value forward(const int16_t* acc, const int16_t* weights) {
     const __m256i min    = _mm256_setzero_si256();
     const __m256i max    = _mm256_set1_epi16(QA);
     __m256i       vector = _mm256_setzero_si256();
@@ -67,14 +67,14 @@ static Value forward(const int16_t* acc, const int16_t* weights) {
     return _mm_cvtsi128_si32(sum);
 }
 
-static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
+SMALL static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
     if (file_of(ksq) > 3)
         sq ^= 7;
 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static Value output_transform(const Accumulator* acc, const Position* pos) {
+SMALL static Value output_transform(const Accumulator* acc, const Position* pos) {
     const int16_t* stm  = acc->values[pos->sideToMove];
     const int16_t* nstm = acc->values[!pos->sideToMove];
 
@@ -82,7 +82,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     return (output / QA + l1_biases[0]) * SCALE / (QA * QB);
 }
 
-static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
+SMALL static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
     memcpy(acc->values[side], in_biases, sizeof(acc->values[side]));
 
     Square ksq = square_of(side, KING);
@@ -101,7 +101,7 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
     }
 }
 
-void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
+SMALL void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
 
@@ -112,7 +112,7 @@ void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square b
     }
 }
 
-void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
+SMALL void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
 
@@ -123,7 +123,7 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
     }
 }
 
-Value nnue_evaluate(Position* pos) {
+SMALL Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
     if (acc->needs_refresh)
