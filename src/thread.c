@@ -62,4 +62,7 @@ void thread_exit() {
     free(pos->stackAllocation);
     free(pos->moveList);
     free(pos);
+    free(pos->contHist);
+    free(pos->matCorrHist);
+    free(pos->pawnCorrHist);
 }
