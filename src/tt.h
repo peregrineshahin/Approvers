@@ -77,7 +77,7 @@ typedef struct TranspositionTable TranspositionTable;
 
 extern TranspositionTable TT;
 
-static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
+NOINLINE static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
     // Preserve any existing move for the same position
     if (m || (uint16_t) k != tte->key16)
         tte->move16 = (uint16_t) m;

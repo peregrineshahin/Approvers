@@ -39,7 +39,7 @@ SMALL void nnue_init() {
         l1_biases[i] = *(data16++);
 }
 
-static Value forward(const int16_t* acc, const int16_t* weights) {
+NOINLINE static Value forward(const int16_t* acc, const int16_t* weights) {
     const __m256i min    = _mm256_setzero_si256();
     const __m256i max    = _mm256_set1_epi16(QA);
     __m256i       vector = _mm256_setzero_si256();

@@ -53,7 +53,7 @@ static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
 
 // pick_best() finds the best move in the range (begin, end).
 
-static Move pick_best(ExtMove* begin, ExtMove* end) {
+NOINLINE static Move pick_best(ExtMove* begin, ExtMove* end) {
     ExtMove *p, *q;
 
     for (p = begin, q = begin + 1; q < end; q++)

@@ -156,7 +156,7 @@ static ExtMove* generate_pawn_moves(
 }
 
 
-static ExtMove* generate_moves(const Position* pos,
+NOINLINE static ExtMove* generate_moves(const Position* pos,
                                ExtMove*        list,
                                Bitboard        target,
                                const Color     Us,

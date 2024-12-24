@@ -1457,7 +1457,7 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 }
 
 // differential.
-static void
+NOINLINE static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff) {
     int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
     int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
@@ -1467,7 +1467,7 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
     *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
-Value to_corrected(Position* pos, Value rawEval) {
+NOINLINE Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / 100 / ch_v2;

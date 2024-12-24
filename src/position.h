@@ -263,7 +263,7 @@ static bool is_capture(const Position* pos, Move m) {
     return (!is_empty(to_sq(m)) && type_of_m(m) != CASTLING) || type_of_m(m) == ENPASSANT;
 }
 
-static bool gives_check(const Position* pos, Stack* st, Move m) {
+NOINLINE static bool gives_check(const Position* pos, Stack* st, Move m) {
     return type_of_m(m) == NORMAL && !(blockers_for_king(pos, !stm()) & pieces_c(stm()))
            ? (bool) (st->checkSquares[type_of_p(moved_piece(m))] & sq_bb(to_sq(m)))
            : gives_check_special(pos, st, m);
