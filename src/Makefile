@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 CC      = clang
-CFLAGS  = -fcommon -O3 -ffunction-sections -fdata-sections -mavx2
+CFLAGS  = -O3 -fcommon -ffunction-sections -fdata-sections -mavx2 -g0 -fno-asynchronous-unwind-tables -fstrict-aliasing -fmerge-all-constants -fvisibility=hidden -ffast-math -fno-math-errno
 
 ifeq ($(comp),$(filter $(comp),gcc clang icc))
     ifeq ($(KERNEL),Darwin)
