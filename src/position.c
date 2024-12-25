@@ -118,7 +118,7 @@ SMALL void zob_init(void) {
 // this is assumed to be the responsibility of the GUI.
 
 SMALL void pos_set(Position* pos, char* fen) {
-    unsigned char col, row, token;
+    unsigned char token;
     Square        sq = SQ_A8;
 
     Stack* st = pos->st;
@@ -179,17 +179,8 @@ SMALL void pos_set(Position* pos, char* fen) {
         set_castling_right(pos, c, rsq);
     }
 
-    // En passant square. Ignore if no pawn capture is possible.
-    if (((col = *fen++) && (col >= 'a' && col <= 'h'))
-        && ((row = *fen++) && (row == (stm() == WHITE ? '6' : '3'))))
-    {
-        st->epSquare = make_square(col - 'a', row - '1');
-
-        if (!(attackers_to(st->epSquare) & pieces_cp(stm(), PAWN)))
-            st->epSquare = 0;
-    }
-    else
-        st->epSquare = 0;
+    // En passant square.
+    st->epSquare = (token = *fen++) != '-' ? make_square(token - 'a', *fen++ - '1') : 0;
 
     // Halfmove clock and fullmove number
     st->rule50   = strtol(fen, &fen, 10);
@@ -669,8 +660,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     // Reset en passant square
     if (unlikely((st - 1)->epSquare != 0))
+    {
         key ^= zob.enpassant[file_of((st - 1)->epSquare)];
-    st->epSquare = 0;
+        st->epSquare = 0;
+    }
 
     // Update castling rights if needed
     if (st->castlingRights && (pos->castlingRightsMask[from] | pos->castlingRightsMask[to]))
@@ -696,7 +689,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     if (type_of_p(piece) == PAWN)
     {
         // Set en-passant square if the moved pawn can be captured
-        if ((to ^ from) == 16 && (attacks_from_pawn(to ^ 8, us) & pieces_cp(them, PAWN)))
+        if ((to ^ from) == 16)
         {
             st->epSquare = to ^ 8;
             key ^= zob.enpassant[file_of(st->epSquare)];
