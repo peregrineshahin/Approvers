@@ -38,7 +38,6 @@ void thread_init() {
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
     pos->stack      = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
-    pos->resetCalls = false;
     pos->contHist   = calloc(sizeof(ContinuationHistoryStat), 1);
 
     for (int c = 0; c < 2; c++)
