@@ -60,8 +60,8 @@ void thread_exit() {
     free(pos->rootMoves);
     free(pos->stackAllocation);
     free(pos->moveList);
-    free(pos);
     free(pos->contHist);
     free(pos->matCorrHist);
     free(pos->pawnCorrHist);
+    free(pos);
 }
