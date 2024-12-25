@@ -63,7 +63,9 @@ typedef struct LimitsType LimitsType;
 
 extern LimitsType Limits;
 
+#ifndef KAGGLE
 static int use_time_management(void) { return Limits.time[WHITE] || Limits.time[BLACK]; }
+#endif
 
 void  search_init(void);
 void  search_clear(void);

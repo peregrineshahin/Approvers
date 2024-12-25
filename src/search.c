@@ -387,7 +387,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
-    RootMoves* rm                 = pos->rootMoves;
+    RootMoves* rm = pos->rootMoves;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
@@ -463,8 +463,12 @@ void thread_search(Position* pos) {
             lastBestMoveDepth = pos->rootDepth;
         }
 
-        // Do we have time for the next iteration? Can we stop searching now?
+// Do we have time for the next iteration? Can we stop searching now?
+#ifndef KAGGLE
         if (use_time_management() && !Thread.stop)
+#else
+        if (!Thread.stop)
+#endif
         {
             double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
                                   + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
@@ -1574,9 +1578,14 @@ static void check_time(void) {
     }
 
     TimePoint elapsed = time_elapsed();
+#ifndef KAGGLE
     if ((use_time_management() && elapsed > time_maximum() - 10)
         || (Limits.nodes && Thread.pos->nodes >= Limits.nodes))
         Thread.stop = 1;
+#else
+    if (elapsed > time_maximum() - 10)
+        Thread.stop = 1;
+#endif
 }
 
 // uci_print_pv() prints PV information according to the UCI protocol.
