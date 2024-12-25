@@ -562,8 +562,7 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
         if (st->checkSquares[PAWN] & sq_bb(to))
             return true;
         Square capsq = make_square(file_of(to), rank_of(from));
-        //    Bitboard b = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
-        Bitboard b = inv_sq(inv_sq(inv_sq(pieces(), from), to), capsq);
+        Bitboard b = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
         return (attacks_bb_rook(st->ksq, b) & pieces_cpp(stm(), QUEEN, ROOK))
             || (attacks_bb_bishop(st->ksq, b) & pieces_cpp(stm(), QUEEN, BISHOP));
     }
