@@ -269,7 +269,7 @@ void pos_set_check_info(Position* pos);
 
 // undo_null_move is used to undo a null move.
 
-static void undo_null_move(Position* pos) {
+SMALL static void undo_null_move(Position* pos) {
 
     pos->st--;
     pos->sideToMove = !pos->sideToMove;

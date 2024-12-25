@@ -581,7 +581,7 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
 // do_move() makes a move. The move is assumed to be legal.
 
-void do_move(Position* pos, Move m, int givesCheck) {
+SMALL void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
     // Copy some fields of the old state to our new Stack object except the
@@ -747,7 +747,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 // undo_move() unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
 
-void undo_move(Position* pos, Move m) {
+SMALL void undo_move(Position* pos, Move m) {
 
     pos->sideToMove = !pos->sideToMove;
 
@@ -805,7 +805,7 @@ void undo_move(Position* pos, Move m) {
 
 // do_null_move() is used to do a null move
 
-void do_null_move(Position* pos) {
+SMALL void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
