@@ -654,6 +654,12 @@ Value search(
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
 
+    if (move_is_ok((ss - 1)->currentMove) && !captured_piece())
+    {
+        int bonus = clamp(-10 * ((ss - 1)->staticEval + ss->staticEval), -1831, 1428) + 623;
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+    }
+
     // Step 7. Razoring
     if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
