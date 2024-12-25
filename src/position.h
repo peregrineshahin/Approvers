@@ -92,7 +92,6 @@ struct Stack {
     uint8_t  stage;
     uint8_t  recaptureSquare;
     uint8_t  mp_ply;
-    Move     countermove;
     Depth    depth;
     Move     ttMove;
     Value    threshold;
@@ -120,7 +119,7 @@ typedef struct Stack Stack;
 #define StateCopySize offsetof(Stack, capturedPiece)
 #define StateSize offsetof(Stack, pv)
 #define SStackBegin(st) (&st.pv)
-#define SStackSize (offsetof(Stack, countermove) - offsetof(Stack, pv))
+#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, pv))
 
 
 // Position struct stores information regarding the board representation as
@@ -154,7 +153,6 @@ struct Position {
     Depth      completedDepth;
 
     // Pointers to thread-specific tables.
-    CounterMoveStat*         counterMoves;
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       matCorrHist;
