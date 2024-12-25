@@ -11,5 +11,5 @@ def w(v):
 
 def main(v):
     t = v.remainingOverageTime * 1000
-    w(f"stop\nposition fen {v.board}\ngo wtime {str(t)} btime {str(t)}\n")
+    w(f"stop\nposition fen {v.board}\ngo time {str(t)}\n")
     return e.stdout.readline().strip().split()[1]

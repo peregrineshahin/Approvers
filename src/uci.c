@@ -187,6 +187,7 @@ static void go(Position* pos, char* str) {
 
     for (char* token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
     {
+#ifndef DKAGGLE
         if (strcmp(token, "wtime") == 0)
             Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "btime") == 0)
@@ -195,11 +196,16 @@ static void go(Position* pos, char* str) {
             Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "binc") == 0)
             Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
-#ifndef DKAGGLE
         else if (strcmp(token, "depth") == 0)
             Limits.depth = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "nodes") == 0)
             Limits.nodes = atoi(strtok(NULL, " \t"));
+#else
+        if (strcmp(token, "time") == 0)
+        {
+            Limits.time[WHITE] = Limits.time[BLACK] = atoi(strtok(NULL, " \t"));
+            Limits.inc[WHITE] = Limits.inc[BLACK] = 50;
+        }
 #endif
     }
 
