@@ -151,7 +151,6 @@ struct Position {
     uint64_t   nodes;
     int        pvIdx, pvLast;
     Depth      rootDepth;
-    Depth      completedDepth;
 
     // Pointers to thread-specific tables.
     CounterMoveStat*         counterMoves;

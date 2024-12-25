@@ -334,9 +334,8 @@ void mainthread_search(void) {
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
-        pos->completedDepth = 0;
-        pos->rootDepth      = 0;
-        pos->pvLast         = 0;
+        pos->rootDepth = 0;
+        pos->pvLast    = 0;
 
         prepare_for_search(pos, true);
         thread_search(pos);
@@ -381,7 +380,6 @@ void thread_search(Position* pos) {
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
-    pos->completedDepth       = 0;
 
     int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
     for (int i = 0; i < 4; i++)
@@ -454,9 +452,6 @@ void thread_search(Position* pos) {
             uci_print_pv(pos, pos->rootDepth, alpha, beta);
 #endif
 
-        if (!Thread.stop)
-            pos->completedDepth = pos->rootDepth;
-
         if (rm->move[0].pv[0] != lastBestMove)
         {
             lastBestMove      = rm->move[0].pv[0];
@@ -478,7 +473,7 @@ void thread_search(Position* pos) {
             // If the best move is stable over several iterations, reduce time
             // accordingly
             timeReduction =
-              lastBestMoveDepth + tm_v7 / 100 < pos->completedDepth ? tm_v8 / 100.0 : tm_v9 / 100.0;
+              lastBestMoveDepth + tm_v7 / 100 < pos->rootDepth ? tm_v8 / 100.0 : tm_v9 / 100.0;
             double reduction =
               (tm_v10 / 100.0 + Thread.previousTimeReduction) / (tm_v11 / 100.0 * timeReduction);
 
