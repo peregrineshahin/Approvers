@@ -720,6 +720,7 @@ Value search(
                 captureOrPromotion = true;
                 probCutCount--;
 
+                prefetch(tt_first_entry(key_after(pos, move)));
                 ss->currentMove         = move;
                 ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
                 givesCheck              = gives_check(pos, ss, move);
