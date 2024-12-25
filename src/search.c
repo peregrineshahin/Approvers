@@ -529,7 +529,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
+    Value    bestValue, value, ttValue, eval, probCutBeta;
     bool     ttHit, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
@@ -618,12 +618,13 @@ Value search(
             return ttValue;
     }
 
+    Value rawEval = VALUE_NONE;
     // Step 6. Static evaluation of the position
     if (inCheck)
     {
         // Skip early pruning when in check
-        ss->staticEval = eval = rawEval = VALUE_NONE;
-        improving                       = false;
+        ss->staticEval = eval = (ss - 2)->staticEval;
+        improving             = false;
         goto moves_loop;
     }
     else if (ttHit)
@@ -644,11 +645,7 @@ Value search(
     }
     else
     {
-        if ((ss - 1)->currentMove != MOVE_NULL)
-            rawEval = evaluate(pos);
-        else
-            rawEval = -(ss - 1)->staticEval + tempo;
-
+        rawEval = evaluate(pos);
         eval = ss->staticEval = to_corrected(pos, rawEval);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
@@ -658,10 +655,7 @@ Value search(
     if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
-
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    improving = ss->staticEval > (ss - 2)->staticEval;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -1214,7 +1208,7 @@ Value qsearch(Position*  pos,
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
-    Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase, oldAlpha;
+    Value    bestValue, value, ttValue, futilityValue, futilityBase, oldAlpha;
     bool     ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
@@ -1250,13 +1244,10 @@ Value qsearch(Position*  pos,
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
 
+    Value rawEval = VALUE_NONE;
     // Evaluate the position statically
     if (InCheck)
-    {
-        rawEval        = VALUE_NONE;
-        ss->staticEval = VALUE_NONE;
         bestValue = futilityBase = -VALUE_INFINITE;
-    }
     else
     {
         if (ttHit)
@@ -1275,8 +1266,7 @@ Value qsearch(Position*  pos,
         }
         else
         {
-            rawEval =
-              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
+            rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval;
 
             ss->staticEval = bestValue = to_corrected(pos, rawEval);
         }
