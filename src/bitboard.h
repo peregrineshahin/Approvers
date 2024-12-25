@@ -44,7 +44,6 @@ void bitboards_init(void);
 
 extern uint8_t SquareDistance[64][64];
 
-extern Bitboard SquareBB[64];
 extern Bitboard FileBB[8];
 extern Bitboard RankBB[8];
 extern Bitboard BetweenBB[64][64];
@@ -53,16 +52,7 @@ extern Bitboard PseudoAttacks[8][64];
 extern Bitboard PawnAttacks[2][64];
 
 
-static __attribute__((pure)) Bitboard sq_bb(Square s) { return SquareBB[s]; }
-
-#if __x86_64__
-static Bitboard inv_sq(Bitboard b, Square s) {
-    __asm__("btcq %1, %0" : "+r"(b) : "r"((uint64_t) s) : "cc");
-    return b;
-}
-#else
-static Bitboard inv_sq(Bitboard b, Square s) { return b ^ sq_bb(s); }
-#endif
+static __attribute__((pure)) Bitboard sq_bb(Square s) { return 1LL << s; }
 
 static uint64_t more_than_one(Bitboard b) { return b & (b - 1); }
 
