@@ -9,7 +9,6 @@
 #include "position.h"
 #include "tt.h"
 
-static void set_castling_right(Position* pos, Color c, Square rfrom);
 static void set_state(Position* pos, Stack* st);
 
 struct Zob zob;
@@ -149,34 +148,24 @@ SMALL void pos_set(Position* pos, char* fen) {
     }
 
     // Active color
-    token           = *fen++;
-    pos->sideToMove = token == 'w' ? WHITE : BLACK;
+    pos->sideToMove = *fen++ == 'b';
     token           = *fen++;
 
-    // Castling availability. Compatible with 3 standards: Normal FEN
-    // standard, Shredder-FEN that uses the letters of the columns on which
-    // the rooks began the game instead of KQkq and also X-FEN standard
-    // that, in case of Chess960, // if an inner rook is associated with
-    // the castling right, the castling tag is replaced by the file letter
-    // of the involved rook, as for the Shredder-FEN.
-    while ((token = *fen++) && !isspace(token))
+    // Castling availability.
+    while (((token = *fen++)) && !isspace(token))
     {
-        Square rsq;
-        int    c    = islower(token) ? BLACK : WHITE;
-        Piece  rook = make_piece(c, ROOK);
+        const Color c = islower(token);
 
-        token = toupper(token);
+        if ((token & ~32) > 64)
+        {
+            const int    rights = WHITE_OO << (!(token & 2) + 2 * c);
+            const Square rfrom  = relative_square(c, token & 2 ? SQ_H1 : SQ_A1);
+            const Square kfrom  = square_of(c, KING);
 
-        if (token == 'K')
-            for (rsq = relative_square(c, SQ_H1); piece_on(rsq) != rook; --rsq)
-                ;
-        else if (token == 'Q')
-            for (rsq = relative_square(c, SQ_A1); piece_on(rsq) != rook; ++rsq)
-                ;
-        else
-            continue;
-
-        set_castling_right(pos, c, rsq);
+            pos->st->castlingRights |= rights;
+            pos->castlingRightsMask[kfrom] |= rights;
+            pos->castlingRightsMask[rfrom] |= rights;
+        }
     }
 
     // En passant square. Ignore if no pawn capture is possible.
@@ -200,21 +189,6 @@ SMALL void pos_set(Position* pos, char* fen) {
     pos->gamePly = max(2 * (pos->gamePly - 1), 0) + (stm() == BLACK);
 
     set_state(pos, st);
-}
-
-
-// set_castling_right() is a helper function used to set castling rights
-// given the corresponding color and the rook starting square.
-
-static void set_castling_right(Position* pos, Color c, Square rfrom) {
-    Square kfrom = square_of(c, KING);
-    int    cs    = kfrom < rfrom ? KING_SIDE : QUEEN_SIDE;
-    int    cr    = (WHITE_OO << ((cs == QUEEN_SIDE) + 2 * c));
-
-    pos->st->castlingRights |= cr;
-
-    pos->castlingRightsMask[kfrom] |= cr;
-    pos->castlingRightsMask[rfrom] |= cr;
 }
 
 

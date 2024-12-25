@@ -542,14 +542,9 @@ Value search(
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
-    if (pos->resetCalls)
-    {
-        pos->resetCalls = false;
-        pos->callsCnt   = 1024;
-    }
     if (--pos->callsCnt <= 0)
     {
-        Thread.pos->resetCalls = true;
+        pos->callsCnt = 1024;
         check_time();
     }
 
@@ -559,7 +554,6 @@ Value search(
         if (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
     }
-
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;

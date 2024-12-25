@@ -163,9 +163,7 @@ struct Position {
 
     // Thread-control data.
     uint64_t bestMoveChanges;
-    bool     resetCalls;
     int      callsCnt;
-    int      action;
 
     void* stackAllocation;
 };
