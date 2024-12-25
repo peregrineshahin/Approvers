@@ -388,7 +388,6 @@ void thread_search(Position* pos) {
         Thread.iterValue[i] = value;
 
     RootMoves* rm                 = pos->rootMoves;
-    int        searchAgainCounter = 0;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
@@ -402,9 +401,6 @@ void thread_search(Position* pos) {
         // all the move scores except the (new) PV are set to -VALUE_INFINITE.
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
-
-        if (!Thread.increaseDepth)
-            searchAgainCounter++;
 
         pos->pvIdx  = 0;
         pos->pvLast = rm->size;
@@ -421,10 +417,9 @@ void thread_search(Position* pos) {
         // Start with a small aspiration window and, in the case of a fail
         // high/low, re-search with a bigger window until we're not failing
         // high/low anymore.
-        int failedHighCnt = 0;
         while (true)
         {
-            Depth adjustedDepth = max(1, pos->rootDepth - failedHighCnt - searchAgainCounter);
+            Depth adjustedDepth = max(1, pos->rootDepth);
             bestValue           = search(pos, ss, alpha, beta, adjustedDepth, false, true);
 
             // Bring the best move to the front. It is critical that sorting
@@ -447,14 +442,9 @@ void thread_search(Position* pos) {
             {
                 beta  = (alpha + beta) / 2;
                 alpha = max(bestValue - delta, -VALUE_INFINITE);
-
-                failedHighCnt = 0;
             }
             else
-            {
-                rm->move[0].bestMoveCount++;
                 break;
-            }
 
             delta += delta / 4 + asd_v1 / 100;
         }
@@ -1669,7 +1659,6 @@ SMALL void prepare_for_search(Position* root, bool ponderMode) {
         rm->move[i].pv[0]         = moves->move[i].pv[0];
         rm->move[i].score         = -VALUE_INFINITE;
         rm->move[i].previousScore = -VALUE_INFINITE;
-        rm->move[i].bestMoveCount = 0;
     }
     memcpy(pos, root, offsetof(Position, moveList));
     // Copy enough of the root State buffer.
