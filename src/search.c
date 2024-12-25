@@ -515,7 +515,7 @@ void thread_search(Position* pos) {
 
 // search() is the main search function template for both PV
 // and non-PV nodes
-Value search(
+SMALL Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
