@@ -89,10 +89,6 @@ static void set_check_info(Position* pos) {
     st->checkSquares[KING]   = 0;
 }
 
-static Key H1(Key h) { return h & 0x1fff; }
-
-static Key H2(Key h) { return (h >> 16) & 0x1fff; }
-
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
 
