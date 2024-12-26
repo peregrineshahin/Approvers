@@ -1197,14 +1197,13 @@ Value qsearch(Position*  pos,
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
-    Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase, oldAlpha;
+    Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase;
     bool     ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
 
     if (PvNode)
     {
-        oldAlpha     = alpha;  // To flag BOUND_EXACT when eval above alpha and no available moves
         (ss + 1)->pv = pv;
         ss->pv[0]    = 0;
     }
@@ -1376,10 +1375,7 @@ Value qsearch(Position*  pos,
         bestValue = (3 * bestValue + beta) / 4;
 
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
-             bestValue >= beta                ? BOUND_LOWER
-             : PvNode && bestValue > oldAlpha ? BOUND_EXACT
-                                              : BOUND_UPPER,
-             ttDepth, bestMove, rawEval);
+             bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, ttDepth, bestMove, rawEval);
 
     return bestValue;
 }
