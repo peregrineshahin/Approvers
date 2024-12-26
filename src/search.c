@@ -1160,7 +1160,7 @@ moves_loop:  // When in check search starts from here.
     {
         // bonus for prior countermoves that caused the fail low
         cpth_update(*pos->captureHistory, piece_on(prevSq), prevSq, type_of_p(captured_piece()),
-                    stat_bonus(depth) * 2);
+                    stat_bonus(depth));
     }
 
     // If no good move is found and the previous position was ttPv, then the
