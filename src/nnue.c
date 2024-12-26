@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../small.nnue");
+INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
@@ -88,6 +88,7 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
       biases[0],
       biases[1],
       biases[2],
+      biases[3],
     };
 
     const Square ksq = square_of(side, KING);
@@ -102,12 +103,14 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
         registers[0] = _mm256_add_epi16(registers[0], weights[0]);
         registers[1] = _mm256_add_epi16(registers[1], weights[1]);
         registers[2] = _mm256_add_epi16(registers[2], weights[2]);
+        registers[3] = _mm256_add_epi16(registers[3], weights[3]);
     }
 
     __m256i* values = (__m256i*) &acc->values[side];
     values[0]       = registers[0];
     values[1]       = registers[1];
     values[2]       = registers[2];
+    values[3]       = registers[3];
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {

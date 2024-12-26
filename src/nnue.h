@@ -6,7 +6,7 @@
 #include "types.h"
 
 #define INSIZE 768
-#define L1SIZE 48
+#define L1SIZE 64
 #define OUTSIZE 1
 
 #define QA 192
