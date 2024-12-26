@@ -84,8 +84,6 @@ static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
     st->depth  = d;
     st->mp_ply = ply;
 
-    Square prevSq    = to_sq((st - 1)->currentMove);
-    st->countermove  = (*pos->counterMoves)[piece_on(prevSq)][prevSq];
     st->mpKillers[0] = st->killers[0];
     st->mpKillers[1] = st->killers[1];
 

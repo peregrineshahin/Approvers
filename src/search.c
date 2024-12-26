@@ -284,7 +284,6 @@ SMALL void search_clear(void) {
     tt_clear();
 
     Position* pos = Thread.pos;
-    stats_clear(pos->counterMoves);
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
@@ -856,7 +855,6 @@ moves_loop:  // When in check search starts from here.
             Value singularBeta  = ttValue - se_v2 / 100 * depth;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
-            Move cm             = ss->countermove;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
             value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
@@ -885,7 +883,6 @@ moves_loop:  // When in check search starts from here.
                 // Fix up our move picker data
                 mp_init(pos, ttMove, depth, ss->ply);
                 ss->stage++;
-                ss->countermove  = cm;  // pedantic
                 ss->mpKillers[0] = k1;
                 ss->mpKillers[1] = k2;
 
@@ -908,7 +905,6 @@ moves_loop:  // When in check search starts from here.
             // move picker data. So we fix it.
             mp_init(pos, ttMove, depth, ss->ply);
             ss->stage++;
-            ss->countermove  = cm;  // pedantic
             ss->mpKillers[0] = k1;
             ss->mpKillers[1] = k2;
         }
@@ -1522,12 +1518,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
 
     if (type_of_p(moved_piece(move)) != PAWN)
         history_update(*pos->mainHistory, c, reverse_move(move), -bonus);
-
-    if (move_is_ok((ss - 1)->currentMove))
-    {
-        Square prevSq                                  = to_sq((ss - 1)->currentMove);
-        (*pos->counterMoves)[piece_on(prevSq)][prevSq] = move;
-    }
 }
 
 static int peak_stdin() {

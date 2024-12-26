@@ -28,7 +28,6 @@ void thread_init() {
     Thread.testPonder = 0;
 
     Position* pos        = calloc(sizeof(Position), 1);
-    pos->counterMoves    = calloc(sizeof(CounterMoveStat), 1);
     pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
     pos->matCorrHist     = calloc(sizeof(CorrectionHistory), 1);
@@ -53,7 +52,6 @@ void thread_init() {
 void thread_exit() {
     Position* pos = Thread.pos;
 
-    free(pos->counterMoves);
     free(pos->mainHistory);
     free(pos->captureHistory);
     free(pos->rootMoves);

@@ -165,24 +165,17 @@ Move next_move(const Position* pos, bool skipQuiets) {
         }
         st->stage++;
 
-        // First killer move.
-        move = st->mpKillers[0];
-        if (move && move != st->ttMove && is_pseudo_legal(pos, move) && !is_capture(pos, move))
-            return move;
-        /* fallthrough */
-
     case ST_KILLERS :
         st->stage++;
-        move = st->mpKillers[1];  // Second killer move.
+        move = st->mpKillers[0];
         if (move && move != st->ttMove && is_pseudo_legal(pos, move) && !is_capture(pos, move))
             return move;
         /* fallthrough */
 
     case ST_KILLERS_2 :
         st->stage++;
-        move = st->countermove;
-        if (move && move != st->ttMove && move != st->mpKillers[0] && move != st->mpKillers[1]
-            && is_pseudo_legal(pos, move) && !is_capture(pos, move))
+        move = st->mpKillers[1];
+        if (move && move != st->ttMove && is_pseudo_legal(pos, move) && !is_capture(pos, move))
             return move;
         /* fallthrough */
 
@@ -202,8 +195,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
             while (st->cur < st->endMoves)
             {
                 move = (st->cur++)->move;
-                if (move != st->ttMove && move != st->mpKillers[0] && move != st->mpKillers[1]
-                    && move != st->countermove)
+                if (move != st->ttMove && move != st->mpKillers[0] && move != st->mpKillers[1])
                     return move;
             }
         st->stage++;
