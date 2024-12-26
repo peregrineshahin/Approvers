@@ -528,7 +528,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
+    Value    bestValue, value, ttValue, eval, probCutBeta;
     bool     ttHit, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
@@ -612,14 +612,17 @@ Value search(
     }
 
     // Step 6. Static evaluation of the position
+    Value rawEval = VALUE_NONE;
     if (inCheck)
     {
         // Skip early pruning when in check
-        ss->staticEval = eval = rawEval = VALUE_NONE;
-        improving                       = false;
+        ss->staticEval = eval = VALUE_NONE;
+        ss->staticEval = eval = (ss - 2)->staticEval;
+        improving             = false;
         goto moves_loop;
     }
-    else if (ttHit)
+
+    if (ttHit)
     {
         // Never assume anything about values stored in TT
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
@@ -652,9 +655,7 @@ Value search(
         return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
 
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    improving = ss->staticEval > (ss - 2)->staticEval;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
