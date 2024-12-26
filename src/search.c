@@ -353,7 +353,7 @@ void mainthread_search(void) {
 
 void thread_search(Position* pos) {
     Value  bestValue, alpha, beta, delta;
-    Move   pv[MAX_PLY + 1];
+    Move   pv[3];
     Move   lastBestMove      = 0;
     Depth  lastBestMoveDepth = 0;
     double timeReduction = 1.0, totBestMoveChanges = 0;
@@ -523,7 +523,7 @@ Value search(
     if (depth <= 0)
         return qsearch(pos, ss, alpha, beta, 0, PvNode, checkers());
 
-    Move     pv[MAX_PLY + 1], capturesSearched[32], quietsSearched[32];
+    Move     pv[3], capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
@@ -781,7 +781,7 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        if (PvNode)
+        if (PvNode && ss->ply <= 2)
             (ss + 1)->pv = NULL;
 
         extension          = 0;
@@ -1007,8 +1007,11 @@ moves_loop:  // When in check search starts from here.
         // parent node fail low with value <= alpha and try another move.
         if (PvNode && (moveCount == 1 || value > alpha))
         {
-            (ss + 1)->pv    = pv;
-            (ss + 1)->pv[0] = 0;
+            if (ss->ply <= 2)
+            {
+                (ss + 1)->pv    = pv;
+                (ss + 1)->pv[0] = 0;
+            }
 
             // Extend move from transposition table if we are about to dive into qsearch.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
@@ -1069,7 +1072,7 @@ moves_loop:  // When in check search starts from here.
             {
                 bestMove = move;
 
-                if (PvNode && !rootNode)  // Update pv even in fail-high case
+                if (PvNode && !rootNode && ss->ply <= 2)  // Update pv even in fail-high case
                     update_pv(ss->pv, move, (ss + 1)->pv);
 
                 if (value >= beta)
@@ -1193,7 +1196,7 @@ Value qsearch(Position*  pos,
               const bool InCheck) {
     const bool PvNode = NT == PV;
 
-    Move     pv[MAX_PLY + 1];
+    Move     pv[3];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
@@ -1202,7 +1205,7 @@ Value qsearch(Position*  pos,
     Depth    ttDepth;
     int      moveCount;
 
-    if (PvNode)
+    if (PvNode && ss->ply <= 2)
     {
         (ss + 1)->pv = pv;
         ss->pv[0]    = 0;

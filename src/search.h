@@ -35,7 +35,7 @@ struct RootMove {
     int   pvSize;
     Value score;
     Value previousScore;
-    Move  pv[MAX_PLY];
+    Move  pv[3];
 };
 
 typedef struct RootMove RootMove;
