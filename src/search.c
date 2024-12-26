@@ -279,8 +279,6 @@ SMALL void search_clear(void) {
         return;
     }
 
-    Time.availableNodes = 0;
-
     tt_clear();
 
     Position* pos = Thread.pos;

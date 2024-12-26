@@ -32,7 +32,6 @@ struct TimeManagement {
     TimePoint startTime;
     int       optimumTime;
     int       maximumTime;
-    int64_t   availableNodes;
 };
 
 extern struct TimeManagement Time;
