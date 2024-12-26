@@ -69,11 +69,9 @@ static int use_time_management(void) { return Limits.time[WHITE] || Limits.time[
 
 void  search_init(void);
 void  search_clear(void);
-void  start_thinking(Position* pos, bool ponderMode);
-void  prepare_for_search(Position* root, bool ponderMode);
-Value qsearch(
-  Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT, const bool InCheck);
-Value search(
-  Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT);
+void  start_thinking(Position* pos);
+void  prepare_for_search(Position* root);
+Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, int NT, bool InCheck);
+Value search(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, int NT);
 
 #endif

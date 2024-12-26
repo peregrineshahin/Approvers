@@ -234,21 +234,6 @@ ExtMove* generate(const Position* pos, ExtMove* list, const int Type) {
     return generate_all(pos, list, stm(), Type);
 }
 
-// generate_legal() generates all the legal moves in the given position
-ExtMove* generate_legal(const Position* pos, ExtMove* list) {
-    Color    us     = stm();
-    Bitboard pinned = blockers_for_king(pos, us) & pieces_c(us);
-    Square   ksq    = square_of(us, KING);
-    ExtMove* cur    = list;
-
-    list = checkers() ? generate(pos, list, EVASIONS) : generate(pos, list, NON_EVASIONS);
-    while (cur != list)
-        if (((pinned && pinned & sq_bb(from_sq(cur->move))) || from_sq(cur->move) == ksq
-             || type_of_m(cur->move) == ENPASSANT)
-            && !is_legal(pos, cur->move))
-            cur->move = (--list)->move;
-        else
-            ++cur;
-
-    return list;
+SMALL ExtMove* generate_pseudo_legal(const Position* pos, ExtMove* list) {
+    return checkers() ? generate(pos, list, EVASIONS) : generate(pos, list, NON_EVASIONS);
 }

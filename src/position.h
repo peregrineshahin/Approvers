@@ -91,7 +91,6 @@ struct Stack {
     // MovePicker data
     uint8_t  stage;
     uint8_t  recaptureSquare;
-    uint8_t  mp_ply;
     Depth    depth;
     Move     ttMove;
     Value    threshold;
@@ -136,7 +135,6 @@ struct Position {
     uint8_t  board[64];
     uint8_t  castlingRightsMask[64];
     uint16_t gamePly;
-    bool     hasRepeated;
 
     ExtMove* moveList;
 
@@ -144,7 +142,7 @@ struct Position {
     RootMoves* rootMoves;
     Stack*     stack;
     uint64_t   nodes;
-    int        pvIdx, pvLast;
+    int        pvLast;
     Depth      rootDepth;
     Depth      completedDepth;
 

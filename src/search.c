@@ -337,7 +337,7 @@ void mainthread_search(void) {
         pos->rootDepth      = 0;
         pos->pvLast         = 0;
 
-        prepare_for_search(pos, true);
+        prepare_for_search(pos);
         thread_search(pos);
 
         Thread.ponder = false;
@@ -401,7 +401,6 @@ void thread_search(Position* pos) {
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
 
-        pos->pvIdx  = 0;
         pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
@@ -427,7 +426,7 @@ void thread_search(Position* pos) {
             // and we want to keep the same order for all the moves except the
             // new PV that goes to the front. Note that in case of MultiPV
             // search the already searched PV lines are preserved.
-            stable_sort(&rm->move[0], pos->pvLast);
+            stable_sort(&rm->move[0], rm->size);
 
             // If search has been stopped, we break immediately. Sorting and
             // writing PV back to TT is safe because RootMoves is still
@@ -578,7 +577,7 @@ Value search(
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = rootNode ? pos->rootMoves->move[pos->pvIdx].pv[0] : ttHit ? tte_move(tte) : 0;
+    ttMove       = rootNode ? pos->rootMoves->move[0].pv[0] : ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -761,22 +760,8 @@ moves_loop:  // When in check search starts from here.
         if (move == excludedMove)
             continue;
 
-        // At root obey the "searchmoves" option and skip moves not listed
-        // inRoot Move List. As a consequence any illegal move is also skipped.
-        // In MultiPV mode we also skip PV moves which have been already
-        // searched.
-        if (rootNode)
-        {
-            int idx;
-            for (idx = pos->pvIdx; idx < pos->pvLast; idx++)
-                if (pos->rootMoves->move[idx].pv[0] == move)
-                    break;
-            if (idx == pos->pvLast)
-                continue;
-        }
-
         // Check for legality just before making the move
-        if (!rootNode && !is_legal(pos, move))
+        if (!is_legal(pos, move))
             continue;
 
         ss->moveCount = ++moveCount;
@@ -1615,42 +1600,41 @@ static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
 // start_thinking() wakes up the main thread to start a new search,
 // then returns immediately.
 
-void start_thinking(Position* root, bool ponderMode) {
-    prepare_for_search(root, ponderMode);
+void start_thinking(Position* root) {
+    prepare_for_search(root);
     mainthread_search();
 }
 
-SMALL void prepare_for_search(Position* root, bool ponderMode) {
+SMALL void prepare_for_search(Position* root) {
     Thread.stop          = false;
     Thread.increaseDepth = true;
-    Thread.ponder        = ponderMode;
 
     // Generate all legal moves.
-    ExtMove    list[MAX_MOVES];
-    ExtMove*   end   = generate_legal(root, list);
-    RootMoves* moves = Thread.pos->rootMoves;
-    moves->size      = end - list;
-    for (int i = 0; i < moves->size; i++)
-        moves->move[i].pv[0] = list[i].move;
+    ExtMove  list[MAX_MOVES];
+    ExtMove* end = generate_pseudo_legal(root, list);
 
     Position* pos  = Thread.pos;
     pos->rootDepth = 0;
     pos->nodes     = 0;
-    RootMoves* rm  = pos->rootMoves;
-    rm->size       = end - list;
+
+    RootMoves* rm = pos->rootMoves;
+
+    rm->size = end - list;
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
-        rm->move[i].pv[0]         = moves->move[i].pv[0];
+        rm->move[i].pv[0]         = list[i].move;
         rm->move[i].score         = -VALUE_INFINITE;
         rm->move[i].previousScore = -VALUE_INFINITE;
     }
     memcpy(pos, root, offsetof(Position, moveList));
+
     // Copy enough of the root State buffer.
     int n = max(7, root->st->pliesFromNull);
     for (int i = 0; i <= n; i++)
         memcpy(&pos->stack[i], &root->st[i - n], StateSize);
     pos->st                 = pos->stack + n;
     (pos->st - 1)->endMoves = pos->moveList;
+
     pos_set_check_info(pos);
 }

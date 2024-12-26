@@ -240,7 +240,6 @@ extern uint32_t NonPawnPieceValue[16];
 #define rank_of(s) ((s) >> 3)
 #define relative_square(c, s) ((Square) ((s) ^ ((c) * 56)))
 #define relative_rank(c, r) ((r) ^ ((c) * 7))
-#define relative_rank_s(c, s) relative_rank(c, rank_of(s))
 #define pawn_push(c) ((c) == WHITE ? 8 : -8)
 #define from_sq(m) ((Square) ((m) >> 6) & 0x3f)
 #define to_sq(m) ((Square) ((m) & 0x3f))
