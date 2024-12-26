@@ -33,23 +33,6 @@ extern int mp_v9;
 extern int mp_v10;
 extern int mp_v11;
 
-// An insertion sort which sorts moves in descending order up to and
-// including a given limit. The order of moves smaller than the limit is
-// left unspecified.
-
-static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
-    for (ExtMove *sortedEnd = begin, *p = begin + 1; p < end; p++)
-        if (p->value >= limit)
-        {
-            ExtMove tmp = *p, *q;
-            *p          = *++sortedEnd;
-            for (q = sortedEnd; q != begin && (q - 1)->value < tmp.value; q--)
-                *q = *(q - 1);
-            *q = tmp;
-        }
-}
-
-
 // pick_best() finds the best move in the range (begin, end).
 
 static Move pick_best(ExtMove* begin, ExtMove* end) {
@@ -185,7 +168,6 @@ Move next_move(const Position* pos, bool skipQuiets) {
             st->cur      = st->endBadCaptures;
             st->endMoves = generate(pos, st->cur, QUIETS);
             score_quiets(pos);
-            partial_insertion_sort(st->cur, st->endMoves, -mp_v3 * st->depth);
         }
         st->stage++;
         /* fallthrough */
@@ -194,7 +176,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         if (!skipQuiets)
             while (st->cur < st->endMoves)
             {
-                move = (st->cur++)->move;
+                move = pick_best(st->cur++, st->endMoves);
                 if (move != st->ttMove && move != st->mpKillers[0] && move != st->mpKillers[1])
                     return move;
             }
