@@ -931,9 +931,6 @@ moves_loop:  // When in check search starts from here.
 
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
-        // HACK: Fix bench after introduction of 2-fold MultiPV bug
-        if (rootNode)
-            pos->st[-1].key ^= pos->rootKeyFlip;
 
         r = r * r_v1;
 
@@ -1021,11 +1018,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Step 18. Undo move
-        // HACK: Fix bench after introduction of 2-fold MultiPV bug
-        if (rootNode)
-            pos->st[-1].key ^= pos->rootKeyFlip;
         undo_move(pos, move);
-
 
         // Step 19. Check for a new best move
         // Finished searching the move. If a stop occurred, the return value of

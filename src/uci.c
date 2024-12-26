@@ -104,27 +104,7 @@ SMALL void position(Position* pos, char* str) {
             memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
     }
 
-    pos->rootKeyFlip        = pos->st->key;
     (pos->st - 1)->endMoves = pos->moveList;
-
-    // Clear history position keys that have not yet repeated. This ensures
-    // that is_draw() does not flag as a draw the first repetition of a
-    // position coming before the root position. In addition, we set
-    // pos->hasRepeated to indicate whether a position has repeated since
-    // the last irreversible move.
-    for (int k = 0; k <= pos->st->pliesFromNull; k++)
-    {
-        int l;
-        for (l = k + 4; l <= pos->st->pliesFromNull; l += 2)
-            if ((pos->st - k)->key == (pos->st - l)->key)
-                break;
-        if (l <= pos->st->pliesFromNull)
-            pos->hasRepeated = true;
-        else
-            (pos->st - k)->key = 0;
-    }
-    pos->rootKeyFlip ^= pos->st->key;
-    pos->st->key ^= pos->rootKeyFlip;
 }
 
 
@@ -243,7 +223,6 @@ SMALL void uci_loop(int argc, char** argv) {
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
-    pos.rootKeyFlip = pos.st->key;
 
     while (get_input(cmd))
     {

@@ -138,7 +138,6 @@ struct Position {
     uint8_t  pieceList[256];
     uint8_t  index[64];
     uint8_t  castlingRightsMask[64];
-    Key      rootKeyFlip;
     uint16_t gamePly;
     bool     hasRepeated;
 
