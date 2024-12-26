@@ -37,8 +37,6 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[0] |= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] |= sq_bb(s);
     pos->byColorBB[c] |= sq_bb(s);
-    pos->index[s]                 = pos->pieceCount[piece]++;
-    pos->pieceList[pos->index[s]] = s;
 }
 
 static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
@@ -47,23 +45,15 @@ static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
     pos->byColorBB[c] ^= sq_bb(s);
     /* board[s] = 0;  Not needed, overwritten by the capturing one */
-    Square lastSquare                      = pos->pieceList[--pos->pieceCount[piece]];
-    pos->index[lastSquare]                 = pos->index[s];
-    pos->pieceList[pos->index[lastSquare]] = lastSquare;
-    pos->pieceList[pos->pieceCount[piece]] = SQ_NONE;
 }
 
 static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
-    // index[from] is not updated and becomes stale. This works as long as
-    // index[] is accessed just by known occupied squares.
     Bitboard fromToBB = sq_bb(from) ^ sq_bb(to);
     pos->byTypeBB[0] ^= fromToBB;
     pos->byTypeBB[type_of_p(piece)] ^= fromToBB;
     pos->byColorBB[c] ^= fromToBB;
-    pos->board[from]               = 0;
-    pos->board[to]                 = piece;
-    pos->index[to]                 = pos->index[from];
-    pos->pieceList[pos->index[to]] = to;
+    pos->board[from] = 0;
+    pos->board[to]   = piece;
 }
 
 
@@ -124,10 +114,6 @@ SMALL void pos_set(Position* pos, char* fen) {
     memset(pos, 0, offsetof(Position, moveList));
     pos->st = st;
     memset(st, 0, StateSize);
-    for (int i = 0; i < 256; i++)
-        pos->pieceList[i] = SQ_NONE;
-    for (int i = 0; i < 16; i++)
-        pos->pieceCount[i] = 16 * i;
 
     // Piece placement
     while ((token = *fen++) && token != ' ')
@@ -209,9 +195,17 @@ SMALL static void set_state(Position* pos, Stack* st) {
 
     for (Bitboard b = pieces(); b;)
     {
-        Square s  = pop_lsb(&b);
-        Piece  pc = piece_on(s);
+        Square    s  = pop_lsb(&b);
+        Piece     pc = piece_on(s);
+        PieceType pt = type_of_p(pc);
+
         st->key ^= zob.psq[pc][s];
+        st->materialKey += matKey[pc];
+
+        if (pt == PAWN)
+            st->pawnKey ^= zob.psq[piece_on(s)][s];
+        else
+            st->nonPawn += NonPawnPieceValue[pc];
     }
 
     if (st->epSquare != 0)
@@ -221,22 +215,6 @@ SMALL static void set_state(Position* pos, Stack* st) {
         st->key ^= zob.side;
 
     st->key ^= zob.castling[st->castlingRights];
-
-    for (Bitboard b = pieces_p(PAWN); b;)
-    {
-        Square s = pop_lsb(&b);
-        st->pawnKey ^= zob.psq[piece_on(s)][s];
-    }
-
-    for (PieceType pt = PAWN; pt <= KING; pt++)
-    {
-        st->materialKey += piece_count(WHITE, pt) * matKey[8 * WHITE + pt];
-        st->materialKey += piece_count(BLACK, pt) * matKey[8 * BLACK + pt];
-    }
-
-    for (PieceType pt = KNIGHT; pt <= QUEEN; pt++)
-        for (int c = 0; c < 2; c++)
-            st->nonPawn += piece_count(c, pt) * NonPawnPieceValue[make_piece(c, pt)];
 }
 
 

@@ -134,9 +134,6 @@ struct Position {
     Bitboard byColorBB[2];
     Color    sideToMove;
     uint8_t  board[64];
-    uint8_t  pieceCount[16];
-    uint8_t  pieceList[256];
-    uint8_t  index[64];
     uint8_t  castlingRightsMask[64];
     uint16_t gamePly;
     bool     hasRepeated;
@@ -197,10 +194,7 @@ PURE bool is_draw(const Position* pos);
 #define piece_on(s) (pos->board[s])
 #define ep_square() (pos->st->epSquare)
 #define is_empty(s) (!piece_on(s))
-#define piece_count(c, p) (pos->pieceCount[8 * (c) + (p)] - (8 * (c) + (p)) * 16)
-#define piece_list(c, p) (&pos->pieceList[16 * (8 * (c) + (p))])
-#define square_of(c, p) (pos->pieceList[16 * (8 * (c) + (p))])
-#define piece_count_mk(c, p) (((material_key()) >> (20 * (c) + 4 * (p) + 4)) & 15)
+#define square_of(c, p) (lsb(pieces_cp(c, p)))
 
 // Castling
 #define can_castle_cr(cr) (pos->st->castlingRights & (cr))
