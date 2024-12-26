@@ -49,6 +49,7 @@ void zob_init(void);
 
 struct Stack {
     // Copied when making a move
+    Key key;
     Key pawnKey;
     Key materialKey;
     union {
@@ -72,7 +73,6 @@ struct Stack {
     // Not copied when making a move
     uint8_t  capturedPiece;
     uint8_t  epSquare;
-    Key      key;
     Bitboard checkersBB;
 
     // Original search stack data
@@ -197,7 +197,6 @@ PURE bool is_draw(const Position* pos);
 // Castling
 #define can_castle_cr(cr) (pos->st->castlingRights & (cr))
 #define can_castle_c(c) can_castle_cr((WHITE_OO | WHITE_OOO) << (2 * (c)))
-#define can_castle_any() (pos->st->castlingRights)
 
 // Checking
 #define checkers() (pos->st->checkersBB)
@@ -231,10 +230,6 @@ PURE bool is_draw(const Position* pos);
 
 static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
-}
-
-static bool is_discovery_check_on_king(const Position* pos, Color c, Move m) {
-    return pos->st->blockersForKing[c] & sq_bb(from_sq(m));
 }
 
 static bool is_capture_or_promotion(const Position* pos, Move m) {

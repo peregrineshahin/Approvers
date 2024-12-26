@@ -81,7 +81,7 @@ static ExtMove* generate_pawn_moves(
             Stack* st = pos->st;
 
             // A quiet check is either a direct check or a discovered check.
-            Bitboard dcCandidatePawns = blockers_for_king(pos, Them) & ~file_bb_s(st->ksq);
+            Bitboard dcCandidatePawns = blockers_for_king(pos, Them) & ~file_bb(file_of(st->ksq));
             b1 &= attacks_from_pawn(st->ksq, Them) | shift_bb(Up, dcCandidatePawns);
             b2 &= attacks_from_pawn(st->ksq, Them) | shift_bb(Up + Up, dcCandidatePawns);
         }
