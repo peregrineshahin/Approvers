@@ -30,8 +30,6 @@ extern int mp_v6;
 extern int mp_v7;
 extern int mp_v8;
 extern int mp_v9;
-extern int mp_v10;
-extern int mp_v11;
 
 // An insertion sort which sorts moves in descending order up to and
 // including a given limit. The order of moves smaller than the limit is
