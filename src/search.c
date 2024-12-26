@@ -1156,6 +1156,12 @@ moves_loop:  // When in check search starts from here.
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
                        stat_bonus(depth) * bonus / pcmb_v11);
     }
+    else if (captured_piece() && prevSq != SQ_NONE)
+    {
+        // bonus for prior countermoves that caused the fail low
+        cpth_update(*pos->captureHistory, piece_on(prevSq), prevSq, type_of_p(captured_piece()),
+                    stat_bonus(depth) * 2);
+    }
 
     // If no good move is found and the previous position was ttPv, then the
     // previous opponent move is probably good and the new position is added
