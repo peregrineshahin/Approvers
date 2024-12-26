@@ -53,8 +53,7 @@ enum {
     ST_MAIN_SEARCH,
     ST_CAPTURES_INIT,
     ST_GOOD_CAPTURES,
-    ST_KILLERS,
-    ST_KILLERS_2,
+    ST_KILLER,
     ST_QUIET_INIT,
     ST_QUIET,
     ST_BAD_CAPTURES,
@@ -84,8 +83,7 @@ static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
     st->depth  = d;
     st->mp_ply = ply;
 
-    st->mpKillers[0] = st->killers[0];
-    st->mpKillers[1] = st->killers[1];
+    st->mpKiller = st->killer;
 
     st->ttMove = ttm;
     st->stage  = checkers() ? ST_EVASION : ST_MAIN_SEARCH;

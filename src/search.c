@@ -556,8 +556,8 @@ Value search(
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
-    (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
-    (ss + 2)->cutoffCnt                         = 0;
+    (ss + 2)->killer                  = 0;
+    (ss + 2)->cutoffCnt               = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
     // Initialize statScore to zero for the grandchildren of the current
@@ -855,7 +855,7 @@ moves_loop:  // When in check search starts from here.
             Value singularBeta  = ttValue - se_v2 / 100 * depth;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
-            Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
+            Move killer         = ss->mpKiller;
             value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
 
@@ -883,8 +883,7 @@ moves_loop:  // When in check search starts from here.
                 // Fix up our move picker data
                 mp_init(pos, ttMove, depth, ss->ply);
                 ss->stage++;
-                ss->mpKillers[0] = k1;
-                ss->mpKillers[1] = k2;
+                ss->mpKiller = killer;
 
                 ss->excludedMove = move;
                 value = search(pos, ss, beta - 1, beta, (depth + se_v7 / 100) / (se_v8 / 100),
@@ -905,8 +904,7 @@ moves_loop:  // When in check search starts from here.
             // move picker data. So we fix it.
             mp_init(pos, ttMove, depth, ss->ply);
             ss->stage++;
-            ss->mpKillers[0] = k1;
-            ss->mpKillers[1] = k2;
+            ss->mpKiller = killer;
         }
 
         // Last capture extension
@@ -989,7 +987,7 @@ moves_loop:  // When in check search starts from here.
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
 
-                    if (move == ss->killers[0])
+                    if (move == ss->killer)
                         bonus += bonus / 4;
 
                     update_cm_stats(ss, movedPiece, to_sq(move), bonus);
@@ -1133,7 +1131,7 @@ moves_loop:  // When in check search starts from here.
         // Extra penalty for a quiet TT or main killer move in previous ply
         // when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
-             || (ss - 1)->currentMove == (ss - 1)->killers[0])
+             || (ss - 1)->currentMove == (ss - 1)->killer)
             && !captured_piece())
             update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
@@ -1499,11 +1497,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 // plus follow-up move history when a new quiet best move is found.
 
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
-    if (ss->killers[0] != move)
-    {
-        ss->killers[1] = ss->killers[0];
-        ss->killers[0] = move;
-    }
+    ss->killer = move;
 
     Color c = stm();
     history_update(*pos->mainHistory, c, move, bonus);

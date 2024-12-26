@@ -80,7 +80,7 @@ struct Stack {
     PieceToHistory* continuationHistory;
     Move            currentMove;
     Move            excludedMove;
-    Move            killers[2];
+    Move            killer;
     Value           staticEval;
     Value           statScore;
     int             cutoffCnt;
@@ -95,7 +95,7 @@ struct Stack {
     Depth    depth;
     Move     ttMove;
     Value    threshold;
-    Move     mpKillers[2];
+    Move     mpKiller;
     ExtMove *cur, *endMoves, *endBadCaptures;
 
     // CheckInfo data
