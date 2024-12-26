@@ -876,16 +876,8 @@ bool see_test(const Position* pos, Move m, int value) {
 // is_draw() tests whether the position is drawn by 50-move rule or by
 // repetition. It does not detect stalemates.
 
-SMALL
-bool is_draw(const Position* pos) {
+SMALL bool is_draw(const Position* pos) {
     Stack* st = pos->st;
-
-    if (unlikely(st->rule50 > 99))
-    {
-        if (!checkers())
-            return true;
-        return generate_legal(pos, (st - 1)->endMoves) != (st - 1)->endMoves;
-    }
 
     // st->pliesFromNull is reset both on null moves and on zeroing moves.
     int e = st->pliesFromNull - 4;
