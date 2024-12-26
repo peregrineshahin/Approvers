@@ -158,8 +158,6 @@ void setoption(char* str) {
 // the search.
 
 static void go(Position* pos, char* str) {
-    bool ponderMode = false;
-
     process_delayed_settings();
 
     Limits           = (struct LimitsType) {0};
@@ -183,7 +181,7 @@ static void go(Position* pos, char* str) {
 #endif
     }
 
-    start_thinking(pos, ponderMode);
+    start_thinking(pos);
 }
 
 
@@ -343,11 +341,8 @@ char* uci_move(char* str, Move m) {
 // notation (g1f3, a7a8q) to the corresponding legal Move, if any.
 
 Move uci_to_move(const Position* pos, char* str) {
-    if (strlen(str) == 5)
-        str[4] = tolower(str[4]);
-
     ExtMove  list[MAX_MOVES];
-    ExtMove* last = generate_legal(pos, list);
+    ExtMove* last = generate_pseudo_legal(pos, list);
 
     char buf[16];
 

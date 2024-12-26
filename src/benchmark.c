@@ -99,7 +99,6 @@ void benchmark() {
     search_clear();
 
     const int numFens = sizeof(Defaults) / sizeof(char*);
-    ;
 
     uint64_t nodes      = 0;
     Position pos        = {0};
@@ -122,7 +121,7 @@ void benchmark() {
         fprintf(stdout, "\nPosition: %d/%d\n", ++j, numFens);
 
         Limits.startTime = now();
-        start_thinking(&pos, false);
+        start_thinking(&pos);
         nodes += Thread.pos->nodes;
     }
 

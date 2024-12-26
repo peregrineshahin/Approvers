@@ -41,5 +41,6 @@ enum {
 
 ExtMove* generate(const Position* pos, ExtMove* list, int Type);
 ExtMove* generate_legal(const Position* pos, ExtMove* list);
+ExtMove* generate_pseudo_legal(const Position* pos, ExtMove* list);
 
 #endif

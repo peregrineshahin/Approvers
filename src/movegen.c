@@ -252,3 +252,7 @@ ExtMove* generate_legal(const Position* pos, ExtMove* list) {
 
     return list;
 }
+
+SMALL ExtMove* generate_pseudo_legal(const Position* pos, ExtMove* list) {
+    return checkers() ? generate(pos, list, EVASIONS) : generate(pos, list, NON_EVASIONS);
+}
