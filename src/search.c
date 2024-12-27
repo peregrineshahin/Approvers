@@ -631,8 +631,8 @@ Value search(
             rawEval = -(ss - 1)->staticEval + tempo;
 
         eval = ss->staticEval = to_corrected(pos, rawEval);
-
-        tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
+        if (!excludedMove)
+            tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
 
     // Step 7. Razoring
