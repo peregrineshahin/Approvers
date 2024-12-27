@@ -32,10 +32,10 @@
 #include "tt.h"
 #include "uci.h"
 
+#ifndef KAGGLE
 Parameter parameters[255];
 int       parameters_count = 0;
 
-#ifndef KAGGLE
     #define STRINGIFY(x) #x
     #define PARAM(Name, Value) \
         int                                               Name = Value; \
