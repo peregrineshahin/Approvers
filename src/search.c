@@ -656,6 +656,8 @@ Value search(
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
+    improving |= ss->staticEval >= beta + 200;
+
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
