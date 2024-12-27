@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 CC      = clang
-CFLAGS  = -O3 -fcommon -ffunction-sections -fdata-sections -mavx2 -g0 -fno-asynchronous-unwind-tables -fstrict-aliasing -fmerge-all-constants -fvisibility=hidden -ffast-math -fno-math-errno
+CFLAGS  = -O3 -fno-common -ffunction-sections -fdata-sections -mavx2   \
+          -g0 -fno-asynchronous-unwind-tables -fstrict-aliasing        \
+          -fmerge-all-constants -fvisibility=hidden -ffast-math        \
+          -fno-math-errno -falign-functions=1 -falign-loops=1
 
 ifeq ($(comp),$(filter $(comp),gcc clang icc))
     ifeq ($(KERNEL),Darwin)
@@ -25,7 +28,7 @@ ifeq ($(comp),$(filter $(comp),gcc clang icc))
 endif
 LDFLAGS = -Wl,--gc-sections -Wl,--strip-all
 OBJ     = uci.o settings.o nnue.o benchmark.o bitboard.o evaluate.o    \
-        main.o misc.o movegen.o movepick.o position.o psqt.o search.o    \
+        main.o misc.o movegen.o movepick.o position.o psqt.o search.o  \
         thread.o timeman.o tt.o
 EXE     = cfish
 
