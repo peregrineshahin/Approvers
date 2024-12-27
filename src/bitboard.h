@@ -44,8 +44,6 @@ void bitboards_init(void);
 
 extern uint8_t SquareDistance[64][64];
 
-extern Bitboard FileBB[8];
-extern Bitboard RankBB[8];
 extern Bitboard BetweenBB[64][64];
 extern Bitboard LineBB[64][64];
 extern Bitboard PseudoAttacks[8][64];
@@ -57,16 +55,7 @@ static __attribute__((pure)) Bitboard sq_bb(Square s) { return 1LL << s; }
 static uint64_t more_than_one(Bitboard b) { return b & (b - 1); }
 
 
-// rank_bb() and file_bb() return a bitboard representing all the squares on
-// the given file or rank.
-
-static Bitboard rank_bb(Rank r) { return RankBB[r]; }
-
-static Bitboard rank_bb_s(Square s) { return RankBB[rank_of(s)]; }
-
-static Bitboard file_bb(File f) { return FileBB[f]; }
-
-static Bitboard file_bb_s(Square s) { return FileBB[file_of(s)]; }
+static Bitboard file_bb(File f) { return 0x101010101010101 << f; }
 
 
 // shift_bb() moves a bitboard one step along direction Direction.
