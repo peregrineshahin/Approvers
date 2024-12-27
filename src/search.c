@@ -507,7 +507,7 @@ Value search(
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode, checkers());
+        return qsearch(pos, ss, alpha, beta, 0, PvNode);
 
     Move     pv[3], capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
@@ -636,7 +636,7 @@ Value search(
 
     // Step 7. Razoring
     if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode, false);
+        return qsearch(pos, ss, alpha, beta, 0, PvNode);
 
 
     improving = (ss - 2)->staticEval == VALUE_NONE
@@ -706,7 +706,7 @@ Value search(
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
-                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false, givesCheck);
+                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false);
 
                 // If the qsearch held, perform the regular search
                 if (value >= probCutBeta)
@@ -1160,13 +1160,7 @@ moves_loop:  // When in check search starts from here.
 // qsearch() is the quiescence search function template, which is
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
-Value qsearch(Position*  pos,
-              Stack*     ss,
-              Value      alpha,
-              Value      beta,
-              Depth      depth,
-              const int  NT,
-              const bool InCheck) {
+Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT) {
     const bool PvNode = NT == PV;
 
     Move     pv[3];
@@ -1189,12 +1183,12 @@ Value qsearch(Position*  pos,
 
     // Check for an instant draw or if the maximum ply has been reached
     if (is_draw(pos) || ss->ply >= MAX_PLY)
-        return ss->ply >= MAX_PLY && !InCheck ? evaluate(pos) : VALUE_DRAW;
+        return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
 
     // Decide whether or not to include checks: this fixes also the type of
     // TT entry depth that we are going to use. Note that in qsearch we use
     // only two types of depth in TT: DEPTH_QS_CHECKS or DEPTH_QS_NO_CHECKS.
-    ttDepth = InCheck || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS : DEPTH_QS_NO_CHECKS;
+    ttDepth = ss->checkersBB || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS : DEPTH_QS_NO_CHECKS;
 
     // Transposition table lookup
     posKey  = key();
@@ -1209,7 +1203,7 @@ Value qsearch(Position*  pos,
         return ttValue;
 
     // Evaluate the position statically
-    if (InCheck)
+    if (ss->checkersBB)
     {
         rawEval        = VALUE_NONE;
         ss->staticEval = VALUE_NONE;
@@ -1319,7 +1313,7 @@ Value qsearch(Position*  pos,
         // Make and search the move
         do_move(pos, move, givesCheck);
 
-        value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode, givesCheck);
+        value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode);
         undo_move(pos, move);
 
         // Check for a new best move
@@ -1341,7 +1335,7 @@ Value qsearch(Position*  pos,
 
     // All legal moves have been searched. A special case: If we're in check
     // and no legal moves were found, it is checkmate.
-    if (InCheck && bestValue == -VALUE_INFINITE)
+    if (ss->checkersBB && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
     if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
