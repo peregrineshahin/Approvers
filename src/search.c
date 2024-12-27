@@ -1445,14 +1445,20 @@ Value to_corrected(Position* pos, Value rawEval) {
 // update_continuation_histories() updates countermove and follow-up move history.
 
 static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
-    for (int *i = (int[]) {1, 2, 4, 6}, *end = i + 4; i < end; ++i)
-    {
-        if (ss->checkersBB && *i > 2)
-            break;
+    if (move_is_ok((ss - 1)->currentMove))
+        update_contHist(*(ss - 1)->continuationHistory, pc, s, bonus);
 
-        if (move_is_ok((ss - *i)->currentMove))
-            update_contHist(*(ss - *i)->continuationHistory, pc, s, bonus);
-    }
+    if (move_is_ok((ss - 2)->currentMove))
+        update_contHist(*(ss - 2)->continuationHistory, pc, s, bonus);
+
+    if (ss->checkersBB)
+        return;
+
+    if (move_is_ok((ss - 4)->currentMove))
+        update_contHist(*(ss - 4)->continuationHistory, pc, s, bonus);
+
+    if (move_is_ok((ss - 6)->currentMove))
+        update_contHist(*(ss - 6)->continuationHistory, pc, s, bonus);
 }
 
 // update_capture_stats() updates move sorting heuristics when a new capture
