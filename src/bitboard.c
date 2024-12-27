@@ -51,8 +51,6 @@ static Bitboard sliding_attack(int dirs[], Square sq, Bitboard occupied) {
     #include "avx2-bitboard.c"
 #endif
 
-Bitboard FileBB[8];
-Bitboard RankBB[8];
 Bitboard BetweenBB[64][64];
 Bitboard LineBB[64][64];
 Bitboard DistanceRingBB[64][8];
@@ -63,12 +61,6 @@ Bitboard PawnAttacks[2][64];
 // startup and relies on global objects to be already zero-initialized.
 
 SMALL void bitboards_init(void) {
-    for (int f = 0; f < 8; f++)
-        FileBB[f] = f > FILE_A ? FileBB[f - 1] << 1 : FileABB;
-
-    for (int r = 0; r < 8; r++)
-        RankBB[r] = r > RANK_1 ? RankBB[r - 1] << 8 : Rank1BB;
-
     for (Square s1 = 0; s1 < 64; s1++)
         for (Square s2 = 0; s2 < 64; s2++)
             if (s1 != s2)

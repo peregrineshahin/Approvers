@@ -41,10 +41,10 @@ static void put_piece(Position* pos, Color c, Piece piece, Square s) {
 
 static void remove_piece(Position* pos, Color c, Piece piece, Square s) {
     // WARNING: This is not a reversible operation.
+    pos->board[s] = 0;
     pos->byTypeBB[0] ^= sq_bb(s);
     pos->byTypeBB[type_of_p(piece)] ^= sq_bb(s);
     pos->byColorBB[c] ^= sq_bb(s);
-    /* board[s] = 0;  Not needed, overwritten by the capturing one */
 }
 
 static void move_piece(Position* pos, Color c, Piece piece, Square from, Square to) {
@@ -437,8 +437,8 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
     case ENPASSANT : {
         if (st->checkSquares[PAWN] & sq_bb(to))
             return true;
-        Square capsq = make_square(file_of(to), rank_of(from));
-        Bitboard b = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
+        Square   capsq = make_square(file_of(to), rank_of(from));
+        Bitboard b     = pieces() ^ sq_bb(from) ^ sq_bb(capsq) ^ sq_bb(to);
         return (attacks_bb_rook(st->ksq, b) & pieces_cpp(stm(), QUEEN, ROOK))
             || (attacks_bb_bishop(st->ksq, b) & pieces_cpp(stm(), QUEEN, BISHOP));
     }
@@ -495,7 +495,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Remove both pieces first since squares could overlap in Chess960
         remove_piece(pos, us, piece, from);
         remove_piece(pos, us, captured, rfrom);
-        pos->board[from] = pos->board[rfrom] = 0;
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
@@ -517,10 +516,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         if (type_of_p(captured) == PAWN)
         {
             if (unlikely(type_of_m(m) == ENPASSANT))
-            {
                 capsq ^= 8;
-                pos->board[capsq] = 0;  // Not done by remove_piece()
-            }
 
             st->pawnKey ^= zob.psq[captured][capsq];
         }
@@ -652,7 +648,6 @@ void undo_move(Position* pos, Move m) {
         // Remove both pieces first since squares could overlap in Chess960
         remove_piece(pos, us, king, to);
         remove_piece(pos, us, rook, rto);
-        pos->board[to] = pos->board[rto] = 0;
         put_piece(pos, us, king, from);
         put_piece(pos, us, rook, rfrom);
     }

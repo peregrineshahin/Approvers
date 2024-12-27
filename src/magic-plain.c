@@ -80,7 +80,7 @@ static void init_magics(struct MagicInit* magic_init,
         attacks[s] = &AttacksTable[magic_init[s].index];
 
         // Board edges are not considered in the relevant occupancies
-        edges = ((Rank1BB | Rank8BB) & ~rank_bb_s(s)) | ((FileABB | FileHBB) & ~file_bb_s(s));
+        edges = ((Rank1BB | Rank8BB) & ~rank_bb_s(s)) | ((FileABB | FileHBB) & ~file_bb(file_of(st->ksq)));
 
         masks[s] = sliding_attack(deltas, s, 0) & ~edges;
 
