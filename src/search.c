@@ -116,7 +116,6 @@ PARAM(ch_v2, 180)
 PARAM(ch_v3, 262)
 PARAM(ch_v4, 86)
 PARAM(ch_v5, 101)
-PARAM(tempo, 47)
 PARAM(mp_v1, 70)
 PARAM(mp_v2, 1064)
 PARAM(mp_v3, 2839)
@@ -628,7 +627,7 @@ Value search(
         if ((ss - 1)->currentMove != MOVE_NULL)
             rawEval = evaluate(pos);
         else
-            rawEval = -(ss - 1)->staticEval + tempo;
+            rawEval = -(ss - 1)->staticEval;
 
         eval = ss->staticEval = to_corrected(pos, rawEval);
 
@@ -646,8 +645,7 @@ Value search(
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
-                          -qmo_v2, qmo_v3);
+        int bonus = clamp(10 * ((ss - 1)->staticEval + ss->staticEval), -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
@@ -1235,8 +1233,7 @@ Value qsearch(Position*  pos,
         }
         else
         {
-            rawEval =
-              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
+            rawEval = (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval;
 
             ss->staticEval = bestValue = to_corrected(pos, rawEval);
         }
