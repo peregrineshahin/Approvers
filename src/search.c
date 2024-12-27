@@ -78,7 +78,6 @@ PARAM(fpp_v2, 217)
 PARAM(fpp_v3, 184)
 PARAM(sqsee_v1, 2856)
 PARAM(sfpc_v1, 630)
-PARAM(sfpc_v2, 197)
 PARAM(sfpc_v3, 183)
 PARAM(sfpc_v4, 230)
 PARAM(scsee_v1, 199)
@@ -800,8 +799,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 // Futility pruning for captures
-                if (!givesCheck && lmrDepth < sfpc_v1 / 100
-                    && !(PvNode && abs(bestValue) < sfpc_v2 / 100) && !inCheck
+                if (!givesCheck && lmrDepth < sfpc_v1 / 100 && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
                            + PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
