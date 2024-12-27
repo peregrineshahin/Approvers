@@ -36,7 +36,7 @@ extern int cpth_v1;
 
 static const int CounterMovePruneThreshold = 0;
 
-static void cms_update(PieceToHistory cms, Piece pc, Square to, int v) {
+static void update_contHist(PieceToHistory cms, Piece pc, Square to, int v) {
     cms[pc][to] += v - cms[pc][to] * abs(v) / cms_v1;
 }
 
@@ -81,7 +81,7 @@ static void mp_init(const Position* pos, Move ttm, Depth d, int ply) {
 
     Stack* st = pos->st;
 
-    st->depth  = d;
+    st->depth = d;
 
     st->mpKillers[0] = st->killers[0];
     st->mpKillers[1] = st->killers[1];

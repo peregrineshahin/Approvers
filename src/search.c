@@ -233,7 +233,7 @@ static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_pv(Move* pv, Move move, Move* childPv);
-static void  update_cm_stats(Stack* ss, Piece pc, Square s, int bonus);
+static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value rawEval);
 static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff);
@@ -596,14 +596,15 @@ Value search(
 
                 // Extra penalty for early quiet moves of the previous ply
                 if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
-                    update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
+                    update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                                  -stat_malus(depth + 1));
             }
             // Penalty for a quiet ttMove that fails low
             else if (!is_capture_or_promotion(pos, ttMove))
             {
                 int penalty = -stat_malus(depth);
                 history_update(*pos->mainHistory, stm(), ttMove, penalty);
-                update_cm_stats(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
+                update_continuation_histories(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
             }
         }
         if (rule50_count() < 90)
@@ -977,7 +978,7 @@ moves_loop:  // When in check search starts from here.
                     if (move == ss->killers[0])
                         bonus += bonus / 4;
 
-                    update_cm_stats(ss, movedPiece, to_sq(move), bonus);
+                    update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
             }
         }
@@ -1111,8 +1112,8 @@ moves_loop:  // When in check search starts from here.
             for (int i = 0; i < quietCount; i++)
             {
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -bonus);
-                update_cm_stats(ss, moved_piece(quietsSearched[i]), to_sq(quietsSearched[i]),
-                                -bonus);
+                update_continuation_histories(ss, moved_piece(quietsSearched[i]),
+                                              to_sq(quietsSearched[i]), -bonus);
             }
         }
 
@@ -1123,7 +1124,7 @@ moves_loop:  // When in check search starts from here.
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
              || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
-            update_cm_stats(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
+            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
@@ -1136,7 +1137,8 @@ moves_loop:  // When in check search starts from here.
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
 
         bonus = max(bonus, 0);
-        update_cm_stats(ss - 1, piece_on(prevSq), prevSq, stat_bonus(depth) * bonus / pcmb_v10);
+        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                      stat_bonus(depth) * bonus / pcmb_v10);
 
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
                        stat_bonus(depth) * bonus / pcmb_v11);
@@ -1440,23 +1442,17 @@ Value to_corrected(Position* pos, Value rawEval) {
     return v;
 }
 
-// update_cm_stats() updates countermove and follow-up move history.
+// update_continuation_histories() updates countermove and follow-up move history.
 
-static void update_cm_stats(Stack* ss, Piece pc, Square s, int bonus) {
-    if (move_is_ok((ss - 1)->currentMove))
-        cms_update(*(ss - 1)->continuationHistory, pc, s, bonus);
+static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
+    for (int *i = (int[]) {1, 2, 4, 6}, *end = i + 4; i < end; ++i)
+    {
+        if (ss->checkersBB && *i > 2)
+            break;
 
-    if (move_is_ok((ss - 2)->currentMove))
-        cms_update(*(ss - 2)->continuationHistory, pc, s, bonus);
-
-    if (ss->checkersBB)
-        return;
-
-    if (move_is_ok((ss - 4)->currentMove))
-        cms_update(*(ss - 4)->continuationHistory, pc, s, bonus);
-
-    if (move_is_ok((ss - 6)->currentMove))
-        cms_update(*(ss - 6)->continuationHistory, pc, s, bonus);
+        if (move_is_ok((ss - *i)->currentMove))
+            update_contHist(*(ss - *i)->continuationHistory, pc, s, bonus);
+    }
 }
 
 // update_capture_stats() updates move sorting heuristics when a new capture
@@ -1491,7 +1487,7 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
 
     Color c = stm();
     history_update(*pos->mainHistory, c, move, bonus);
-    update_cm_stats(ss, moved_piece(move), to_sq(move), bonus);
+    update_continuation_histories(ss, moved_piece(move), to_sq(move), bonus);
 
     if (type_of_p(moved_piece(move)) != PAWN)
         history_update(*pos->mainHistory, c, reverse_move(move), -bonus);
