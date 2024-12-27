@@ -357,6 +357,7 @@ void thread_search(Position* pos) {
     {
         ss[i].continuationHistory = &(*pos->contHist)[0][0];  // Use as sentinel
         ss[i].staticEval          = VALUE_NONE;
+        ss[i].checkersBB          = 0;
     }
 
     for (int i = 0; i <= MAX_PLY; i++)
