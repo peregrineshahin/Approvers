@@ -561,7 +561,7 @@ Value search(
     // partial search to overwrite a previous full search TT value, so we
     // use a different position key in case of an excluded move.
     excludedMove = ss->excludedMove;
-    posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
+    posKey       = key();
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = rootNode ? pos->rootMoves->move[0].pv[0] : ttHit ? tte_move(tte) : 0;
@@ -569,7 +569,7 @@ Value search(
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff.
-    if (!PvNode && ttHit && tte_depth(tte) >= depth
+    if (!PvNode && !excludedMove && ttHit && tte_depth(tte) >= depth
         && ttValue != VALUE_NONE  // Possible in case of TT access race.
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
     {
@@ -606,6 +606,8 @@ Value search(
         improving                       = false;
         goto moves_loop;
     }
+    else if (excludedMove)
+        rawEval = eval = ss->staticEval;
     else if (ttHit)
     {
         // Never assume anything about values stored in TT
@@ -630,7 +632,6 @@ Value search(
             rawEval = -(ss - 1)->staticEval + tempo;
 
         eval = ss->staticEval = to_corrected(pos, rawEval);
-
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
 
