@@ -1313,9 +1313,9 @@ Value qsearch(Position*  pos,
 
         if (!captureOrPromotion && bestValue > VALUE_MATED_IN_MAX_PLY
             && (*(ss - 1)->continuationHistory)[moved_piece(move)][to_sq(move)]
-                 < CounterMovePruneThreshold
+                 < (depth == 1 ? 0 : -stat_bonus(depth-1))
             && (*(ss - 2)->continuationHistory)[moved_piece(move)][to_sq(move)]
-                 < CounterMovePruneThreshold)
+                 < (depth == 1 ? 0 : -stat_bonus(depth-1)))
             continue;
 
         // Make and search the move
