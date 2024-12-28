@@ -58,104 +58,99 @@ PARAM(nmp_v6, 27)
 PARAM(nmp_v7, 23)
 PARAM(nmp_v8, 92)
 PARAM(nmp_v9, 194)
-PARAM(qmo_v1, 357)
-PARAM(qmo_v2, 1118)
-PARAM(qmo_v3, 1113)
-PARAM(rz_v1, 565)
-PARAM(rz_v2, 115)
-PARAM(ft_v1, 210)
-PARAM(rd_v1, 578)
-PARAM(rd_v2, 1251)
-PARAM(rd_v3, 854)
-PARAM(rd_init_v1, 2857)
-PARAM(d_v1, 18)
-PARAM(iir_v1, 670)
-PARAM(iir_v2, 238)
-PARAM(cbp_v1, 353)
-PARAM(cbp_v2, 6)
-PARAM(fpp_v1, 706)
-PARAM(fpp_v2, 217)
-PARAM(fpp_v3, 184)
-PARAM(sqsee_v1, 2856)
-PARAM(sfpc_v1, 630)
-PARAM(sfpc_v3, 183)
-PARAM(sfpc_v4, 230)
+PARAM(qmo_v1, 367)
+PARAM(qmo_v2, 1230)
+PARAM(qmo_v3, 1010)
+PARAM(rz_v1, 573)
+PARAM(rz_v2, 1)
+PARAM(ft_v1, 197)
+PARAM(rd_v1, 595)
+PARAM(rd_v2, 1237)
+PARAM(rd_v3, 848)
+PARAM(rd_init_v1, 2881)
+PARAM(d_v1, 17)
+PARAM(iir_v1, 6)
+PARAM(iir_v2, 2)
+PARAM(cbp_v1, 3)
+PARAM(cbp_v2, 0)
+PARAM(fpp_v1, 7)
+PARAM(fpp_v2, 214)
+PARAM(fpp_v3, 183)
+PARAM(sqsee_v1, 27)
+PARAM(sfpc_v1, 6)
+PARAM(sfpc_v3, 197)
+PARAM(sfpc_v4, 219)
 PARAM(scsee_v1, 199)
-PARAM(se_v1, 575)
-PARAM(se_v2, 177)
-PARAM(se_v5, 3755)
-PARAM(se_v6, 112)
-PARAM(se_v7, 240)
-PARAM(se_v8, 257)
-PARAM(prb_v1, 134)
-PARAM(prb_v2, 45)
-PARAM(rfp_v1, 933)
-PARAM(lmr_v3, 3792)
-PARAM(lmr_v4, 99)
+PARAM(se_v1, 5)
+PARAM(se_v2, 111)
+PARAM(se_v5, 27)
+PARAM(se_v7, 2)
+PARAM(se_v8, 2)
+PARAM(prb_v1, 125)
+PARAM(prb_v2, 43)
+PARAM(rfp_v1, 9)
+PARAM(lmr_v3, 4079)
+PARAM(lmr_v4, 104)
 PARAM(lmr_v5, 88)
-PARAM(lmr_v6, 96)
-PARAM(lmr_v7, 106)
+PARAM(lmr_v6, 88)
+PARAM(lmr_v7, 111)
 PARAM(lmr_v8, 14626)
-PARAM(fmc_v1, 305)
-PARAM(fmc_v2, 298)
-PARAM(fmc_v3, 238)
-PARAM(hb_v1, 690)
-PARAM(hb_v2, 198)
-PARAM(hb_v3, 155)
-PARAM(hb_v4, 2362)
-PARAM(hm_v1, 699)
+PARAM(fmc_v1, 3)
+PARAM(fmc_v2, 2)
+PARAM(fmc_v3, 2)
+PARAM(hb_v1, 653)
+PARAM(hb_v2, 205)
+PARAM(hb_v3, 167)
+PARAM(hb_v4, 2481)
+PARAM(hm_v1, 581)
 PARAM(hm_v2, 187)
-PARAM(hm_v3, 167)
-PARAM(hm_v4, 1581)
-PARAM(asd_v1, 493)
-PARAM(ses_v1, 396)
-PARAM(qsf_v1, 177)
-PARAM(ch_v1, 1849)
-PARAM(ch_v2, 180)
-PARAM(ch_v3, 262)
-PARAM(ch_v4, 86)
-PARAM(ch_v5, 101)
-PARAM(tempo, 47)
+PARAM(hm_v3, 156)
+PARAM(hm_v4, 1661)
+PARAM(asd_v1, 487)
+PARAM(ses_v1, 3)
+PARAM(qsf_v1, 185)
+PARAM(ch_v1, 22)
+PARAM(ch_v2, 162)
+PARAM(ch_v3, 286)
+PARAM(ch_v4, 84)
+PARAM(ch_v5, 105)
+PARAM(tempo, 44)
 PARAM(mp_v1, 70)
 PARAM(mp_v2, 1064)
-PARAM(mp_v3, 2839)
-PARAM(mp_v4, 126)
-PARAM(mp_v5, 242)
-PARAM(mp_v6, 236)
-PARAM(mp_v7, 200)
-PARAM(mp_v8, 99)
-PARAM(mp_v9, 107)
-PARAM(eval_scale, 90)
-PARAM(mat_scale, 26211)
-PARAM(pcmb_v1, 113)
-PARAM(pcmb_v2, 484)
-PARAM(pcmb_v3, 38)
-PARAM(pcmb_v4, 165)
-PARAM(pcmb_v5, 786)
-PARAM(pcmb_v6, 117)
+PARAM(mp_v3, 2724)
+PARAM(mp_v4, 132)
+PARAM(mp_v5, 243)
+PARAM(mp_v6, 237)
+PARAM(mp_v7, 187)
+PARAM(mp_v8, 93)
+PARAM(eval_scale, 89)
+PARAM(mat_scale, 26273)
+PARAM(pcmb_v1, 103)
+PARAM(pcmb_v2, 4)
+PARAM(pcmb_v3, 30)
+PARAM(pcmb_v4, 162)
+PARAM(pcmb_v5, 7)
+PARAM(pcmb_v6, 119)
 PARAM(pcmb_v7, 101)
-PARAM(pcmb_v8, 131)
-PARAM(pcmb_v9, 232)
-PARAM(pcmb_v10, 110)
-PARAM(pcmb_v11, 146)
-PARAM(r_v1, 1039)
-PARAM(r_v2, 2278)
-PARAM(r_v3, 861)
-PARAM(r_v4, 1033)
-PARAM(r_v5, 1094)
-PARAM(r_v6, 1158)
-PARAM(r_v7, 1056)
-PARAM(r_v8, 2101)
-PARAM(r_v9, 1852)
-PARAM(r_v10, 872)
-PARAM(r_v11, 924)
-PARAM(r_v12, 1145)
-PARAM(r_v13, 1016)
+PARAM(pcmb_v8, 125)
+PARAM(pcmb_v9, 250)
+PARAM(pcmb_v10, 108)
+PARAM(pcmb_v11, 142)
+PARAM(r_v1, 1056)
+PARAM(r_v2, 2183)
+PARAM(r_v6, 1290)
+PARAM(r_v7, 1089)
+PARAM(r_v8, 1975)
+PARAM(r_v9, 1727)
+PARAM(r_v10, 860)
+PARAM(r_v11, 996)
+PARAM(r_v12, 1109)
+PARAM(r_v13, 993)
 PARAM(lce_v1, 2280)
-PARAM(qb_v1, 199)
-PARAM(cms_v1, 29304)
-PARAM(hu_v1, 10217)
-PARAM(cpth_v1, 11598)
+PARAM(qb_v1, 193)
+PARAM(cms_v1, 29212)
+PARAM(hu_v1, 10216)
+PARAM(cpth_v1, 11664)
 PARAM(kb_v1, 29)
 
 PARAM(tm_v1, 329)
@@ -202,15 +197,14 @@ static Depth reduction(int i, Depth d, int mn) {
 
 static int futility_move_count(bool improving, Depth depth) {
     //  return (3 + depth * depth) / (2 - improving);
-    return improving ? fmc_v1 / 100 + depth * depth
-                     : (fmc_v2 / 100 + depth * depth) / (fmc_v3 / 100);
+    return improving ? fmc_v1 + depth * depth : (fmc_v2 + depth * depth) / fmc_v3;
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth d) { return min((hb_v1 / 100 * d + hb_v2) * d - hb_v3, hb_v4); }
+static Value stat_bonus(Depth d) { return min((hb_v1 * d / 100 + hb_v2) * d - hb_v3, hb_v4); }
 
 // History and stats update malus, based on depth
-static Value stat_malus(Depth d) { return min((hm_v1 / 100 * d + hm_v2) * d - hm_v3, hm_v4); }
+static Value stat_malus(Depth d) { return min((hm_v1 * d / 100 + hm_v2) * d - hm_v3, hm_v4); }
 
 // Add a small random component to draw evaluations to keep search dynamic
 // and to avoid three-fold blindness. (Yucks, ugly hack)
@@ -635,7 +629,7 @@ Value search(
     }
 
     // Step 7. Razoring
-    if (!rootNode && depth <= rz_v2 / 100 && eval <= alpha - rz_v1)
+    if (!rootNode && depth <= rz_v2 && eval <= alpha - rz_v1)
         return qsearch(pos, ss, alpha, beta, 0, PvNode);
 
 
@@ -651,7 +645,7 @@ Value search(
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 / 100 && eval - futility_margin(depth, improving) >= beta
+    if (!PvNode && depth < rfp_v1 && eval - futility_margin(depth, improving) >= beta
         && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
@@ -725,8 +719,8 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= max(iir_v1 / 100, 3) && !ttMove)
-        depth -= max(iir_v2 / 100, 2);
+    if (PvNode && depth >= iir_v1 && !ttMove)
+        depth -= iir_v2;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -780,26 +774,25 @@ moves_loop:  // When in check search starts from here.
             if (!captureOrPromotion && !givesCheck)
             {
                 // Countermoves based pruning
-                if (lmrDepth < cbp_v1 / 100
-                                 + ((ss - 1)->statScore > cbp_v2 / 100 || (ss - 1)->moveCount == 1)
+                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
                     && (*contHist0)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
                     && (*contHist1)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
                     continue;
 
                 // Futility pruning: parent node
-                if (lmrDepth < fpp_v1 / 100 && !inCheck
+                if (lmrDepth < fpp_v1 && !inCheck
                     && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
                     continue;
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
-                if (!see_test(pos, move, -(sqsee_v1 / 100 * lmrDepth * lmrDepth)))
+                if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
                     continue;
             }
             else
             {
                 // Futility pruning for captures
-                if (!givesCheck && lmrDepth < sfpc_v1 / 100 && !inCheck
+                if (!givesCheck && lmrDepth < sfpc_v1 && !inCheck
                     && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
                            + PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
@@ -818,13 +811,13 @@ moves_loop:  // When in check search starts from here.
         // that move is singular and should be extended. To verify this we do a
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
-        if (depth >= se_v1 / 100 && move == ttMove && !rootNode
+        if (depth >= se_v1 && move == ttMove && !rootNode
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - ses_v1 / 100)
+            && tte_depth(tte) >= depth - ses_v1)
         {
-            Value singularBeta  = ttValue - se_v2 / 100 * depth;
+            Value singularBeta  = ttValue - se_v2 * depth / 100;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
@@ -834,7 +827,7 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 / 100)
+                if (!PvNode && value < singularBeta - se_v5)
                     extension = 2;
             }
 
@@ -859,8 +852,7 @@ moves_loop:  // When in check search starts from here.
                 ss->mpKillers[1] = k2;
 
                 ss->excludedMove = move;
-                value = search(pos, ss, beta - 1, beta, (depth + se_v7 / 100) / (se_v8 / 100),
-                               cutNode, false);
+                value = search(pos, ss, beta - 1, beta, (depth + se_v7) / se_v8, cutNode, false);
                 ss->excludedMove = 0;
 
                 if (value >= beta)
@@ -870,7 +862,7 @@ moves_loop:  // When in check search starts from here.
             }
             else if (cutNode)
             {
-                extension -= se_v6 / 100;
+                extension--;
             }
 
             // The call to search_NonPV with the same value of ss messed up our
@@ -1115,8 +1107,8 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > pcmb_v2 / 100) + pcmb_v3 * !(PvNode || cutNode)
-                  + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5 / 100)
+        int bonus = pcmb_v1 * (depth > pcmb_v2) + pcmb_v3 * !(PvNode || cutNode)
+                  + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
                   + pcmb_v6 * (!inCheck && bestValue <= ss->staticEval - pcmb_v7);
 
         // Proportional to "how much damage we have to undo"
@@ -1404,7 +1396,7 @@ static void update_pv(Move* pv, Move move, Move* childPv) {
 static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff) {
     int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(ch_v1 / 100, 1 + depth);
+    int32_t  newWeight  = min(ch_v1, 1 + depth);
     int32_t  scaledDiff = diff * ch_v2;
     int32_t  update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
     // Clamp entry in-bounds.
