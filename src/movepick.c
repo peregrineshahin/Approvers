@@ -98,11 +98,14 @@ static void score_quiets(const Position* pos) {
         uint32_t move = m->move & 4095;
         Square   to   = move & 63;
         Square   from = move >> 6;
+
         m->value =
           (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
            + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
            + mp_v8 * (*contHist3)[piece_on(from)][to])
           / 100;
+
+        m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
     }
 }
 
@@ -163,20 +166,6 @@ Move next_move(const Position* pos, bool skipQuiets) {
         }
         st->stage++;
 
-    case ST_KILLERS :
-        st->stage++;
-        move = st->mpKillers[0];
-        if (move && move != st->ttMove && is_pseudo_legal(pos, move) && !is_capture(pos, move))
-            return move;
-        /* fallthrough */
-
-    case ST_KILLERS_2 :
-        st->stage++;
-        move = st->mpKillers[1];
-        if (move && move != st->ttMove && is_pseudo_legal(pos, move) && !is_capture(pos, move))
-            return move;
-        /* fallthrough */
-
     case ST_QUIET_INIT :
         if (!skipQuiets)
         {
@@ -193,7 +182,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
             while (st->cur < st->endMoves)
             {
                 move = (st->cur++)->move;
-                if (move != st->ttMove && move != st->mpKillers[0] && move != st->mpKillers[1])
+                if (move != st->ttMove)
                     return move;
             }
         st->stage++;
