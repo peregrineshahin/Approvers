@@ -568,25 +568,15 @@ Value search(
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit.
-        if (ttMove)
+        if (ttMove && ttValue >= beta)
         {
-            if (ttValue >= beta)
-            {
-                if (!is_capture_or_promotion(pos, ttMove))
-                    update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
+            if (!is_capture_or_promotion(pos, ttMove))
+                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
 
-                // Extra penalty for early quiet moves of the previous ply
-                if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
-                    update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                                  -stat_malus(depth + 1));
-            }
-            // Penalty for a quiet ttMove that fails low
-            else if (!is_capture_or_promotion(pos, ttMove))
-            {
-                int penalty = -stat_malus(depth);
-                history_update(*pos->mainHistory, stm(), ttMove, penalty);
-                update_continuation_histories(ss, moved_piece(ttMove), to_sq(ttMove), penalty);
-            }
+            // Extra penalty for early quiet moves of the previous ply
+            if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
+                update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                              -stat_malus(depth + 1));
         }
         if (rule50_count() < 90)
             return ttValue;
