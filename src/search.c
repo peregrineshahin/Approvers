@@ -1032,7 +1032,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
