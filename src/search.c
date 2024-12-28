@@ -253,12 +253,6 @@ SMALL void search_init(void) {
 // search_clear() resets search state to zero, to obtain reproducible results
 
 SMALL void search_clear(void) {
-    if (!settings.ttSize)
-    {
-        delayedSettings.clear = true;
-        return;
-    }
-
     Time.availableNodes = 0;
 
     tt_clear();

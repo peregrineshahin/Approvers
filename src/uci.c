@@ -28,6 +28,8 @@
 #include "thread.h"
 #include "uci.h"
 
+#include "tt.h"
+
 #ifndef KAGGLE
 extern void benchmark();
 
@@ -139,7 +141,8 @@ void setoption(char* str) {
 
     if (strcmp("Hash", name) == 0)
     {
-        delayedSettings.ttSize = atoi(value);
+        tt_free();
+        tt_allocate(atoi(value));
         return;
     }
 
@@ -216,8 +219,6 @@ SMALL void uci_loop(int argc, char** argv) {
     pos.st[-1].endMoves = pos.moveList;
 
     char cmd[4096] = {0};
-
-    delayedSettings.ttSize = 1;
 
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
