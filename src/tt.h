@@ -77,15 +77,23 @@ typedef struct TranspositionTable TranspositionTable;
 
 extern TranspositionTable TT;
 
+NOINLINE static int relative_age(const TTEntry* entry) {
+    // Due to our packed storage format for generation and its cyclic
+    // nature we add 263 (256 is the modulus plus 7 to keep the unrelated
+    // lowest three bits from affecting the result) to calculate the entry
+    // age correctly even after generation8 overflows into the next cycle.
+    return (263 + TT.generation8 - entry->genBound8) & 0xF8;
+}
+
 static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
     // Preserve any existing move for the same position
     if (m || (uint16_t) k != tte->key16)
         tte->move16 = (uint16_t) m;
 
     // Don't overwrite more valuable entries
-    if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4 || b == BOUND_EXACT)
+    if (b == BOUND_EXACT || (uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4
+        || relative_age(tte))
     {
-
         tte->key16     = (uint16_t) k;
         tte->depth8    = (uint8_t) (d - DEPTH_OFFSET);
         tte->genBound8 = (uint8_t) (TT.generation8 | ((uint8_t) pv << 2) | b);

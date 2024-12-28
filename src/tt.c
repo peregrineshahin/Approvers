@@ -133,23 +133,13 @@ TTEntry* tt_probe(Key key, bool* found) {
     uint16_t key16 = key;  // Use the low 16 bits as key inside the cluster
 
     for (int i = 0; i < ClusterSize; i++)
-        if (tte[i].key16 == key16 || !tte[i].depth8)
-        {
-            //      if ((tte[i].genBound8 & 0xF8) != TT.generation8 && tte[i].key16)
-            tte[i].genBound8 = TT.generation8 | (tte[i].genBound8 & 0x7);  // Refresh
-            *found           = tte[i].depth8;
-            return &tte[i];
-        }
+        if (tte[i].key16 == key16)
+            return *found = tte[i].depth8, &tte[i];
 
     // Find an entry to be replaced according to the replacement strategy
     TTEntry* replace = tte;
     for (int i = 1; i < ClusterSize; i++)
-        // Due to our packed storage format for generation and its cyclic
-        // nature we add 263 (256 is the modulus plus 7 to keep the unrelated
-        // lowest three bits from affecting the result) to calculate the entry
-        // age correctly even after generation8 overflows into the next cycle.
-        if (replace->depth8 - ((263 + TT.generation8 - replace->genBound8) & 0xF8)
-            > tte[i].depth8 - ((263 + TT.generation8 - tte[i].genBound8) & 0xF8))
+        if (replace->depth8 - relative_age(replace) > tte[i].depth8 - relative_age(&tte[i]))
             replace = &tte[i];
 
     *found = false;
