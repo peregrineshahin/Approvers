@@ -27,7 +27,6 @@
 #include "misc.h"
 #include "position.h"
 #include "search.h"
-#include "settings.h"
 #include "thread.h"
 #include "tt.h"
 #include "uci.h"

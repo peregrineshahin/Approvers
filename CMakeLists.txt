@@ -28,8 +28,6 @@ add_executable(Peregrine
         src/psqt.c
         src/search.c
         src/search.h
-        src/settings.c
-        src/settings.h
         src/thread.c
         src/thread.h
         src/timeman.c

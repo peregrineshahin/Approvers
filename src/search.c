@@ -26,7 +26,6 @@
 #include "movegen.h"
 #include "movepick.h"
 #include "search.h"
-#include "settings.h"
 #include "timeman.h"
 #include "thread.h"
 #include "tt.h"
