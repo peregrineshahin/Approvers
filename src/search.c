@@ -1161,7 +1161,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     Move     ttMove, move, bestMove;
     Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase;
     bool     ttHit, pvHit, givesCheck;
-    Depth    ttDepth;
     int      moveCount;
 
     if (PvNode && ss->ply <= 2)
@@ -1177,11 +1176,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     if (is_draw(pos) || ss->ply >= MAX_PLY)
         return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
 
-    // Decide whether or not to include checks: this fixes also the type of
-    // TT entry depth that we are going to use. Note that in qsearch we use
-    // only two types of depth in TT: DEPTH_QS_CHECKS or DEPTH_QS_NO_CHECKS.
-    ttDepth = ss->checkersBB || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS : DEPTH_QS_NO_CHECKS;
-
     // Transposition table lookup
     posKey  = key();
     tte     = tt_probe(posKey, &ttHit);
@@ -1189,7 +1183,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     ttMove  = ttHit ? tte_move(tte) : 0;
     pvHit   = ttHit && tte_is_pv(tte);
 
-    if (!PvNode && ttHit && tte_depth(tte) >= ttDepth
+    if (!PvNode && ttHit && tte_depth(tte) >= DEPTH_QS
         && ttValue != VALUE_NONE  // Only in case of TT access race
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
@@ -1334,7 +1328,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         bestValue = (3 * bestValue + beta) / 4;
 
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
-             bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, ttDepth, bestMove, rawEval);
+             bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, DEPTH_QS, bestMove, rawEval);
 
     return bestValue;
 }

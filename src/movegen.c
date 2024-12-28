@@ -56,7 +56,7 @@ static ExtMove* generate_pawn_moves(
     const int      Right    = Us == WHITE ? NORTH_EAST : SOUTH_WEST;
     const int      Left     = Us == WHITE ? NORTH_WEST : SOUTH_EAST;
 
-    const Bitboard emptySquares = Type == QUIETS || Type == QUIET_CHECKS ? target : ~pieces();
+    const Bitboard emptySquares = Type == QUIETS ? target : ~pieces();
     const Bitboard enemies      = Type == EVASIONS ? checkers()
                                 : Type == CAPTURES ? target
                                                    : pieces_c(Them);
@@ -74,16 +74,6 @@ static ExtMove* generate_pawn_moves(
         {  // Consider only blocking squares
             b1 &= target;
             b2 &= target;
-        }
-
-        if (Type == QUIET_CHECKS)
-        {
-            Stack* st = pos->st;
-
-            // A quiet check is either a direct check or a discovered check.
-            Bitboard dcCandidatePawns = blockers_for_king(pos, Them) & ~file_bb(file_of(st->ksq));
-            b1 &= attacks_from_pawn(st->ksq, Them) | shift_bb(Up, dcCandidatePawns);
-            b2 &= attacks_from_pawn(st->ksq, Them) | shift_bb(Up + Up, dcCandidatePawns);
         }
 
         while (b1)
@@ -156,21 +146,13 @@ static ExtMove* generate_pawn_moves(
 }
 
 
-static ExtMove* generate_moves(const Position* pos,
-                               ExtMove*        list,
-                               Bitboard        target,
-                               const Color     Us,
-                               const int       Pt,
-                               const bool      Checks) {
+static ExtMove*
+generate_moves(const Position* pos, ExtMove* list, Bitboard target, const Color Us, const int Pt) {
     Bitboard bb = pieces_cp(Us, Pt);
     while (bb)
     {
         Square   from = pop_lsb(&bb);
         Bitboard b    = attacks_bb(Pt, from, pieces()) & target;
-
-        if (Checks && (Pt == QUEEN || !(blockers_for_king(pos, !Us) & sq_bb(from))))
-            b &= pos->st->checkSquares[Pt];
-
         while (b)
             (list++)->move = make_move(from, pop_lsb(&b));
     }
@@ -180,8 +162,7 @@ static ExtMove* generate_moves(const Position* pos,
 
 
 static ExtMove* generate_all(const Position* pos, ExtMove* list, const Color Us, const int Type) {
-    const bool   Checks = Type == QUIET_CHECKS;
-    const Square ksq    = square_of(Us, KING);
+    const Square ksq = square_of(Us, KING);
 
     if (Type == EVASIONS && more_than_one(checkers()))
         goto kingMoves;
@@ -192,38 +173,33 @@ static ExtMove* generate_all(const Position* pos, ExtMove* list, const Color Us,
                                            : ~pieces();
 
     list = generate_pawn_moves(pos, list, target, Us, Type);
-    list = generate_moves(pos, list, target, Us, KNIGHT, Checks);
-    list = generate_moves(pos, list, target, Us, BISHOP, Checks);
-    list = generate_moves(pos, list, target, Us, ROOK, Checks);
-    list = generate_moves(pos, list, target, Us, QUEEN, Checks);
+    list = generate_moves(pos, list, target, Us, KNIGHT);
+    list = generate_moves(pos, list, target, Us, BISHOP);
+    list = generate_moves(pos, list, target, Us, ROOK);
+    list = generate_moves(pos, list, target, Us, QUEEN);
 
-kingMoves:
+kingMoves:;
 
-    if (!Checks || blockers_for_king(pos, !Us) & sq_bb(ksq))
+    Bitboard b = attacks_from(KING, ksq) & (Type == EVASIONS ? ~pieces_c(Us) : target);
+
+    while (b)
+        (list++)->move = make_move(ksq, pop_lsb(&b));
+
+    if ((Type == QUIETS || Type == NON_EVASIONS) && can_castle_c(Us))
     {
-        Bitboard b = attacks_from(KING, ksq) & (Type == EVASIONS ? ~pieces_c(Us) : target);
-        if (Checks)
-            b &= ~PseudoAttacks[QUEEN][square_of(!Us, KING)];
+        const int king_castle  = make_castling_right(Us, KING_SIDE);
+        const int queen_castle = make_castling_right(Us, QUEEN_SIDE);
 
-        while (b)
-            (list++)->move = make_move(ksq, pop_lsb(&b));
+        const int king_rook  = Us == WHITE ? SQ_H1 : SQ_H8;
+        const int queen_rook = Us == WHITE ? SQ_A1 : SQ_A8;
 
-        if ((Type == QUIETS || Type == NON_EVASIONS) && can_castle_c(Us))
-        {
-            const int king_castle  = make_castling_right(Us, KING_SIDE);
-            const int queen_castle = make_castling_right(Us, QUEEN_SIDE);
+        if (!(BetweenBB[ksq][king_rook] & ~sq_bb(king_rook) & pieces())
+            && can_castle_cr(king_castle))
+            (list++)->move = make_castling(ksq, king_rook);
 
-            const int king_rook  = Us == WHITE ? SQ_H1 : SQ_H8;
-            const int queen_rook = Us == WHITE ? SQ_A1 : SQ_A8;
-
-            if (!(BetweenBB[ksq][king_rook] & ~sq_bb(king_rook) & pieces())
-                && can_castle_cr(king_castle))
-                (list++)->move = make_castling(ksq, king_rook);
-
-            if (!(BetweenBB[ksq][queen_rook] & ~sq_bb(queen_rook) & pieces())
-                && can_castle_cr(queen_castle))
-                (list++)->move = make_castling(ksq, queen_rook);
-        }
+        if (!(BetweenBB[ksq][queen_rook] & ~sq_bb(queen_rook) & pieces())
+            && can_castle_cr(queen_castle))
+            (list++)->move = make_castling(ksq, queen_rook);
     }
 
     return list;
