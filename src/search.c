@@ -273,7 +273,7 @@ SMALL void search_clear(void) {
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
             for (int k = 0; k < 64; k++)
-                (*pos->contHist)[c][0][j][k] = CounterMovePruneThreshold - 1;
+                (*pos->contHist)[c][0][j][k] = -1;
 
     Thread.previousScore         = VALUE_INFINITE;
     Thread.previousTimeReduction = 1;
@@ -521,11 +521,8 @@ Value search(
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
-    if (--pos->callsCnt <= 0)
-    {
-        pos->callsCnt = 1024;
+    if ((pos->nodes & 1023) == 0)
         check_time();
-    }
 
     if (!rootNode)
     {
@@ -765,8 +762,8 @@ moves_loop:  // When in check search starts from here.
             {
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < CounterMovePruneThreshold
-                    && (*contHist1)[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
+                    && (*contHist0)[movedPiece][to_sq(move)] < 0
+                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
                     continue;
 
                 // Futility pruning: parent node
@@ -1286,10 +1283,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
 
         if (!captureOrPromotion && bestValue > VALUE_MATED_IN_MAX_PLY
-            && (*(ss - 1)->continuationHistory)[moved_piece(move)][to_sq(move)]
-                 < CounterMovePruneThreshold
-            && (*(ss - 2)->continuationHistory)[moved_piece(move)][to_sq(move)]
-                 < CounterMovePruneThreshold)
+            && (*(ss - 1)->continuationHistory)[moved_piece(move)][to_sq(move)] < 0
+            && (*(ss - 2)->continuationHistory)[moved_piece(move)][to_sq(move)] < 0)
             continue;
 
         // Make and search the move
@@ -1362,9 +1357,6 @@ static Value value_to_tt(Value v, int ply) {
 // from current position) to "plies to mate/be mated from the root".
 
 static Value value_from_tt(Value v, int ply, int r50c) {
-    if (v == VALUE_NONE)
-        return VALUE_NONE;
-
     if (v >= VALUE_MATE_IN_MAX_PLY)
         return (VALUE_MATE - v > 99 - r50c) ? VALUE_MATE_IN_MAX_PLY - 1 : v - ply;
 

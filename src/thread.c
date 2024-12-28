@@ -36,13 +36,13 @@ void thread_init() {
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
-    pos->stack      = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
-    pos->contHist   = calloc(sizeof(ContinuationHistoryStat), 1);
+    pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
 
     for (int c = 0; c < 2; c++)
         for (int j = 0; j < 16; j++)
             for (int k = 0; k < 64; k++)
-                (*pos->contHist)[c][0][j][k] = CounterMovePruneThreshold - 1;
+                (*pos->contHist)[c][0][j][k] = -1;
 
     Thread.pos = pos;
 
