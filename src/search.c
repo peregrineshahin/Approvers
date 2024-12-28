@@ -921,12 +921,6 @@ moves_loop:  // When in check search starts from here.
                 if (cutNode)
                     r += r_v8;
 
-                // Decrease reduction for moves that escape a capture. Filter out
-                // castling moves, because they are coded as "king captures rook" and
-                // hence break make_move().
-                else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
-
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
