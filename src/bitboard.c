@@ -60,8 +60,10 @@ Bitboard PawnAttacks[2][64];
 // bitboards_init() initializes various bitboard tables. It is called at
 // startup and relies on global objects to be already zero-initialized.
 
-SMALL void bitboards_init(void) {
+SMALL void         bitboards_init(void) {
+#pragma clang loop unroll(disable)
     for (Square s1 = 0; s1 < 64; s1++)
+#pragma clang loop unroll(disable)
         for (Square s2 = 0; s2 < 64; s2++)
             if (s1 != s2)
             {
@@ -71,9 +73,13 @@ SMALL void bitboards_init(void) {
 
     int steps[][5] = {{0}, {7, 9}, {6, 10, 15, 17}, {0}, {0}, {0}, {1, 7, 8, 9}};
 
+#pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
+#pragma clang loop unroll(disable)
         for (int pt = PAWN; pt <= KING; pt++)
+#pragma clang loop unroll(disable)
             for (int s = 0; s < 64; s++)
+#pragma clang loop unroll(disable)
                 for (int i = 0; steps[pt][i]; i++)
                 {
                     Square to = s + (Square) (c == WHITE ? steps[pt][i] : -steps[pt][i]);
@@ -88,13 +94,14 @@ SMALL void bitboards_init(void) {
                 }
 
     init_sliding_attacks();
-
+#pragma clang loop unroll(disable)
     for (Square s1 = 0; s1 < 64; s1++)
     {
         PseudoAttacks[QUEEN][s1] = PseudoAttacks[BISHOP][s1] = attacks_bb_bishop(s1, 0);
         PseudoAttacks[QUEEN][s1] |= PseudoAttacks[ROOK][s1]  = attacks_bb_rook(s1, 0);
-
+#pragma clang loop unroll(disable)
         for (int pt = BISHOP; pt <= ROOK; pt++)
+#pragma clang loop unroll(disable)
             for (Square s2 = 0; s2 < 64; s2++)
             {
                 if (PseudoAttacks[pt][s1] & sq_bb(s2))

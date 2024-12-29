@@ -12,12 +12,16 @@ SMALL static void init_sliding_attacks(void) {
     uint8_t          s8, att8;
 
     // pseudo attacks for Queen 8 directions
+    #pragma clang loop unroll(disable)
     for (sq = SQ_A1; sq <= SQ_H8; ++sq)
+    #pragma clang loop unroll(disable)
         for (j = 0; j < 2; ++j)
         {
+            #pragma clang loop unroll(disable)
             for (i = 0; i < 4; ++i)
             {
                 attacks[i] = 0;
+                #pragma clang loop unroll(disable)
                 for (s = sq + dirs[j][i]; square_is_ok(s) && distance(s, s - dirs[j][i]) == 1;
                      s += dirs[j][i])
                 {
@@ -29,6 +33,7 @@ SMALL static void init_sliding_attacks(void) {
         }
 
     // pseudo attacks for Rook (NORTH-SOUTH) and Bishop
+#pragma clang loop unroll(disable)
     for (sq = SQ_A1; sq <= SQ_H8; ++sq)
     {
         rook_mask_NS[sq] = _mm_set_epi64x(
@@ -44,16 +49,20 @@ SMALL static void init_sliding_attacks(void) {
     }
 
     // sliding attacks for Rook EAST-WEST
+#pragma clang loop unroll(disable)
     for (occ8 = 0; occ8 < 128; occ8 += 2)  // inner 6 bits
+#pragma clang loop unroll(disable)
         for (sq = 0; sq < 8; ++sq)
         {
             att8 = 0;
+#pragma clang loop unroll(disable)
             for (s8 = (1 << sq) << 1; s8; s8 <<= 1)
             {
                 att8 |= s8;
                 if (occ8 & s8)
                     break;
             }
+#pragma clang loop unroll(disable)
             for (s8 = (1 << sq) >> 1; s8; s8 >>= 1)
             {
                 att8 |= s8;

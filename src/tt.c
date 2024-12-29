@@ -54,7 +54,7 @@ void tt_allocate(size_t mbSize) {
     size_t size     = TT.clusterCount * sizeof(Cluster);
 
 #ifdef _WIN32
-    TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    TT.mem   = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     TT.table = (Cluster*) TT.mem;
 #else /* Unix */
     TT.mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -91,6 +91,7 @@ TTEntry* tt_probe(Key key, bool* found) {
     TTEntry* tte   = tt_first_entry(key);
     uint16_t key16 = key;  // Use the low 16 bits as key inside the cluster
 
+#pragma clang loop unroll(disable)
     for (int i = 0; i < ClusterSize; i++)
         if (tte[i].key16 == key16 || !tte[i].depth8)
         {
@@ -102,6 +103,7 @@ TTEntry* tt_probe(Key key, bool* found) {
 
     // Find an entry to be replaced according to the replacement strategy
     TTEntry* replace = tte;
+#pragma clang loop unroll(disable)
     for (int i = 1; i < ClusterSize; i++)
         // Due to our packed storage format for generation and its cyclic
         // nature we add 263 (256 is the modulus plus 7 to keep the unrelated
