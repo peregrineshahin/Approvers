@@ -827,27 +827,8 @@ moves_loop:  // When in check search starts from here.
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
-            else if (ttValue >= beta)
-            {
-                // Fix up our move picker data
-                mp_init(pos, ttMove, depth, ss->ply);
-                ss->stage++;
-                ss->mpKillers[0] = k1;
-                ss->mpKillers[1] = k2;
-
-                ss->excludedMove = move;
-                value = search(pos, ss, beta - 1, beta, (depth + se_v7) / se_v8, cutNode, false);
-                ss->excludedMove = 0;
-
-                if (value >= beta)
-                {
-                    return beta;
-                }
-            }
-            else if (cutNode)
-            {
+            else if (cutNode || ttValue >= beta)
                 extension--;
-            }
 
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
