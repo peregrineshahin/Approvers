@@ -27,9 +27,9 @@ ifeq ($(comp),$(filter $(comp),gcc clang icc))
     endif
 endif
 LDFLAGS = -Wl,--gc-sections -Wl,--strip-all
-OBJ     = uci.o settings.o nnue.o benchmark.o bitboard.o evaluate.o    \
-        main.o misc.o movegen.o movepick.o position.o psqt.o search.o  \
-        thread.o timeman.o tt.o
+OBJ     = benchmark.o bitboard.o evaluate.o main.o misc.o movegen.o   \
+          movepick.o nnue.o position.o psqt.o search.o thread.o       \
+          timeman.o tt.o uci.o
 EXE     = cfish
 
 all: build

@@ -23,13 +23,6 @@
 
 #include "types.h"
 
-#define GEN_CAPTURES 0
-#define GEN_QUIETS 1
-#define GEN_QUIET_CHECKS 2
-#define GEN_EVASIONS 3
-#define GEN_NON_EVASIONS 4
-#define GEN_LEGAL 5
-
 enum {
     CAPTURES,
     QUIETS,

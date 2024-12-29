@@ -54,59 +54,18 @@ void tt_allocate(size_t mbSize) {
     size_t size     = TT.clusterCount * sizeof(Cluster);
 
 #ifdef _WIN32
-
-    TT.mem = NULL;
-
-    if (!TT.mem)
-        TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    #ifndef DKAGGLE
-    if (!TT.mem)
-        goto failed;
-    #endif
-
+    TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     TT.table = (Cluster*) TT.mem;
-
 #else /* Unix */
+    TT.mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-    size_t alignment = 1;
-    size_t allocSize = size + alignment - 1;
-
-    #if defined(__APPLE__) && defined(VM_FLAGS_SUPERPAGE_SIZE_2MB)
-
-    if (!TT.mem)
-        TT.mem = mmap(NULL, allocSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-    #else
-
-    TT.mem = mmap(NULL, allocSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-    #endif
-
-    TT.allocSize = allocSize;
-    TT.table     = (Cluster*) ((((uintptr_t) TT.mem) + alignment - 1) & ~(alignment - 1));
-    #ifndef DKAGGLE
-    if (!TT.mem)
-        goto failed;
-    #endif
-
-    #if defined(__linux__) && defined(MADV_HUGEPAGE)
-
-    #endif
+    TT.allocSize = size;
+    TT.table     = (Cluster*) ((uintptr_t) TT.mem & ~0);
 #endif
 
     // Clear the TT table to page in the memory immediately. This avoids
     // an initial slow down during the first second or minutes of the search.
     tt_clear();
-    return;
-
-#ifndef DKAGGLE
-failed:
-    fprintf(stderr,
-            "Failed to allocate %" PRIu64 "MB for "
-            "transposition table.\n",
-            (uint64_t) mbSize);
-    exit(EXIT_FAILURE);
-#endif
 }
 
 

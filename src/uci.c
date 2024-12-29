@@ -24,8 +24,8 @@
 #include "movegen.h"
 #include "position.h"
 #include "search.h"
-#include "settings.h"
 #include "thread.h"
+#include "tt.h"
 #include "uci.h"
 
 #ifndef KAGGLE
@@ -139,7 +139,8 @@ void setoption(char* str) {
 
     if (strcmp("Hash", name) == 0)
     {
-        delayedSettings.ttSize = atoi(value);
+        tt_free();
+        tt_allocate(atoi(value));
         return;
     }
 
@@ -158,8 +159,6 @@ void setoption(char* str) {
 // the search.
 
 static void go(Position* pos, char* str) {
-    process_delayed_settings();
-
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
@@ -217,8 +216,6 @@ SMALL void uci_loop(int argc, char** argv) {
 
     char cmd[4096] = {0};
 
-    delayedSettings.ttSize = 1;
-
     strcpy(fen, StartFEN);
     pos_set(&pos, fen);
 
@@ -263,12 +260,10 @@ SMALL void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
-            process_delayed_settings();
             search_clear();
         }
         else if (strcmp(token, "isready") == 0)
         {
-            process_delayed_settings();
             printf("readyok\n");
             fflush(stdout);
         }

@@ -34,8 +34,6 @@ extern int cpth_v1;
 
 #define stats_clear(s) memset(s, 0, sizeof(*s))
 
-static const int CounterMovePruneThreshold = 0;
-
 static void update_contHist(PieceToHistory cms, Piece pc, Square to, int v) {
     cms[pc][to] += v - cms[pc][to] * abs(v) / cms_v1;
 }

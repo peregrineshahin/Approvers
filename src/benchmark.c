@@ -27,8 +27,8 @@
 #include "misc.h"
 #include "position.h"
 #include "search.h"
-#include "settings.h"
 #include "thread.h"
+#include "tt.h"
 #include "uci.h"
 
 static char* Defaults[] = {
@@ -89,13 +89,11 @@ static char* Defaults[] = {
 };
 
 void benchmark() {
-    Limits                 = (LimitsType) {0};
-    Limits.depth           = 16;
-    delayedSettings.ttSize = 1;
-
+    Limits            = (LimitsType) {0};
+    Limits.depth      = 16;
     Thread.testPonder = 0;
 
-    process_delayed_settings();
+    tt_allocate(1);
     search_clear();
 
     const int numFens = sizeof(Defaults) / sizeof(char*);
