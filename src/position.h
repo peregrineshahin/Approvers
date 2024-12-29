@@ -149,8 +149,7 @@ struct Position {
     // Pointers to thread-specific tables.
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
-    CorrectionHistory*       matCorrHist;
-    CorrectionHistory*       pawnCorrHist;
+    CorrectionHistory*       corrHist;
     ContinuationHistoryStat* contHist;
 
     // Thread-control data.

@@ -214,9 +214,8 @@ static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_pv(Move* pv, Move move, Move* childPv);
 static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value rawEval);
-static void
-add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff);
-static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
+static void  update_correction_history(Position* pos, Depth depth, int32_t diff);
+static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
@@ -260,8 +259,6 @@ SMALL void search_clear(void) {
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
-    stats_clear(pos->matCorrHist);
-    stats_clear(pos->pawnCorrHist);
 
 #pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
@@ -1125,10 +1122,7 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        add_correction_history(*pos->matCorrHist, stm(), material_key(), depth,
-                               bestValue - ss->staticEval);
-        add_correction_history(*pos->pawnCorrHist, stm(), pawn_key(), depth,
-                               bestValue - ss->staticEval);
+        update_correction_history(pos, depth, bestValue - ss->staticEval);
     }
 
     return bestValue;
@@ -1375,23 +1369,27 @@ static void        update_pv(Move* pv, Move move, Move* childPv) {
     *pv = 0;
 }
 
-// differential.
-static void
-add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff) {
-    int16_t* entry      = &hist[side][key % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t  newWeight  = min(ch_v1, 1 + depth);
-    int32_t  scaledDiff = diff * ch_v2;
-    int32_t  update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
-    // Clamp entry in-bounds.
-    *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
+static void update_correction_history(Position* pos, Depth depth, int32_t diff) {
+    Key keys[] = {material_key(), pawn_key()};
+
+#pragma clang loop unroll(disable)
+    for (int i = 0; i < 2; i++)
+    {
+        int16_t* entry = &(*pos->corrHist)[i][stm()][keys[i] % CORRECTION_HISTORY_ENTRY_NB];
+
+        int32_t newWeight  = min(ch_v1, 1 + depth);
+        int32_t scaledDiff = diff * ch_v2;
+        int32_t update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
+
+        *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
+    }
 }
 
 Value to_corrected(Position* pos, Value rawEval) {
-    int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t mch = ch_v4 * (*pos->corrHist)[0][stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
+    int32_t pch = ch_v5 * (*pos->corrHist)[1][stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     Value   v   = rawEval + (pch + mch) / 100 / ch_v2;
-    v           = clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
-    return v;
+    return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
 // update_continuation_histories() updates countermove and follow-up move history.
@@ -1424,7 +1422,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
