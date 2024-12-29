@@ -29,7 +29,8 @@ uint32_t NonPawnPieceValue[16];
 // of the tables are initialized by flipping and changing the sign of the
 // white scores.
 
-SMALL void psqt_init(void) {
+SMALL void         psqt_init(void) {
+#pragma clang loop unroll(disable)
     for (int pt = PAWN; pt <= KING; pt++)
     {
         PieceValue[make_piece(BLACK, pt)] = PieceValue[pt];
@@ -39,6 +40,7 @@ SMALL void psqt_init(void) {
         uint32_t combi;
     } tmp;
     NonPawnPieceValue[W_PAWN] = NonPawnPieceValue[B_PAWN] = 0;
+#pragma clang loop unroll(disable)
     for (int pt = KNIGHT; pt < KING; pt++)
     {
         tmp.val[0]                = PieceValue[pt];
