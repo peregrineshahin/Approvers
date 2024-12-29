@@ -47,23 +47,6 @@ static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
 }
 
 
-// pick_best() finds the best move in the range (begin, end).
-
-static Move pick_best(ExtMove* begin, ExtMove* end) {
-    ExtMove *p, *q;
-
-    for (p = begin, q = begin + 1; q < end; q++)
-        if (q->value > p->value)
-            p = q;
-    Move m       = p->move;
-    int  v       = p->value;
-    *p           = *begin;
-    begin->value = v;
-
-    return m;
-}
-
-
 // score() assigns a numerical value to each move in a move list. The moves with
 // highest values will be picked first.
 
@@ -147,13 +130,14 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->endBadCaptures = st->cur = (st - 1)->endMoves;
         st->endMoves                 = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
         st->stage++;
         /* fallthrough */
 
     case ST_GOOD_CAPTURES :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove)
             {
                 if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2))
@@ -197,12 +181,13 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, EVASIONS);
         score_evasions(pos);
+        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
         st->stage++;
 
     case ST_ALL_EVASIONS :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove)
                 return move;
         }
@@ -212,12 +197,13 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
         st->stage++;
 
     case ST_QCAPTURES :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove
                 && (st->depth > DEPTH_QS_RECAPTURES || to_sq(move) == st->recaptureSquare))
                 return move;
@@ -242,13 +228,14 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
         st->stage++;
         /* fallthrough */
 
     case ST_PROBCUT_2 :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove && see_test(pos, move, st->threshold))
                 return move;
         }
