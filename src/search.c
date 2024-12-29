@@ -263,8 +263,11 @@ SMALL void search_clear(void) {
     stats_clear(pos->matCorrHist);
     stats_clear(pos->pawnCorrHist);
 
+#pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
+#pragma clang loop unroll(disable)
         for (int j = 0; j < 16; j++)
+#pragma clang loop unroll(disable)
             for (int k = 0; k < 64; k++)
                 (*pos->contHist)[c][0][j][k] = -1;
 
@@ -333,12 +336,14 @@ void thread_search(Position* pos) {
     int    iterIdx = 0;
 
     Stack* ss = pos->st;  // At least the seventh element of the allocated array.
+#pragma clang loop unroll(disable)
     for (int i = -7; i < 3; i++)
     {
         memset(SStackBegin(ss[i]), 0, SStackSize);
     }
     (ss - 1)->endMoves = pos->moveList;
 
+#pragma clang loop unroll(disable)
     for (int i = -7; i < 0; i++)
     {
         ss[i].continuationHistory = &(*pos->contHist)[0][0];  // Use as sentinel
@@ -346,6 +351,7 @@ void thread_search(Position* pos) {
         ss[i].checkersBB          = 0;
     }
 
+#pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
     ss->pv = pv;
@@ -357,6 +363,7 @@ void thread_search(Position* pos) {
     pos->completedDepth       = 0;
 
     int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
+#pragma clang loop unroll(disable)
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
@@ -372,6 +379,7 @@ void thread_search(Position* pos) {
 
         // Save the last iteration's scores before first PV line is searched and
         // all the move scores except the (new) PV are set to -VALUE_INFINITE.
+#pragma clang loop unroll(disable)
         for (int idx = 0; idx < rm->size; idx++)
             rm->move[idx].previousScore = rm->move[idx].score;
 
@@ -979,6 +987,7 @@ moves_loop:  // When in check search starts from here.
         if (rootNode)
         {
             RootMove* rm = NULL;
+#pragma clang loop unroll(disable)
             for (int idx = 0; idx < pos->rootMoves->size; idx++)
                 if (pos->rootMoves->move[idx].pv[0] == move)
                 {
@@ -991,7 +1000,7 @@ moves_loop:  // When in check search starts from here.
             {
                 rm->score  = value;
                 rm->pvSize = 1;
-
+#pragma clang loop unroll(disable)
                 for (Move* m = (ss + 1)->pv; *m; ++m)
                     rm->pv[rm->pvSize++] = *m;
 
@@ -1067,6 +1076,7 @@ moves_loop:  // When in check search starts from here.
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
+#pragma clang loop unroll(disable)
             for (int i = 0; i < quietCount; i++)
             {
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -bonus);
@@ -1325,11 +1335,13 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
 static void stable_sort(RootMove* rm, int num) {
     int i, j;
 
+#pragma clang loop unroll(disable)
     for (i = 1; i < num; i++)
         if (rm_lt(rm[i - 1], rm[i]))
         {
             RootMove tmp = rm[i];
             rm[i]        = rm[i - 1];
+#pragma clang loop unroll(disable)
             for (j = i - 1; j > 0 && rm_lt(rm[j - 1], tmp); j--)
                 rm[j] = rm[j - 1];
             rm[j] = tmp;
@@ -1361,7 +1373,8 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 // update_pv() adds current move and appends child pv[]
 
-static void update_pv(Move* pv, Move move, Move* childPv) {
+static void        update_pv(Move* pv, Move move, Move* childPv) {
+#pragma clang loop unroll(disable)
     for (*pv++ = move; childPv && *childPv;)
         *pv++ = *childPv++;
     *pv = 0;
@@ -1416,7 +1429,8 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-    // Decrease all the other played capture moves
+        // Decrease all the other played capture moves
+#pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
         moved_piece = moved_piece(captures[i]);
@@ -1517,7 +1531,7 @@ static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
 
     printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", d,
            uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
-
+#pragma clang loop unroll(disable)
     for (int idx = 0; idx < rm->move[i].pvSize; idx++)
         printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
     printf("\n");
@@ -1566,6 +1580,7 @@ SMALL void prepare_for_search(Position* root) {
     RootMoves* rm = pos->rootMoves;
 
     rm->size = end - list;
+#pragma clang loop unroll(disable)
     for (int i = 0; i < rm->size; i++)
     {
         rm->move[i].pvSize        = 1;
@@ -1577,6 +1592,7 @@ SMALL void prepare_for_search(Position* root) {
 
     // Copy enough of the root State buffer.
     int n = max(7, root->st->pliesFromNull);
+#pragma clang loop unroll(disable)
     for (int i = 0; i <= n; i++)
         memcpy(&pos->stack[i], &root->st[i - n], StateSize);
     pos->st                 = pos->stack + n;
