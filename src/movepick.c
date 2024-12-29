@@ -30,6 +30,8 @@ extern int mp_v6;
 extern int mp_v7;
 extern int mp_v8;
 
+#define LIMIT (-(1 << 30))
+
 // An insertion sort which sorts moves in descending order up to and
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.
@@ -130,7 +132,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->endBadCaptures = st->cur = (st - 1)->endMoves;
         st->endMoves                 = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
-        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
         /* fallthrough */
 
@@ -181,7 +183,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, EVASIONS);
         score_evasions(pos);
-        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
 
     case ST_ALL_EVASIONS :
@@ -197,7 +199,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
-        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
 
     case ST_QCAPTURES :
@@ -228,7 +230,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
-        partial_insertion_sort(st->cur, st->endMoves, 1 << 20);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
         /* fallthrough */
 
