@@ -94,12 +94,10 @@ static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
 
     st->ttMove = ttm;
     st->stage  = checkers() ? ST_EVASION : ST_QSEARCH;
-    if (!ttm || !is_pseudo_legal(pos, ttm)
-        || !(checkers() || d > DEPTH_QS_RECAPTURES || to_sq(ttm) == s))
+    if (!ttm || !is_pseudo_legal(pos, ttm) || !checkers())
         st->stage++;
 
-    st->depth           = d;
-    st->recaptureSquare = s;
+    st->depth = d;
 }
 
 static void mp_init_pc(const Position* pos, Move ttm, Value th) {

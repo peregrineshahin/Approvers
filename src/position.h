@@ -90,7 +90,6 @@ struct Stack {
 
     // MovePicker data
     uint8_t  stage;
-    uint8_t  recaptureSquare;
     Depth    depth;
     Move     ttMove;
     Value    threshold;
