@@ -616,11 +616,6 @@ Value search(
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
 
-    // Step 7. Razoring
-    if (!rootNode && depth <= rz_v2 && eval <= alpha - rz_v1)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode);
-
-
     improving = (ss - 2)->staticEval == VALUE_NONE
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
