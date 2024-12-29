@@ -36,7 +36,7 @@
 
 #if defined __has_attribute
     #if __has_attribute(minsize)
-        #define SMALL __attribute__((minsize, cold))
+        #define SMALL __attribute__((minsize, cold, section(".text.small")))
     #elif __has_attribute(optimize)
         #define SMALL __attribute__((optimize("Os")))
     #endif
