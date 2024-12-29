@@ -262,6 +262,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->contHist);
     stats_clear(pos->matCorrHist);
     stats_clear(pos->pawnCorrHist);
+    stats_clear(pos->prevMoveCorrHist);
 
 #pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
@@ -1125,6 +1126,8 @@ moves_loop:  // When in check search starts from here.
                                bestValue - ss->staticEval);
         add_correction_history(*pos->pawnCorrHist, stm(), pawn_key(), depth,
                                bestValue - ss->staticEval);
+        add_correction_history(*pos->prevMoveCorrHist, stm(), (ss - 1)->currentMove & 4095, depth,
+                               bestValue - ss->staticEval);
     }
 
     return bestValue;
@@ -1385,9 +1388,10 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
 Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
-    Value   v   = rawEval + (pch + mch) / 100 / ch_v2;
-    v           = clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
-    return v;
+    int32_t cph = 100 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
+
+    Value v = rawEval + (pch + mch + cph) / 100 / ch_v2;
+    return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
 // update_continuation_histories() updates countermove and follow-up move history.
