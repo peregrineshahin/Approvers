@@ -38,9 +38,11 @@ void thread_init() {
 
     pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
-
+#pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
+#pragma clang loop unroll(disable)
         for (int j = 0; j < 16; j++)
+#pragma clang loop unroll(disable)
             for (int k = 0; k < 64; k++)
                 (*pos->contHist)[c][0][j][k] = -1;
 

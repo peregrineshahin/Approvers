@@ -74,7 +74,7 @@ SMALL void position(Position* pos, char* str) {
     if (moves)
     {
         int ply = 0;
-
+#pragma clang loop unroll(disable)
         for (moves = strtok(moves, " \t"); moves; moves = strtok(NULL, " \t"))
         {
             Move m = uci_to_move(pos, moves);
@@ -100,6 +100,7 @@ SMALL void position(Position* pos, char* str) {
         // Now move some of the game history at the end of the circular buffer
         // in front of that buffer.
         int k = (pos->st - (pos->stack + 100)) - max(7, pos->st->pliesFromNull);
+#pragma clang loop unroll(disable)
         for (; k < 0; k++)
             memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
     }
@@ -159,9 +160,10 @@ void setoption(char* str) {
 // the search.
 
 static void go(Position* pos, char* str) {
-    Limits           = (struct LimitsType) {0};
+    Limits           = (struct LimitsType){0};
     Limits.startTime = now();  // As early as possible!
 
+#pragma clang loop unroll(disable)
     for (char* token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
     {
         if (strcmp(token, "wtime") == 0)
@@ -341,6 +343,7 @@ Move uci_to_move(const Position* pos, char* str) {
 
     char buf[16];
 
+#pragma clang loop unroll(disable)
     for (ExtMove* m = list; m < last; m++)
         if (strcmp(str, uci_move(buf, m->move)) == 0)
             return m->move;

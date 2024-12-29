@@ -40,6 +40,7 @@ SMALL double my_sqrt(double x) {
     if (x <= 0)
         return 0;
     double guess = x / 2.0;
+#pragma clang loop unroll(disable)
     for (int i = 0; i < 10; ++i)
         guess = (guess + x / guess) / 2.0;
     return guess;

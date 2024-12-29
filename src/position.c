@@ -86,14 +86,17 @@ SMALL void zob_init(void) {
     PRNG rng;
     prng_init(&rng, 1070372);
 
+#pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
+#pragma clang loop unroll(disable)
         for (int pt = PAWN; pt <= KING; pt++)
+#pragma clang loop unroll(disable)
             for (Square s = 0; s < 64; s++)
                 zob.psq[make_piece(c, pt)][s] = prng_rand(&rng);
-
+#pragma clang loop unroll(disable)
     for (int f = 0; f < 8; f++)
         zob.enpassant[f] = prng_rand(&rng);
-
+#pragma clang loop unroll(disable)
     for (int cr = 0; cr < 16; cr++)
         zob.castling[cr] = prng_rand(&rng);
 
