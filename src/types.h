@@ -46,6 +46,8 @@
     #define SMALL
 #endif
 
+#define NOINLINE __attribute__((noinline))
+
 #if defined(USE_PEXT)
     #include <immintrin.h>  // Header for _pext_u64() intrinsic
     #define pext(b, m) _pext_u64(b, m)

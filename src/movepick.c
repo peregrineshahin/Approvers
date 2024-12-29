@@ -36,7 +36,7 @@ extern int mp_v8;
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.
 
-static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
+NOINLINE static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
     for (ExtMove *sortedEnd = begin, *p = begin + 1; p < end; p++)
         if (p->value >= limit)
         {
@@ -65,8 +65,7 @@ static void score_captures(const Position* pos) {
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
-SMALL
-static void score_quiets(const Position* pos) {
+SMALL static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->mainHistory;
 
@@ -117,6 +116,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
     Stack* st = pos->st;
     Move   move;
 
+top:
     switch (st->stage)
     {
 
@@ -127,6 +127,15 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->endMoves = (st - 1)->endMoves;
         st->stage++;
         return st->ttMove;
+
+    case ST_QCAPTURES_INIT :
+    case ST_PROBCUT_INIT :
+        st->cur      = (st - 1)->endMoves;
+        st->endMoves = generate(pos, st->cur, CAPTURES);
+        score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
+        st->stage++;
+        goto top;
 
     case ST_CAPTURES_INIT :
         st->endBadCaptures = st->cur = (st - 1)->endMoves;
@@ -195,13 +204,6 @@ Move next_move(const Position* pos, bool skipQuiets) {
         }
         break;
 
-    case ST_QCAPTURES_INIT :
-        st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate(pos, st->cur, CAPTURES);
-        score_captures(pos);
-        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
-        st->stage++;
-
     case ST_QCAPTURES :
         while (st->cur < st->endMoves)
         {
@@ -225,14 +227,6 @@ Move next_move(const Position* pos, bool skipQuiets) {
                 return move;
         }
         break;
-
-    case ST_PROBCUT_INIT :
-        st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate(pos, st->cur, CAPTURES);
-        score_captures(pos);
-        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
-        st->stage++;
-        /* fallthrough */
 
     case ST_PROBCUT_2 :
         while (st->cur < st->endMoves)
