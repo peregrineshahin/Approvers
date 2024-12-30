@@ -220,7 +220,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
-static void stable_sort(RootMove* rm, int num);
 static void uci_print_pv(Position* pos, Depth depth);
 static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
@@ -379,12 +378,6 @@ void thread_search(Position* pos) {
         // Age out PV variability metric
         totBestMoveChanges /= 2;
 
-        // Save the last iteration's scores before first PV line is searched and
-        // all the move scores except the (new) PV are set to -VALUE_INFINITE.
-#pragma clang loop unroll(disable)
-        for (int idx = 0; idx < rm->size; idx++)
-            rm->move[idx].previousScore = rm->move[idx].score;
-
         pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
@@ -403,14 +396,6 @@ void thread_search(Position* pos) {
         {
             Depth adjustedDepth = max(1, pos->rootDepth);
             pvNew->score = bestValue = search(pos, ss, alpha, beta, adjustedDepth, false, true);
-
-            // Bring the best move to the front. It is critical that sorting
-            // is done with a stable algorithm because all the values but the
-            // first and eventually the new best one are set to -VALUE_INFINITE
-            // and we want to keep the same order for all the moves except the
-            // new PV that goes to the front. Note that in case of MultiPV
-            // search the already searched PV lines are preserved.
-            stable_sort(&rm->move[0], rm->size);
 
             // If search has been stopped, we break immediately. Sorting and
             // writing PV back to TT is safe because RootMoves is still
@@ -439,9 +424,9 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
-        if (rm->move[0].pv[0] != lastBestMove)
+        if (pvNew->line[0] != lastBestMove)
         {
-            lastBestMove      = rm->move[0].pv[0];
+            lastBestMove      = pvNew->line[0];
             lastBestMoveDepth = pos->rootDepth;
         }
 
@@ -1304,26 +1289,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     return bestValue;
 }
 
-#define rm_lt(m1, m2) \
-    ((m1).score != (m2).score ? (m1).score < (m2).score : (m1).previousScore < (m2).previousScore)
-
-// stable_sort() sorts RootMoves from highest-scoring move to lowest-scoring
-// move while preserving order of equal elements.
-static void stable_sort(RootMove* rm, int num) {
-    int i, j;
-
-#pragma clang loop unroll(disable)
-    for (i = 1; i < num; i++)
-        if (rm_lt(rm[i - 1], rm[i]))
-        {
-            RootMove tmp = rm[i];
-            rm[i]        = rm[i - 1];
-#pragma clang loop unroll(disable)
-            for (j = i - 1; j > 0 && rm_lt(rm[j - 1], tmp); j--)
-                rm[j] = rm[j - 1];
-            rm[j] = tmp;
-        }
-}
 
 // value_to_tt() adjusts a mate score from "plies to mate from the root" to
 // "plies to mate from the current position". Non-mate scores are unchanged.
@@ -1554,7 +1519,6 @@ SMALL void prepare_for_search(Position* root) {
         rm->move[i].pvSize        = 1;
         rm->move[i].pv[0]         = list[i].move;
         rm->move[i].score         = -VALUE_INFINITE;
-        rm->move[i].previousScore = -VALUE_INFINITE;
     }
     memcpy(pos, root, offsetof(Position, moveList));
 

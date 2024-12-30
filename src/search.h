@@ -34,7 +34,6 @@
 struct RootMove {
     int   pvSize;
     Value score;
-    Value previousScore;
     Move  pv[3];
 };
 
