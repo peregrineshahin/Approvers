@@ -540,7 +540,7 @@ Value search(
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = ttHit ? tte_move(tte) : 0;
+    ttMove       = rootNode ? ss->pvNew.line[0] : ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -1505,8 +1505,8 @@ SMALL void prepare_for_search(Position* root) {
 #pragma clang loop unroll(disable)
     for (int i = 0; i < rm->size; i++)
     {
-        rm->move[i].pvSize        = 1;
-        rm->move[i].pv[0]         = list[i].move;
+        rm->move[i].pvSize = 1;
+        rm->move[i].pv[0]  = list[i].move;
     }
     memcpy(pos, root, offsetof(Position, moveList));
 
