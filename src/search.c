@@ -270,7 +270,7 @@ SMALL void search_clear(void) {
         for (int j = 0; j < 16; j++)
 #pragma clang loop unroll(disable)
             for (int k = 0; k < 64; k++)
-                (*pos->contHist)[c][0][j][k] = -1;
+                (*pos->contHist)[c][0][j][k] = -71;
 
     Thread.previousScore         = VALUE_INFINITE;
     Thread.previousTimeReduction = 1;
