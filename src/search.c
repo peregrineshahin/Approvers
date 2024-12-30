@@ -221,7 +221,7 @@ static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
 static void uci_print_pv(Position* pos, Depth depth);
-static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
+static bool extract_ponder_from_tt(Position* pos);
 
 SMALL double my_log(double x) {
     double result = 0.0;
@@ -297,14 +297,14 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    if (pos->rootMoves->move[0].pvSize >= 2
-        || extract_ponder_from_tt(&pos->rootMoves->move[0], pos))
+    const int pvSize = pos->st->pvNew.length;
+    if (pvSize >= 2 || (pvSize == 1 && extract_ponder_from_tt(pos)))
     {
         Thread.ponder = true;
         Thread.stop   = false;
 
-        const Move bestMove = pos->rootMoves->move[0].pv[0];
-        const Move ponder   = pos->rootMoves->move[0].pv[1];
+        const Move bestMove = pos->st->pvNew.line[0];
+        const Move ponder   = pos->st->pvNew.line[1];
 
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
@@ -1450,22 +1450,22 @@ static void uci_print_pv(Position* pos, Depth depth) {
     fflush(stdout);
 }
 
-static int extract_ponder_from_tt(RootMove* rm, Position* pos) {
-    if (!rm->pv[0])
-        return 0;
+SMALL static bool extract_ponder_from_tt(Position* pos) {
+    PVariation* pv   = &pos->st->pvNew;
+    Move        move = pv->line[0];
 
-    do_move(pos, rm->pv[0], gives_check(pos, pos->st, rm->pv[0]));
+    do_move(pos, move, gives_check(pos, pos->st, move));
 
     bool     ttHit;
     TTEntry* tte = tt_probe(key(), &ttHit);
     if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
     {
-        rm->pv[1]  = tte_move(tte);
-        rm->pvSize = 2;
+        pv->line[1] = tte_move(tte);
+        pv->length  = 2;
     }
 
-    undo_move(pos, rm->pv[0]);
-    return rm->pvSize > 1;
+    undo_move(pos, move);
+    return pv->length >= 2;
 }
 
 // start_thinking() wakes up the main thread to start a new search,
