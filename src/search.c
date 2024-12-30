@@ -390,7 +390,7 @@ void thread_search(Position* pos) {
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
-            Value previousScore = rm->move[0].previousScore;
+            Value previousScore = pvNew->score;
             delta               = d_v1;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
@@ -560,7 +560,7 @@ Value search(
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = rootNode ? pos->rootMoves->move[0].pv[0] : ttHit ? tte_move(tte) : 0;
+    ttMove       = ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
