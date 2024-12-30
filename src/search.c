@@ -1228,30 +1228,33 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         givesCheck = gives_check(pos, ss, move);
 
         // Futility pruning
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
-            && type_of_m(move) != PROMOTION)
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && non_pawn_material_c(stm()))
         {
-            if (moveCount > 2)
-                continue;
-
-            futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
-
-            if (futilityValue <= alpha)
+            if (!givesCheck && to_sq(move) != prevSq && futilityBase > -VALUE_KNOWN_WIN
+                && type_of_m(move) != PROMOTION)
             {
-                bestValue = max(bestValue, futilityValue);
-                continue;
-            }
+                if (moveCount > 2)
+                    continue;
 
-            if (futilityBase <= alpha && !see_test(pos, move, 1))
-            {
-                bestValue = max(bestValue, futilityBase);
-                continue;
+                futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
+
+                if (futilityValue <= alpha)
+                {
+                    bestValue = max(bestValue, futilityValue);
+                    continue;
+                }
+
+                if (futilityBase <= alpha && !see_test(pos, move, 1))
+                {
+                    bestValue = max(bestValue, futilityBase);
+                    continue;
+                }
             }
+            // Do not search moves with negative SEE values
+            if (!see_test(pos, move, 0))
+                continue;
         }
 
-        // Do not search moves with negative SEE values
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !see_test(pos, move, 0))
-            continue;
 
         // Speculative prefetch as early as possible
         prefetch(tt_first_entry(key_after(pos, move)));
@@ -1399,7 +1402,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
