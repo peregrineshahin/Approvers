@@ -501,6 +501,10 @@ Value search(
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
 
+    // Dive into quiescense search when the depth reaches zero
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0, PvNode);
+
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
     if (!rootNode && alpha < VALUE_DRAW && upcoming_repetition(pos, ss->ply))
@@ -509,10 +513,6 @@ Value search(
         if (alpha >= beta)
             return alpha;
     }
-
-    // Dive into quiescense search when the depth reaches zero
-    if (depth <= 0)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode);
 
     Move     pv[3], capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
@@ -1128,24 +1128,14 @@ moves_loop:  // When in check search starts from here.
 // further decreasing depth per call.
 Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT) {
     const bool PvNode = NT == PV;
-
-    // Check if we have an upcoming move which draws by repetition, or if the
-    // opponent had an alternative move earlier to this position.
-    if (alpha < VALUE_DRAW && upcoming_repetition(pos, ss->ply))
-    {
-        alpha = value_draw(pos);
-        if (alpha >= beta)
-            return alpha;
-    }
-
-    Move     pv[3];
-    TTEntry* tte;
-    Key      posKey;
-    Move     ttMove, move, bestMove;
-    Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase;
-    bool     ttHit, pvHit, givesCheck;
-    Depth    ttDepth;
-    int      moveCount;
+    Move       pv[3];
+    TTEntry*   tte;
+    Key        posKey;
+    Move       ttMove, move, bestMove;
+    Value      bestValue, value, rawEval, ttValue, futilityValue, futilityBase;
+    bool       ttHit, pvHit, givesCheck;
+    Depth      ttDepth;
+    int        moveCount;
 
     if (PvNode && ss->ply <= 2)
     {
