@@ -76,9 +76,9 @@ struct Stack {
     Bitboard checkersBB;
 
     // Original search stack data
-    Move*           pv;
+    Move*           pvOld;
     PieceToHistory* continuationHistory;
-    PVariation      pvNew;
+    PVariation      pv;
     Move            currentMove;
     Move            excludedMove;
     Move            killers[2];
@@ -117,9 +117,9 @@ struct Stack {
 typedef struct Stack Stack;
 
 #define StateCopySize offsetof(Stack, capturedPiece)
-#define StateSize offsetof(Stack, pv)
-#define SStackBegin(st) (&st.pv)
-#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, pv))
+#define StateSize offsetof(Stack, pvOld)
+#define SStackBegin(st) (&st.pvOld)
+#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, pvOld))
 
 
 // Position struct stores information regarding the board representation as

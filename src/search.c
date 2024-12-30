@@ -288,23 +288,23 @@ void mainthread_search(void) {
 
     Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
-    Thread.previousScore = pos->st->pvNew.score;
+    Thread.previousScore = pos->st->pv.score;
 
-    printf("bestmove %s\n", uci_move(buf, pos->st->pvNew.line[0]));
+    printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
 
     if (!IsKaggle && !Thread.testPonder)
         return;
 
     // Start pondering right after the best move has been printed if we can
-    const int pvSize = pos->st->pvNew.length;
+    const int pvSize = pos->st->pv.length;
     if (pvSize >= 2 || (pvSize == 1 && extract_ponder_from_tt(pos)))
     {
         Thread.ponder = true;
         Thread.stop   = false;
 
-        const Move bestMove = pos->st->pvNew.line[0];
-        const Move ponder   = pos->st->pvNew.line[1];
+        const Move bestMove = pos->st->pv.line[0];
+        const Move ponder   = pos->st->pv.line[1];
 
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
         do_move(pos, ponder, gives_check(pos, pos->st, ponder));
@@ -353,7 +353,7 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
-    ss->pv = pv;
+    ss->pvOld = pv;
 
     ss->accumulator.needs_refresh = 1;
 
@@ -366,7 +366,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
-    PVariation* pvNew = &pos->st->pvNew;
+    PVariation* pvNew = &pos->st->pv;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
@@ -471,7 +471,7 @@ Value search(
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
 
-    ss->pvNew.length = 0;
+    ss->pv.length = 0;
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
@@ -529,7 +529,7 @@ Value search(
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = rootNode ? ss->pvNew.line[0] : ttHit ? tte_move(tte) : 0;
+    ttMove       = rootNode ? ss->pv.line[0] : ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -705,7 +705,7 @@ moves_loop:  // When in check search starts from here.
         ss->moveCount = ++moveCount;
 
         if (PvNode && ss->ply <= 2)
-            (ss + 1)->pv = NULL;
+            (ss + 1)->pvOld = NULL;
 
         extension          = 0;
         captureOrPromotion = is_capture_or_promotion(pos, move);
@@ -906,8 +906,8 @@ moves_loop:  // When in check search starts from here.
         {
             if (ss->ply <= 2)
             {
-                (ss + 1)->pv    = pv;
-                (ss + 1)->pv[0] = 0;
+                (ss + 1)->pvOld    = pv;
+                (ss + 1)->pvOld[0] = 0;
             }
 
             // Extend move from transposition table if we are about to dive into qsearch.
@@ -950,12 +950,12 @@ moves_loop:  // When in check search starts from here.
                 bestMove = move;
 
                 if (PvNode && !rootNode && ss->ply <= 2)  // Update pv even in fail-high case
-                    update_pv(ss->pv, move, (ss + 1)->pv);
+                    update_pv(ss->pvOld, move, (ss + 1)->pvOld);
 
-                ss->pvNew.line[0] = move;
-                ss->pvNew.length  = (ss + 1)->pvNew.length + 1;
-                memcpy(ss->pvNew.line + 1, (ss + 1)->pvNew.line,
-                       sizeof(Move) * (ss + 1)->pvNew.length);
+                ss->pv.line[0] = move;
+                ss->pv.length  = (ss + 1)->pv.length + 1;
+                memcpy(ss->pv.line + 1, (ss + 1)->pv.line,
+                       sizeof(Move) * (ss + 1)->pv.length);
 
                 if (value >= beta)
                 {
@@ -1087,8 +1087,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
 
     if (PvNode && ss->ply <= 2)
     {
-        (ss + 1)->pv = pv;
-        ss->pv[0]    = 0;
+        (ss + 1)->pvOld = pv;
+        ss->pvOld[0]    = 0;
     }
 
     bestMove  = 0;
@@ -1421,7 +1421,7 @@ static void check_time(void) {
 
 static void uci_print_pv(Position* pos, Depth depth) {
     TimePoint   elapsed        = time_elapsed() + 1;
-    PVariation* pv             = &pos->st->pvNew;
+    PVariation* pv             = &pos->st->pv;
     uint64_t    nodes_searched = Thread.pos->nodes;
     char        buf[16];
 
@@ -1436,7 +1436,7 @@ static void uci_print_pv(Position* pos, Depth depth) {
 }
 
 SMALL static bool extract_ponder_from_tt(Position* pos) {
-    PVariation* pv   = &pos->st->pvNew;
+    PVariation* pv   = &pos->st->pv;
     Move        move = pv->line[0];
 
     do_move(pos, move, gives_check(pos, pos->st, move));
@@ -1469,7 +1469,7 @@ SMALL void prepare_for_search(Position* root) {
     pos->rootDepth = 0;
     pos->nodes     = 0;
 
-    root->st->pvNew.length = 0;
+    root->st->pv.length = 0;
     memcpy(pos, root, offsetof(Position, moveList));
 
     // Copy enough of the root State buffer.
