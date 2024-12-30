@@ -1229,7 +1229,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
 
         // Futility pruning
         if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
-            && type_of_m(move) != PROMOTION)
+            && type_of_m(move) != PROMOTION && to_sq(move) != prevSq)
         {
             if (moveCount > 2)
                 continue;
