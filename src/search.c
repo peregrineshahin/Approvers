@@ -1203,7 +1203,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         if (PvNode && bestValue > alpha)
             alpha = bestValue;
 
-        futilityBase = bestValue + qsf_v1;
+        futilityBase = ss->staticEval + qsf_v1;
     }
 
     ss->continuationHistory = &(*pos->contHist)[0][0];
