@@ -703,7 +703,7 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= iir_v1 && !ttMove)
+    if ((PvNode || cutNode) && depth >= iir_v1 && !ttMove)
         depth -= iir_v2;
 
 moves_loop:  // When in check search starts from here.
@@ -1399,8 +1399,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
-#pragma clang loop unroll(disable)
+    // Decrease all the other played capture moves
     for (int i = 0; i < captureCnt; i++)
     {
         moved_piece = moved_piece(captures[i]);
