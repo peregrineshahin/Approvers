@@ -98,8 +98,11 @@ PARAM(lmr_v11, 996)
 PARAM(lmr_v12, 88)
 PARAM(lmr_v13, 111)
 PARAM(lmr_v14, 1109)
-PARAM(lmr_v15, 14626)
-PARAM(lmr_v16, 993)
+PARAM(lmr_v15, 1474)
+PARAM(lmr_v16, 100)
+PARAM(lmr_v17, 100)
+PARAM(lmr_v18, 100)
+PARAM(lmr_v19, 100)
 PARAM(fmc_v1, 3)
 PARAM(fmc_v2, 2)
 PARAM(fmc_v3, 2)
@@ -863,7 +866,6 @@ moves_loop:  // When in check search starts from here.
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= lmr_v2;
@@ -887,10 +889,12 @@ moves_loop:  // When in check search starts from here.
                 else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
                     r -= lmr_v6 + lmr_v7 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
 
-                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
-                              + (*contHist1)[movedPiece][to_sq(move)]
-                              + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v8;
+                ss->statScore = (lmr_v16 * (*pos->mainHistory)[!stm()][from_to(move)]
+                                 + lmr_v17 * (*contHist0)[movedPiece][to_sq(move)]
+                                 + lmr_v18 * (*contHist1)[movedPiece][to_sq(move)]
+                                 + lmr_v19 * (*contHist2)[movedPiece][to_sq(move)])
+                                / 100
+                              - lmr_v8;
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
                 if (ss->statScore >= -lmr_v9 && (ss - 1)->statScore < -lmr_v10)
@@ -900,7 +904,7 @@ moves_loop:  // When in check search starts from here.
                     r += lmr_v14;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v15 * lmr_v16;
+                r -= 100 * ss->statScore / lmr_v15;
             }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
