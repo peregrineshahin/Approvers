@@ -30,11 +30,13 @@ extern int mp_v6;
 extern int mp_v7;
 extern int mp_v8;
 
+#define LIMIT (-(1 << 30))
+
 // An insertion sort which sorts moves in descending order up to and
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.
 
-static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
+NOINLINE static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
     for (ExtMove *sortedEnd = begin, *p = begin + 1; p < end; p++)
         if (p->value >= limit)
         {
@@ -44,23 +46,6 @@ static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
                 *q = *(q - 1);
             *q = tmp;
         }
-}
-
-
-// pick_best() finds the best move in the range (begin, end).
-
-static Move pick_best(ExtMove* begin, ExtMove* end) {
-    ExtMove *p, *q;
-
-    for (p = begin, q = begin + 1; q < end; q++)
-        if (q->value > p->value)
-            p = q;
-    Move m       = p->move;
-    int  v       = p->value;
-    *p           = *begin;
-    begin->value = v;
-
-    return m;
 }
 
 
@@ -80,8 +65,7 @@ static void score_captures(const Position* pos) {
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
-SMALL
-static void score_quiets(const Position* pos) {
+SMALL static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->mainHistory;
 
@@ -132,6 +116,7 @@ Move next_move(const Position* pos, bool skipQuiets) {
     Stack* st = pos->st;
     Move   move;
 
+top:
     switch (st->stage)
     {
 
@@ -143,17 +128,27 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->stage++;
         return st->ttMove;
 
+    case ST_QCAPTURES_INIT :
+    case ST_PROBCUT_INIT :
+        st->cur      = (st - 1)->endMoves;
+        st->endMoves = generate(pos, st->cur, CAPTURES);
+        score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
+        st->stage++;
+        goto top;
+
     case ST_CAPTURES_INIT :
         st->endBadCaptures = st->cur = (st - 1)->endMoves;
         st->endMoves                 = generate(pos, st->cur, CAPTURES);
         score_captures(pos);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
         /* fallthrough */
 
     case ST_GOOD_CAPTURES :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove)
             {
                 if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2))
@@ -197,27 +192,22 @@ Move next_move(const Position* pos, bool skipQuiets) {
         st->cur      = (st - 1)->endMoves;
         st->endMoves = generate(pos, st->cur, EVASIONS);
         score_evasions(pos);
+        partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
 
     case ST_ALL_EVASIONS :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove)
                 return move;
         }
         break;
 
-    case ST_QCAPTURES_INIT :
-        st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate(pos, st->cur, CAPTURES);
-        score_captures(pos);
-        st->stage++;
-
     case ST_QCAPTURES :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove
                 && (st->depth > DEPTH_QS_RECAPTURES || to_sq(move) == st->recaptureSquare))
                 return move;
@@ -238,17 +228,10 @@ Move next_move(const Position* pos, bool skipQuiets) {
         }
         break;
 
-    case ST_PROBCUT_INIT :
-        st->cur      = (st - 1)->endMoves;
-        st->endMoves = generate(pos, st->cur, CAPTURES);
-        score_captures(pos);
-        st->stage++;
-        /* fallthrough */
-
     case ST_PROBCUT_2 :
         while (st->cur < st->endMoves)
         {
-            move = pick_best(st->cur++, st->endMoves);
+            move = (st->cur++)->move;
             if (move != st->ttMove && see_test(pos, move, st->threshold))
                 return move;
         }
