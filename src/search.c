@@ -60,8 +60,6 @@ PARAM(nmp_v9, 194)
 PARAM(qmo_v1, 367)
 PARAM(qmo_v2, 1230)
 PARAM(qmo_v3, 1010)
-PARAM(rz_v1, 573)
-PARAM(rz_v2, 1)
 PARAM(ft_v1, 197)
 PARAM(rd_v1, 595)
 PARAM(rd_v2, 1237)
@@ -77,23 +75,31 @@ PARAM(fpp_v2, 214)
 PARAM(fpp_v3, 183)
 PARAM(sqsee_v1, 27)
 PARAM(sfpc_v1, 6)
-PARAM(sfpc_v3, 197)
-PARAM(sfpc_v4, 219)
+PARAM(sfpc_v2, 197)
+PARAM(sfpc_v3, 219)
 PARAM(scsee_v1, 199)
 PARAM(se_v1, 5)
 PARAM(se_v2, 111)
-PARAM(se_v5, 27)
-PARAM(se_v7, 2)
-PARAM(se_v8, 2)
+PARAM(se_v3, 27)
 PARAM(prb_v1, 125)
 PARAM(prb_v2, 43)
 PARAM(rfp_v1, 9)
-PARAM(lmr_v3, 4079)
-PARAM(lmr_v4, 104)
-PARAM(lmr_v5, 88)
-PARAM(lmr_v6, 88)
-PARAM(lmr_v7, 111)
-PARAM(lmr_v8, 14626)
+PARAM(lmr_v1, 1056)
+PARAM(lmr_v2, 2183)
+PARAM(lmr_v3, 1290)
+PARAM(lmr_v4, 1089)
+PARAM(lmr_v5, 1975)
+PARAM(lmr_v6, 1727)
+PARAM(lmr_v7, 860)
+PARAM(lmr_v8, 4079)
+PARAM(lmr_v9, 104)
+PARAM(lmr_v10, 88)
+PARAM(lmr_v11, 996)
+PARAM(lmr_v12, 88)
+PARAM(lmr_v13, 111)
+PARAM(lmr_v14, 1109)
+PARAM(lmr_v15, 14626)
+PARAM(lmr_v16, 993)
 PARAM(fmc_v1, 3)
 PARAM(fmc_v2, 2)
 PARAM(fmc_v3, 2)
@@ -113,6 +119,7 @@ PARAM(ch_v2, 162)
 PARAM(ch_v3, 286)
 PARAM(ch_v4, 84)
 PARAM(ch_v5, 105)
+PARAM(ch_v6, 100)
 PARAM(tempo, 44)
 PARAM(mp_v1, 70)
 PARAM(mp_v2, 1064)
@@ -135,23 +142,11 @@ PARAM(pcmb_v8, 125)
 PARAM(pcmb_v9, 250)
 PARAM(pcmb_v10, 108)
 PARAM(pcmb_v11, 142)
-PARAM(r_v1, 1056)
-PARAM(r_v2, 2183)
-PARAM(r_v6, 1290)
-PARAM(r_v7, 1089)
-PARAM(r_v8, 1975)
-PARAM(r_v9, 1727)
-PARAM(r_v10, 860)
-PARAM(r_v11, 996)
-PARAM(r_v12, 1109)
-PARAM(r_v13, 993)
 PARAM(lce_v1, 2280)
 PARAM(qb_v1, 193)
 PARAM(cms_v1, 29212)
 PARAM(hu_v1, 10216)
 PARAM(cpth_v1, 11664)
-PARAM(kb_v1, 29)
-
 PARAM(tm_v1, 329)
 PARAM(tm_v2, 555)
 PARAM(tm_v3, 657)
@@ -777,7 +772,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Futility pruning for captures
                 if (!givesCheck && lmrDepth < sfpc_v1 && !inCheck
-                    && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
+                    && ss->staticEval + sfpc_v2 + sfpc_v3 * lmrDepth
                            + PieceValue[type_of_p(piece_on(to_sq(move)))]
                          <= alpha)
                     continue;
@@ -811,7 +806,7 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5)
+                if (!PvNode && value < singularBeta - se_v3)
                     extension = 2;
             }
 
@@ -861,7 +856,7 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
 
-        r = r * r_v1;
+        r = r * lmr_v1;
 
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
@@ -871,41 +866,41 @@ moves_loop:  // When in check search starts from here.
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2;
+                r -= lmr_v2;
 
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r += r_v6;
+                    r += lmr_v3;
 
                 if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
+                    r += lmr_v4;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
-                    r += r_v8;
+                    r += lmr_v5;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
                 // hence break make_move().
                 else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
+                    r -= lmr_v6 + lmr_v7 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
 
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v8;
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
+                if (ss->statScore >= -lmr_v9 && (ss - 1)->statScore < -lmr_v10)
+                    r -= lmr_v11;
 
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
+                else if ((ss - 1)->statScore >= -lmr_v12 && ss->statScore < -lmr_v13)
+                    r += lmr_v14;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                r -= ss->statScore / lmr_v15 * lmr_v16;
             }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
@@ -1363,7 +1358,7 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
 Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t cph = 100 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
+    int32_t cph = ch_v6 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
 
     Value v = rawEval + (pch + mch + cph) / 100 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
@@ -1399,7 +1394,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
