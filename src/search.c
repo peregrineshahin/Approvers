@@ -353,8 +353,8 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
-    ss->pvOld = pv;
 
+    ss->pvOld = pv;
     ss->accumulator.needs_refresh = 1;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
@@ -704,9 +704,6 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        if (PvNode && ss->ply <= 2)
-            (ss + 1)->pvOld = NULL;
-
         extension          = 0;
         captureOrPromotion = is_capture_or_promotion(pos, move);
         movedPiece         = moved_piece(move);
@@ -904,12 +901,6 @@ moves_loop:  // When in check search starts from here.
         // parent node fail low with value <= alpha and try another move.
         if (PvNode && (moveCount == 1 || value > alpha))
         {
-            if (ss->ply <= 2)
-            {
-                (ss + 1)->pvOld    = pv;
-                (ss + 1)->pvOld[0] = 0;
-            }
-
             // Extend move from transposition table if we are about to dive into qsearch.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
                 newDepth = max(newDepth, 1);
@@ -948,9 +939,6 @@ moves_loop:  // When in check search starts from here.
             if (value > alpha)
             {
                 bestMove = move;
-
-                if (PvNode && !rootNode && ss->ply <= 2)  // Update pv even in fail-high case
-                    update_pv(ss->pvOld, move, (ss + 1)->pvOld);
 
                 ss->pv.line[0] = move;
                 ss->pv.length  = (ss + 1)->pv.length + 1;
@@ -1084,12 +1072,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     bool     ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
-
-    if (PvNode && ss->ply <= 2)
-    {
-        (ss + 1)->pvOld = pv;
-        ss->pvOld[0]    = 0;
-    }
 
     bestMove  = 0;
     moveCount = 0;
