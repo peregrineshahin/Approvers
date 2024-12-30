@@ -80,6 +80,14 @@ static void set_check_info(Position* pos) {
 
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
+SMALL
+Key H1(Key h) { return h & 0x1fff; }
+
+SMALL
+Key H2(Key h) { return (h >> 16) & 0x1fff; }
+
+static Key      cuckoo[8192];
+static uint16_t cuckooMove[8192];
 
 SMALL void zob_init(void) {
 
@@ -821,5 +829,39 @@ SMALL bool is_draw(const Position* pos) {
     return false;
 }
 
+bool upcoming_repetition(const Position* pos, int ply) {
+    int j;
+
+    int end = min(pos->st->rule50, pos->st->pliesFromNull);
+
+    if (end < 3)
+        return false;
+
+    Key    originalKey = pos->st->key;
+    Stack* stp         = pos->st - 1;
+    Key    other       = originalKey ^ stp->key ^ zob.side;
+
+    for (int i = 3; i <= end; i += 2)
+    {
+        stp = (stp - 1);
+        other ^= stp->key ^ (stp - 1)->key ^ zob.side;
+        stp = (stp - 1);
+
+        if (other != 0)
+            continue;
+
+        Key moveKey = originalKey ^ stp->key;
+        if ((j = H1(moveKey), cuckoo[j] == moveKey) || (j = H2(moveKey), cuckoo[j] == moveKey))
+        {
+            Move m = cuckooMove[j];
+            if (!((((Bitboard*) BetweenBB)[m] ^ sq_bb(to_sq(m))) & pieces()))
+            {
+                if (ply > i)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
 
 void pos_set_check_info(Position* pos) { set_check_info(pos); }

@@ -228,6 +228,8 @@ PURE bool is_draw(const Position* pos);
 #define non_pawn_material_c(c) (pos->st->nonPawnMaterial[c])
 #define non_pawn_material() (non_pawn_material_c(WHITE) + non_pawn_material_c(BLACK))
 
+bool upcoming_repetition(const Position* pos, int ply);
+
 static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
 }
