@@ -271,7 +271,7 @@ SMALL void search_clear(void) {
             for (int k = 0; k < 64; k++)
                 (*pos->contHist)[c][0][j][k] = -1;
 
-    Thread.previousScore         = VALUE_INFINITE;
+    Thread.previousScore         = VALUE_ZERO;
     Thread.previousTimeReduction = 1;
 }
 
@@ -288,7 +288,7 @@ void mainthread_search(void) {
 
     Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
-    Thread.previousScore = pos->rootMoves->move[0].score;
+    Thread.previousScore = pos->st->pvNew.score;
 
     printf("bestmove %s\n", uci_move(buf, pos->st->pvNew.line[0]));
     fflush(stdout);
@@ -311,7 +311,6 @@ void mainthread_search(void) {
 
         pos->completedDepth = 0;
         pos->rootDepth      = 0;
-        pos->pvLast         = 0;
 
         prepare_for_search(pos);
         thread_search(pos);
@@ -362,12 +361,11 @@ void thread_search(Position* pos) {
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
 
-    int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
+    int value = Thread.previousScore;
 #pragma clang loop unroll(disable)
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
-    RootMoves*  rm    = pos->rootMoves;
     PVariation* pvNew = &pos->st->pvNew;
 
     // Iterative deepening loop until requested to stop or the target depth
@@ -377,8 +375,6 @@ void thread_search(Position* pos) {
     {
         // Age out PV variability metric
         totBestMoveChanges /= 2;
-
-        pos->pvLast = rm->size;
 
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
@@ -457,8 +453,7 @@ void thread_search(Position* pos) {
               tm_v21 / 1000.0
               + max(1.0, tm_v22 / 100.0 - tm_v23 / 100.0 / (pos->rootDepth)) * totBestMoveChanges;
 
-            double totalTime =
-              rm->size == 1 ? 0 : time_optimum() * fallingEval * reduction * bestMoveInstability;
+            double totalTime = time_optimum() * fallingEval * reduction * bestMoveInstability;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -959,7 +954,6 @@ moves_loop:  // When in check search starts from here.
             // PV move or new best move ?
             if (moveCount == 1 || value > alpha)
             {
-                rm->score  = value;
                 rm->pvSize = 1;
 #pragma clang loop unroll(disable)
                 for (Move* m = (ss + 1)->pv; *m; ++m)
@@ -971,11 +965,6 @@ moves_loop:  // When in check search starts from here.
                 if (moveCount > 1)
                     pos->bestMoveChanges++;
             }
-            else
-                // All other moves but the PV are set to the lowest value: this is
-                // not a problem when sorting because the sort is stable and the
-                // move position in the list is preserved - just the PV is pushed up.
-                rm->score = -VALUE_INFINITE;
         }
 
         if (value > bestValue)
@@ -1518,7 +1507,6 @@ SMALL void prepare_for_search(Position* root) {
     {
         rm->move[i].pvSize        = 1;
         rm->move[i].pv[0]         = list[i].move;
-        rm->move[i].score         = -VALUE_INFINITE;
     }
     memcpy(pos, root, offsetof(Position, moveList));
 

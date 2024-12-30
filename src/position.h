@@ -143,7 +143,6 @@ struct Position {
     RootMoves* rootMoves;
     Stack*     stack;
     uint64_t   nodes;
-    int        pvLast;
     Depth      rootDepth;
     Depth      completedDepth;
 
