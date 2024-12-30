@@ -1250,7 +1250,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         }
 
         // Do not search moves with negative SEE values
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !see_test(pos, move, 0))
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && !see_test(pos, move, -108))
             continue;
 
         // Speculative prefetch as early as possible
