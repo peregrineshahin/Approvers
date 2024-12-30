@@ -221,7 +221,7 @@ static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
 static void stable_sort(RootMove* rm, int num);
-static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta);
+static void uci_print_pv(Position* pos, Depth depth);
 static int  extract_ponder_from_tt(RootMove* rm, Position* pos);
 
 SMALL double my_log(double x) {
@@ -368,7 +368,8 @@ void thread_search(Position* pos) {
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
-    RootMoves* rm = pos->rootMoves;
+    RootMoves*  rm    = pos->rootMoves;
+    PVariation* pvNew = &pos->st->pvNew;
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
@@ -401,7 +402,7 @@ void thread_search(Position* pos) {
         while (true)
         {
             Depth adjustedDepth = max(1, pos->rootDepth);
-            bestValue           = search(pos, ss, alpha, beta, adjustedDepth, false, true);
+            pvNew->score = bestValue = search(pos, ss, alpha, beta, adjustedDepth, false, true);
 
             // Bring the best move to the front. It is critical that sorting
             // is done with a stable algorithm because all the values but the
@@ -432,7 +433,7 @@ void thread_search(Position* pos) {
 
 #ifndef KAGGLE
         if (!Thread.ponder)
-            uci_print_pv(pos, pos->rootDepth, alpha, beta);
+            uci_print_pv(pos, pos->rootDepth);
 #endif
 
         if (!Thread.stop)
@@ -1003,10 +1004,10 @@ moves_loop:  // When in check search starts from here.
                 if (PvNode && !rootNode && ss->ply <= 2)  // Update pv even in fail-high case
                     update_pv(ss->pv, move, (ss + 1)->pv);
 
-                ss->pvNew.length  = 1 + (ss + 1)->pvNew.length;
                 ss->pvNew.line[0] = move;
+                ss->pvNew.length  = (ss + 1)->pvNew.length + 1;
                 memcpy(ss->pvNew.line + 1, (ss + 1)->pvNew.line,
-                       sizeof(uint16_t) * (ss + 1)->pvNew.length);
+                       sizeof(Move) * (ss + 1)->pvNew.length);
 
                 if (value >= beta)
                 {
@@ -1406,7 +1407,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
@@ -1490,27 +1491,17 @@ static void check_time(void) {
 // UCI requires that all (if any) unsearched PV lines are sent with a
 // previous search score.
 
-static void uci_print_pv(Position* pos, Depth depth, Value alpha, Value beta) {
-    TimePoint  elapsed        = time_elapsed() + 1;
-    RootMoves* rm             = pos->rootMoves;
-    uint64_t   nodes_searched = Thread.pos->nodes;
-    char       buf[16];
+static void uci_print_pv(Position* pos, Depth depth) {
+    TimePoint   elapsed        = time_elapsed() + 1;
+    PVariation* pv             = &pos->st->pvNew;
+    uint64_t    nodes_searched = Thread.pos->nodes;
+    char        buf[16];
 
-    int i = 0;
-
-    bool updated = rm->move[i].score != -VALUE_INFINITE;
-
-    Depth d = updated ? depth : max(1, depth - 1);
-    Value v = updated ? rm->move[i].score : rm->move[i].previousScore;
-
-    if (v == -VALUE_INFINITE)
-        v = VALUE_ZERO;
-
-    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", d,
-           uci_value(buf, v), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
+    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", depth,
+           uci_value(buf, pv->score), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
 #pragma clang loop unroll(disable)
-    for (int idx = 0; idx < rm->move[i].pvSize; idx++)
-        printf(" %s", uci_move(buf, rm->move[i].pv[idx]));
+    for (int i = 0; i < pv->length; i++)
+        printf(" %s", uci_move(buf, pv->line[i]));
     printf("\n");
 
     fflush(stdout);
