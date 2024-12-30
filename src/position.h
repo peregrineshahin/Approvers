@@ -70,15 +70,15 @@ struct Stack {
     uint8_t castlingRights;
 
     // Not copied when making a move
-    uint8_t  capturedPiece;
-    uint8_t  epSquare;
-    Key      key;
-    Bitboard checkersBB;
+    uint8_t    capturedPiece;
+    uint8_t    epSquare;
+    Key        key;
+    Bitboard   checkersBB;
+    PVariation pv;
 
     // Original search stack data
     Move*           pvOld;
     PieceToHistory* continuationHistory;
-    PVariation      pv;
     Move            currentMove;
     Move            excludedMove;
     Move            killers[2];
@@ -140,10 +140,10 @@ struct Position {
     ExtMove* moveList;
 
     // Relevant mainly to the search of the root position.
-    Stack*     stack;
-    uint64_t   nodes;
-    Depth      rootDepth;
-    Depth      completedDepth;
+    Stack*   stack;
+    uint64_t nodes;
+    Depth    rootDepth;
+    Depth    completedDepth;
 
     // Pointers to thread-specific tables.
     ButterflyHistory*        mainHistory;
