@@ -879,7 +879,7 @@ moves_loop:  // When in check search starts from here.
                 if (ttCapture)
                     r += r_v6;
 
-                if ((ss + 1)->cutoffCnt > 3)
+                if ((ss + 1)->cutoffCnt > 2)
                     r += r_v7;
 
                 // Increase reduction for cut nodes
@@ -1399,7 +1399,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
