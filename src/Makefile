@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+MAKEFLAGS += -j$(nproc)
 CC      = clang
 CFLAGS  = -O3 -fno-common -ffunction-sections -fdata-sections -mavx2   \
           -g0 -fno-asynchronous-unwind-tables -fstrict-aliasing        \
@@ -37,6 +38,9 @@ all: build
 build: clean $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(EXE) $(LDFLAGS)
 
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 kaggle: CFLAGS += -DKAGGLE
 kaggle: clean $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(EXE) $(LDFLAGS)
@@ -45,7 +49,10 @@ bench: build
 	./$(EXE) bench
 
 clean:
-	@rm -f $(EXE) $(OBJ)
+	@if [ -f $(EXE) ]; then rm -f $(EXE); fi
+	@for file in $(OBJ); do \
+		if [ -f $$file ]; then rm -f $$file; fi; \
+	done
 
 format:
 	clang-format -i $(filter-out incbin.h, $(wildcard *.c) $(wildcard *.h))
