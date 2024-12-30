@@ -1257,13 +1257,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         prefetch(tt_first_entry(key_after(pos, move)));
 
         ss->currentMove         = move;
-        bool captureOrPromotion = is_capture_or_promotion(pos, move);
         ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
-
-        if (!captureOrPromotion && bestValue > VALUE_MATED_IN_MAX_PLY
-            && (*(ss - 1)->continuationHistory)[moved_piece(move)][to_sq(move)] < 0
-            && (*(ss - 2)->continuationHistory)[moved_piece(move)][to_sq(move)] < 0)
-            continue;
 
         // Make and search the move
         do_move(pos, move, givesCheck);
