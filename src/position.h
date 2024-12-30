@@ -151,6 +151,7 @@ struct Position {
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       matCorrHist;
     CorrectionHistory*       pawnCorrHist;
+    CorrectionHistory*       prevMoveCorrHist;
     ContinuationHistoryStat* contHist;
 
     // Thread-control data.
