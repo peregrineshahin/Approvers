@@ -76,6 +76,7 @@ struct Stack {
     Bitboard checkersBB;
 
     // Original search stack data
+    PVariation      pvNew;
     Move*           pv;
     PieceToHistory* continuationHistory;
     Move            currentMove;

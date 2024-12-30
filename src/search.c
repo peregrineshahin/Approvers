@@ -291,7 +291,7 @@ void mainthread_search(void) {
     thread_search(pos);
     Thread.previousScore = pos->rootMoves->move[0].score;
 
-    printf("bestmove %s\n", uci_move(buf, pos->rootMoves->move[0].pv[0]));
+    printf("bestmove %s\n", uci_move(buf, pos->st->pvNew.line[0]));
     fflush(stdout);
 
     if (!IsKaggle && !Thread.testPonder)
@@ -500,6 +500,8 @@ Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
+
+    ss->pvNew.length = 0;
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
@@ -1000,6 +1002,11 @@ moves_loop:  // When in check search starts from here.
 
                 if (PvNode && !rootNode && ss->ply <= 2)  // Update pv even in fail-high case
                     update_pv(ss->pv, move, (ss + 1)->pv);
+
+                ss->pvNew.length  = 1 + (ss + 1)->pvNew.length;
+                ss->pvNew.line[0] = move;
+                memcpy(ss->pvNew.line + 1, (ss + 1)->pvNew.line,
+                       sizeof(uint16_t) * (ss + 1)->pvNew.length);
 
                 if (value >= beta)
                 {

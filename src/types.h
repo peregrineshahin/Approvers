@@ -264,6 +264,13 @@ typedef struct Position   Position;
 typedef struct LimitsType LimitsType;
 typedef struct RootMove   RootMove;
 typedef struct RootMoves  RootMoves;
+typedef struct PVariation PVariation;
+
+struct PVariation {
+    int  length;
+    int  score;
+    Move line[MAX_PLY];
+};
 
 enum {
     CORRECTION_HISTORY_ENTRY_NB = 16384,
