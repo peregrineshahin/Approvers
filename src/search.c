@@ -385,30 +385,19 @@ void thread_search(Position* pos) {
             beta                = min(previousScore + delta, VALUE_INFINITE);
         }
 
-        // Start with a small aspiration window and, in the case of a fail
-        // high/low, re-search with a bigger window until we're not failing
-        // high/low anymore.
         while (true)
         {
-            Depth adjustedDepth = max(1, pos->rootDepth);
-            pvNew->score = bestValue = search(pos, ss, alpha, beta, adjustedDepth, false, true);
+            pvNew->score = bestValue = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
 
-            // If search has been stopped, we break immediately. Sorting and
-            // writing PV back to TT is safe because RootMoves is still
-            // valid, although it refers to the previous iteration.
+            // If search has been stopped, we break immediately
             if (Thread.stop)
                 break;
 
-            // In case of failing low/high increase aspiration window and
-            // re-search, otherwise exit the loop.
-            if (bestValue <= alpha)
-            {
-                beta  = (alpha + beta) / 2;
-                alpha = max(bestValue - delta, -VALUE_INFINITE);
-            }
-            else
+            if (bestValue > alpha)
                 break;
 
+            beta  = (alpha + beta) / 2;
+            alpha = max(bestValue - delta, -VALUE_INFINITE);
             delta += delta / 4 + asd_v1 / 100;
         }
 

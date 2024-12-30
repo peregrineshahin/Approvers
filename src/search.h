@@ -23,7 +23,6 @@
 
 #include "misc.h"
 #include "position.h"
-#include "thread.h"
 #include "types.h"
 
 // RootMove struct is used for moves at the root of the tree. For each root
@@ -33,7 +32,6 @@
 
 struct RootMove {
     int   pvSize;
-    Value score;
     Move  pv[3];
 };
 
