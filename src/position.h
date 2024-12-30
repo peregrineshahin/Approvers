@@ -140,7 +140,6 @@ struct Position {
     ExtMove* moveList;
 
     // Relevant mainly to the search of the root position.
-    RootMoves* rootMoves;
     Stack*     stack;
     uint64_t   nodes;
     Depth      rootDepth;

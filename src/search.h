@@ -25,25 +25,6 @@
 #include "position.h"
 #include "types.h"
 
-// RootMove struct is used for moves at the root of the tree. For each root
-// move we store a score and a PV (really a refutation in the case of moves
-// which fail low). Score is normally set at -VALUE_INFINITE for all non-pv
-// moves.
-
-struct RootMove {
-    int   pvSize;
-    Move  pv[3];
-};
-
-typedef struct RootMove RootMove;
-
-struct RootMoves {
-    int      size;
-    RootMove move[MAX_MOVES];
-};
-
-typedef struct RootMoves RootMoves;
-
 /// LimitsType struct stores information sent by GUI about available time to
 /// search the current move, maximum depth/time, if we are in analysis mode or
 /// if we have to ponder while it's our opponent's turn to move.

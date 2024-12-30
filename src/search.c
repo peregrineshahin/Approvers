@@ -931,23 +931,8 @@ moves_loop:  // When in check search starts from here.
 
         if (rootNode)
         {
-            RootMove* rm = NULL;
-#pragma clang loop unroll(disable)
-            for (int idx = 0; idx < pos->rootMoves->size; idx++)
-                if (pos->rootMoves->move[idx].pv[0] == move)
-                {
-                    rm = &pos->rootMoves->move[idx];
-                    break;
-                }
-
-            // PV move or new best move ?
             if (moveCount == 1 || value > alpha)
             {
-                rm->pvSize = 1;
-#pragma clang loop unroll(disable)
-                for (Move* m = (ss + 1)->pv; *m; ++m)
-                    rm->pv[rm->pvSize++] = *m;
-
                 // We record how often the best move has been changed in each
                 // iteration. This information is used for time management: When
                 // the best move changes frequently, we allocate some more time.
@@ -1480,23 +1465,11 @@ SMALL void prepare_for_search(Position* root) {
     Thread.stop          = false;
     Thread.increaseDepth = true;
 
-    // Generate all legal moves.
-    ExtMove  list[MAX_MOVES];
-    ExtMove* end = generate_pseudo_legal(root, list);
-
     Position* pos  = Thread.pos;
     pos->rootDepth = 0;
     pos->nodes     = 0;
 
-    RootMoves* rm = pos->rootMoves;
-
-    rm->size = end - list;
-#pragma clang loop unroll(disable)
-    for (int i = 0; i < rm->size; i++)
-    {
-        rm->move[i].pvSize = 1;
-        rm->move[i].pv[0]  = list[i].move;
-    }
+    root->st->pvNew.length = 0;
     memcpy(pos, root, offsetof(Position, moveList));
 
     // Copy enough of the root State buffer.

@@ -262,8 +262,6 @@ static Key make_key(uint64_t seed) {
 
 typedef struct Position   Position;
 typedef struct LimitsType LimitsType;
-typedef struct RootMove   RootMove;
-typedef struct RootMoves  RootMoves;
 typedef struct PVariation PVariation;
 
 struct PVariation {
