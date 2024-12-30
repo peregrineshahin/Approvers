@@ -884,7 +884,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Increase reduction for cut nodes
                 if (cutNode)
-                    r += r_v8 - (tte_depth(tte) >= depth && ss->ttPv) * 1000;
+                    r += r_v8 + !(tte_depth(tte) >= depth && ss->ttPv) * 1000;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
