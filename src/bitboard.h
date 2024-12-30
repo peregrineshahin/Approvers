@@ -54,8 +54,9 @@ static __attribute__((pure)) Bitboard sq_bb(Square s) { return 1LL << s; }
 
 static uint64_t more_than_one(Bitboard b) { return b & (b - 1); }
 
+static Bitboard rank_bb(Rank r) { return Rank1BB << (r << 3); }
 
-static Bitboard file_bb(File f) { return 0x101010101010101 << f; }
+static Bitboard file_bb(File f) { return FileABB << f; }
 
 
 // shift_bb() moves a bitboard one step along direction Direction.
