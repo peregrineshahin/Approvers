@@ -390,7 +390,7 @@ void thread_search(Position* pos) {
         if (pos->rootDepth >= 4)
         {
             Value previousScore = rm->move[0].previousScore;
-            delta               = d_v1;
+            delta               = d_v1 + previousScore * previousScore / 16384;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
         }
