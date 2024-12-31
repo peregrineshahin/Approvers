@@ -931,7 +931,7 @@ moves_loop:  // When in check search starts from here.
                 r += 2037;
 
             value =
-              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > 2983), !cutNode, false);
+              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > 7983), !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
