@@ -52,7 +52,6 @@ PARAM(nmp_v1, 764)
 PARAM(nmp_v2, 56)
 PARAM(nmp_v3, 165)
 PARAM(nmp_v4, 182)
-PARAM(nmp_v5, 25312)
 PARAM(nmp_v6, 27)
 PARAM(nmp_v7, 23)
 PARAM(nmp_v8, 92)
@@ -634,8 +633,7 @@ Value search(
         return eval;                // - futility_margin(depth); (do not do the right thing)
 
     // Step 9. Null move search
-    if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
-        && eval >= beta && eval >= ss->staticEval
+    if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && eval >= beta && eval >= ss->staticEval
         && ss->staticEval >= beta - nmp_v6 * depth - nmp_v7 * improving + nmp_v8 * ss->ttPv + nmp_v9
         && !excludedMove && non_pawn_material_c(stm()))
     {
