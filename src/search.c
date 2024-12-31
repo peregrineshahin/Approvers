@@ -908,7 +908,7 @@ moves_loop:  // When in check search starts from here.
                 r -= ss->statScore / lmr_v8 * r_v13;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
@@ -1399,7 +1399,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
