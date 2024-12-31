@@ -865,10 +865,8 @@ moves_loop:  // When in check search starts from here.
 
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
-        if (depth >= 2 && moveCount > 1 + 2 * rootNode
-            && (!captureOrPromotion || cutNode || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1 + 2 * rootNode)
         {
-
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2;
