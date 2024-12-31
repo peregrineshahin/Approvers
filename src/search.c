@@ -618,7 +618,7 @@ Value search(
     }
 
     improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
+                ? (ss - 4)->staticEval != VALUE_NONE && ss->staticEval > (ss - 4)->staticEval
                 : ss->staticEval > (ss - 2)->staticEval;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
