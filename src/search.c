@@ -62,7 +62,8 @@ PARAM(qmo_v2, 1230)
 PARAM(qmo_v3, 1010)
 PARAM(rz_v1, 573)
 PARAM(rz_v2, 1)
-PARAM(ft_v1, 197)
+PARAM(ft_v1, 109)
+PARAM(ft_v2, 27)
 PARAM(rd_v1, 595)
 PARAM(rd_v2, 1237)
 PARAM(rd_v3, 848)
@@ -88,6 +89,7 @@ PARAM(se_v8, 2)
 PARAM(prb_v1, 125)
 PARAM(prb_v2, 43)
 PARAM(rfp_v1, 9)
+PARAM(rfp_v2, 290)
 PARAM(lmr_v3, 4079)
 PARAM(lmr_v4, 104)
 PARAM(lmr_v5, 88)
@@ -184,7 +186,13 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
+static int futility_margin(Depth d, bool noTtCutNode, bool improving, bool oppWorsening) {
+    Value futilityMult       = ft_v1 - ft_v2 * noTtCutNode;
+    Value improvingDeduction = improving * futilityMult * 2;
+    Value worseningDeduction = oppWorsening * futilityMult / 3;
+
+    return futilityMult * d - improvingDeduction - worseningDeduction;
+}
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -350,6 +358,7 @@ void thread_search(Position* pos) {
         ss[i].continuationHistory = &(*pos->contHist)[0][0];  // Use as sentinel
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
+        ss[i].statScore           = 0;
     }
 
 #pragma clang loop unroll(disable)
@@ -511,7 +520,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, opponentWorsening;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
@@ -586,7 +595,7 @@ Value search(
     {
         // Skip early pruning when in check
         ss->staticEval = eval = rawEval = VALUE_NONE;
-        improving                       = false;
+        improving = opponentWorsening = false;
         goto moves_loop;
     }
     else if (ttHit)
@@ -617,6 +626,8 @@ Value search(
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
 
+    opponentWorsening = ss->staticEval + (ss - 1)->staticEval > tempo;
+
     improving = (ss - 2)->staticEval == VALUE_NONE
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
@@ -628,10 +639,12 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
-    // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 && eval - futility_margin(depth, improving) >= beta
-        && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
-        return eval;                // - futility_margin(depth); (do not do the right thing)
+    if (!ss->ttPv && depth < rfp_v1
+        && eval - futility_margin(depth, cutNode && !ttHit, improving, opponentWorsening)
+               - (ss - 1)->statScore / rfp_v2
+             >= beta
+        && eval >= beta && (!ttMove || ttCapture))
+        return eval;
 
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
@@ -708,6 +721,7 @@ Value search(
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
+
     PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
     PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
     PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
@@ -1399,7 +1413,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
