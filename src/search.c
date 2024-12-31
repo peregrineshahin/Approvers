@@ -1193,6 +1193,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         // Stand pat. Return immediately if static value is at least beta
         if (bestValue >= beta)
         {
+            if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY)
+                bestValue = (bestValue + beta) / 2;
             if (!ttHit)
                 tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false, BOUND_LOWER,
                          DEPTH_NONE, 0, rawEval);
