@@ -70,13 +70,13 @@ struct Stack {
     uint8_t castlingRights;
 
     // Not copied when making a move
-    uint8_t  capturedPiece;
-    uint8_t  epSquare;
-    Key      key;
-    Bitboard checkersBB;
+    uint8_t    capturedPiece;
+    uint8_t    epSquare;
+    Key        key;
+    Bitboard   checkersBB;
+    PVariation pv;
 
     // Original search stack data
-    Move*           pv;
     PieceToHistory* continuationHistory;
     Move            currentMove;
     Move            excludedMove;
@@ -116,9 +116,9 @@ struct Stack {
 typedef struct Stack Stack;
 
 #define StateCopySize offsetof(Stack, capturedPiece)
-#define StateSize offsetof(Stack, pv)
-#define SStackBegin(st) (&st.pv)
-#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, pv))
+#define StateSize offsetof(Stack, continuationHistory)
+#define SStackBegin(st) (&st.continuationHistory)
+#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, continuationHistory))
 
 
 // Position struct stores information regarding the board representation as
@@ -139,12 +139,10 @@ struct Position {
     ExtMove* moveList;
 
     // Relevant mainly to the search of the root position.
-    RootMoves* rootMoves;
-    Stack*     stack;
-    uint64_t   nodes;
-    int        pvLast;
-    Depth      rootDepth;
-    Depth      completedDepth;
+    Stack*   stack;
+    uint64_t nodes;
+    Depth    rootDepth;
+    Depth    completedDepth;
 
     // Pointers to thread-specific tables.
     ButterflyHistory*        mainHistory;

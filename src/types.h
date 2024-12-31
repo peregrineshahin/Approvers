@@ -262,8 +262,13 @@ static Key make_key(uint64_t seed) {
 
 typedef struct Position   Position;
 typedef struct LimitsType LimitsType;
-typedef struct RootMove   RootMove;
-typedef struct RootMoves  RootMoves;
+typedef struct PVariation PVariation;
+
+struct PVariation {
+    int  length;
+    int  score;
+    Move line[5];
+};
 
 enum {
     CORRECTION_HISTORY_ENTRY_NB = 16384,
