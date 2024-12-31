@@ -1194,7 +1194,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         if (bestValue >= beta)
         {
             if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY)
-                bestValue = (bestValue + beta) / 2;
+                bestValue = (3 * bestValue + beta) / 4;
             if (!ttHit)
                 tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false, BOUND_LOWER,
                          DEPTH_NONE, 0, rawEval);
