@@ -138,13 +138,6 @@ void setoption(char* str) {
     }
 #endif
 
-    if (strcmp("Hash", name) == 0)
-    {
-        tt_free();
-        tt_allocate(atoi(value));
-        return;
-    }
-
     if (strcmp("Pondering", name) == 0)
     {
         Thread.testPonder = strcmp("true", value) == 0;
