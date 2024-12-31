@@ -370,6 +370,8 @@ void thread_search(Position* pos) {
 
     RootMoves* rm = pos->rootMoves;
 
+    int searchAgainCounter = 0;
+
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
     while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
@@ -386,6 +388,9 @@ void thread_search(Position* pos) {
 
         pos->pvLast = rm->size;
 
+        if (!Thread.increaseDepth)
+            searchAgainCounter++;
+
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
@@ -398,10 +403,12 @@ void thread_search(Position* pos) {
         // Start with a small aspiration window and, in the case of a fail
         // high/low, re-search with a bigger window until we're not failing
         // high/low anymore.
+        int failedHighCnt = 0;
         while (true)
         {
-            Depth adjustedDepth = max(1, pos->rootDepth);
-            bestValue           = search(pos, ss, alpha, beta, adjustedDepth, false, true);
+            Depth adjustedDepth =
+              max(1, pos->rootDepth - failedHighCnt - 3 * (searchAgainCounter + 1) / 4);
+            bestValue = search(pos, ss, alpha, beta, adjustedDepth, false, true);
 
             // Bring the best move to the front. It is critical that sorting
             // is done with a stable algorithm because all the values but the
@@ -421,8 +428,14 @@ void thread_search(Position* pos) {
             // re-search, otherwise exit the loop.
             if (bestValue <= alpha)
             {
-                beta  = (alpha + beta) / 2;
-                alpha = max(bestValue - delta, -VALUE_INFINITE);
+                failedHighCnt = 0;
+                beta          = (alpha + beta) / 2;
+                alpha         = max(bestValue - delta, -VALUE_INFINITE);
+            }
+            else if (bestValue >= beta)
+            {
+                beta = min(bestValue + delta, VALUE_INFINITE);
+                ++failedHighCnt;
             }
             else
                 break;
