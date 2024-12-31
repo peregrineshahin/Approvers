@@ -562,7 +562,7 @@ Value search(
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff.
-    if (!PvNode && ttHit && tte_depth(tte) >= depth
+    if (!PvNode && ttHit && tte_depth(tte) > depth - (ttValue <= beta)
         && ttValue != VALUE_NONE  // Possible in case of TT access race.
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
     {
@@ -1399,7 +1399,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
