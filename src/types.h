@@ -267,7 +267,7 @@ typedef struct PVariation PVariation;
 struct PVariation {
     int  length;
     int  score;
-    Move line[MAX_PLY];
+    Move line[5];
 };
 
 enum {

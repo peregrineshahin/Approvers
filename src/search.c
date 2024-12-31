@@ -529,7 +529,7 @@ Value search(
     posKey       = !excludedMove ? key() : key() ^ make_key(excludedMove);
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = rootNode ? ss->pv.line[0] : ttHit ? tte_move(tte) : 0;
+    ttMove       = ttHit ? tte_move(tte) : MOVE_NONE;
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -940,9 +940,12 @@ moves_loop:  // When in check search starts from here.
             {
                 bestMove = move;
 
-                ss->pv.line[0] = move;
-                ss->pv.length  = (ss + 1)->pv.length + 1;
-                memcpy(ss->pv.line + 1, (ss + 1)->pv.line, sizeof(Move) * (ss + 1)->pv.length);
+                if (ss->ply < 5)
+                {
+                    ss->pv.line[0] = move;
+                    ss->pv.length  = (ss + 1)->pv.length + 1;
+                    memcpy(ss->pv.line + 1, (ss + 1)->pv.line, sizeof(Move) * (ss + 1)->pv.length);
+                }
 
                 if (value >= beta)
                 {
@@ -1460,10 +1463,6 @@ SMALL void prepare_for_search(Position* root) {
         memcpy(&pos->stack[i], &root->st[i - n], StateSize);
     pos->st                 = pos->stack + n;
     (pos->st - 1)->endMoves = pos->moveList;
-
-    ExtMove list[MAX_MOVES];
-    generate_pseudo_legal(root, list);
-    pos->st->pv.line[0] = list[0].move;
 
     pos_set_check_info(pos);
 }
