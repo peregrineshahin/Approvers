@@ -79,9 +79,6 @@ static void mp_init(const Position* pos, Move ttm, Depth d) {
 
     st->depth = d;
 
-    st->mpKillers[0] = st->killers[0];
-    st->mpKillers[1] = st->killers[1];
-
     st->ttMove = ttm;
     st->stage  = checkers() ? ST_EVASION : ST_MAIN_SEARCH;
     if (!ttm || !is_pseudo_legal(pos, ttm))

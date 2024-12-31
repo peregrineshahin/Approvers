@@ -764,7 +764,6 @@ moves_loop:  // When in check search starts from here.
             Value singularBeta  = ttValue - se_v2 * depth / 100;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
-            Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
             value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
 
@@ -794,8 +793,6 @@ moves_loop:  // When in check search starts from here.
             // move picker data. So we fix it.
             mp_init(pos, ttMove, depth);
             ss->stage++;
-            ss->mpKillers[0] = k1;
-            ss->mpKillers[1] = k2;
         }
 
         // Last capture extension

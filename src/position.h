@@ -94,7 +94,6 @@ struct Stack {
     Depth    depth;
     Move     ttMove;
     Value    threshold;
-    Move     mpKillers[2];
     ExtMove *cur, *endMoves, *endBadCaptures;
 
     // CheckInfo data
