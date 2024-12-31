@@ -916,7 +916,8 @@ moves_loop:  // When in check search starts from here.
                 value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
                 if (!captureOrPromotion)
                 {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
+                    int bonus =
+                      value > alpha ? 5 * stat_bonus(newDepth) / 2 : -stat_malus(newDepth);
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
             }
