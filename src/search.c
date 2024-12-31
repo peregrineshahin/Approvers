@@ -675,7 +675,7 @@ moves_loop:  // When in check search starts from here.
     PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
     PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
 
-    mp_init(pos, ttMove, depth, ss->ply);
+    mp_init(pos, ttMove, depth);
 
     value            = bestValue;
     moveCountPruning = false;
@@ -792,7 +792,7 @@ moves_loop:  // When in check search starts from here.
 
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
-            mp_init(pos, ttMove, depth, ss->ply);
+            mp_init(pos, ttMove, depth);
             ss->stage++;
             ss->mpKillers[0] = k1;
             ss->mpKillers[1] = k2;
