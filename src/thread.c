@@ -45,7 +45,7 @@ void thread_init() {
         for (int j = 0; j < 16; j++)
 #pragma clang loop unroll(disable)
             for (int k = 0; k < 64; k++)
-                (*pos->contHist)[c][0][j][k] = -71;
+                (*pos->contHist)[c][0][j][k] = -371;
 
     Thread.pos = pos;
 
