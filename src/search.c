@@ -205,10 +205,6 @@ static Value stat_bonus(Depth d) { return min((hb_v1 * d / 100 + hb_v2) * d - hb
 // History and stats update malus, based on depth
 static Value stat_malus(Depth d) { return min((hm_v1 * d / 100 + hm_v2) * d - hm_v3, hm_v4); }
 
-// Add a small random component to draw evaluations to keep search dynamic
-// and to avoid three-fold blindness. (Yucks, ugly hack)
-static Value value_draw(Position* pos) { return VALUE_DRAW + 2 * (pos->nodes & 1) - 1; }
-
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_pv(Move* pv, Move move, Move* childPv);
@@ -500,7 +496,7 @@ Value search(
     {
         // Step 2. Check for aborted search and immediate draw
         if (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY)
-            return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : value_draw(pos);
+            return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : VALUE_DRAW;
     }
 
     (ss + 1)->ttPv         = false;
@@ -566,9 +562,6 @@ Value search(
             rawEval = evaluate(pos);
 
         eval = ss->staticEval = to_corrected(pos, rawEval);
-
-        if (eval == VALUE_DRAW)
-            eval = value_draw(pos);
 
         // Can ttValue be used as a better position evaluation?
         if (ttValue != VALUE_NONE
