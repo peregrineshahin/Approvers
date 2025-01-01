@@ -60,8 +60,6 @@ PARAM(nmp_v9, 194)
 PARAM(qmo_v1, 367)
 PARAM(qmo_v2, 1230)
 PARAM(qmo_v3, 1010)
-PARAM(rz_v1, 573)
-PARAM(rz_v2, 1)
 PARAM(ft_v1, 197)
 PARAM(rd_v1, 595)
 PARAM(rd_v2, 1237)
@@ -83,8 +81,6 @@ PARAM(scsee_v1, 199)
 PARAM(se_v1, 5)
 PARAM(se_v2, 111)
 PARAM(se_v5, 27)
-PARAM(se_v7, 2)
-PARAM(se_v8, 2)
 PARAM(prb_v1, 125)
 PARAM(prb_v2, 43)
 PARAM(rfp_v1, 9)
@@ -113,6 +109,7 @@ PARAM(ch_v2, 162)
 PARAM(ch_v3, 286)
 PARAM(ch_v4, 84)
 PARAM(ch_v5, 105)
+PARAM(ch_v6, 100)
 PARAM(tempo, 44)
 PARAM(mp_v1, 70)
 PARAM(mp_v2, 1064)
@@ -150,7 +147,6 @@ PARAM(qb_v1, 193)
 PARAM(cms_v1, 29212)
 PARAM(hu_v1, 10216)
 PARAM(cpth_v1, 11664)
-PARAM(kb_v1, 29)
 
 PARAM(tm_v1, 329)
 PARAM(tm_v2, 555)
@@ -1275,7 +1271,7 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
 Value to_corrected(Position* pos, Value rawEval) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t cph = 100 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
+    int32_t cph = ch_v6 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
 
     Value v = rawEval + (pch + mch + cph) / 100 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
