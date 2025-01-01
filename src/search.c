@@ -717,12 +717,6 @@ moves_loop:  // When in check search starts from here.
 
             if (!captureOrPromotion && !givesCheck)
             {
-                // Countermoves based pruning
-                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < 0
-                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
-                    continue;
-
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
                     && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
