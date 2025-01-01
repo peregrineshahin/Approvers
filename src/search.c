@@ -255,12 +255,10 @@ SMALL void search_clear(void) {
     stats_clear(pos->prevMoveCorrHist);
 
 #pragma clang loop unroll(disable)
-    for (int c = 0; c < 2; c++)
+    for (int pc = 0; pc < 15; pc++)
 #pragma clang loop unroll(disable)
-        for (int j = 0; j < 15; j++)
-#pragma clang loop unroll(disable)
-            for (int k = 0; k < 64; k++)
-                (*pos->contHist)[c][0][j][k] = -1;
+        for (int sq = 0; sq < 64; sq++)
+            (*pos->contHist)[0][0][pc][sq] = -1;
 
     Thread.previousScore         = VALUE_INFINITE;
     Thread.previousTimeReduction = 1;
