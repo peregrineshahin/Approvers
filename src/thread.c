@@ -41,7 +41,7 @@ void thread_init() {
 #pragma clang loop unroll(disable)
     for (int c = 0; c < 2; c++)
 #pragma clang loop unroll(disable)
-        for (int j = 0; j < 16; j++)
+        for (int j = 0; j < 15; j++)
 #pragma clang loop unroll(disable)
             for (int k = 0; k < 64; k++)
                 (*pos->contHist)[c][0][j][k] = -1;
