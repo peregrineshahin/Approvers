@@ -666,7 +666,7 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if (PvNode && depth >= iir_v1 && !ttMove)
+    if ((PvNode || cutNode) && depth >= (1 + cutNode) * iir_v1 && !ttMove)
         depth -= iir_v2;
 
 moves_loop:  // When in check search starts from here.
