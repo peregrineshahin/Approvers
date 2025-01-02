@@ -33,7 +33,7 @@ Value evaluate(Position* pos) {
     v = v * (mat_scale + non_pawn_material()) / 32768;
 
     // Damp down the evaluation linearly when shuffling
-    v = v * (100 - rule50_count()) / 100;
+    v = v * (256 - rule50_count()) / 256;
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }
