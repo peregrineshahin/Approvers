@@ -153,6 +153,7 @@ PARAM(cms_v1, 29212)
 PARAM(hu_v1, 10216)
 PARAM(cpth_v1, 11664)
 PARAM(ded_v1, 64)
+PARAM(fill_v1, 0)
 
 PARAM(tm_v1, 329)
 PARAM(tm_v2, 555)
@@ -259,6 +260,11 @@ SMALL void search_clear(void) {
     stats_clear(pos->matCorrHist);
     stats_clear(pos->pawnCorrHist);
     stats_clear(pos->prevMoveCorrHist);
+
+    int16_t* ptr = (int16_t*) pos->contHist;
+#pragma clang loop unroll(disable)
+    for (size_t i = 0; i < sizeof(ContinuationHistoryStat) / sizeof(int16_t); i++)
+        ptr[i] = fill_v1;
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 15; pc++)
