@@ -721,7 +721,9 @@ moves_loop:  // When in check search starts from here.
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
-                    && ss->staticEval + fpp_v2 + fpp_v3 * lmrDepth <= alpha)
+                    && ss->staticEval + (bestValue < ss->staticEval - 64 ? fpp_v2 : 64)
+                           + fpp_v3 * lmrDepth
+                         <= alpha)
                     continue;
 
                 // Prune moves with negative SEE at low depths and below a decreasing
@@ -1307,7 +1309,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-    // Decrease all the other played capture moves
+        // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
