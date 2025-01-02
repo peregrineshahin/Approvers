@@ -223,8 +223,6 @@ PURE bool is_draw(const Position* pos);
 #define game_ply() (pos->gamePly)
 #define nodes_searched() (pos->nodes)
 #define rule50_count() (pos->st->rule50)
-#define non_pawn_material_c(c) (pos->st->nonPawnMaterial[c])
-#define non_pawn_material() (non_pawn_material_c(WHITE) + non_pawn_material_c(BLACK))
 
 static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
@@ -243,6 +241,20 @@ static bool gives_check(const Position* pos, Stack* st, Move m) {
     return type_of_m(m) == NORMAL && !(blockers_for_king(pos, !stm()) & pieces_c(stm()))
            ? (bool) (st->checkSquares[type_of_p(moved_piece(m))] & sq_bb(to_sq(m)))
            : gives_check_special(pos, st, m);
+}
+
+static bool has_non_pawn_material(const Position* pos) {
+    return pieces_cpp(stm(), PAWN, KING) != pieces_c(stm());
+}
+
+static bool low_material(const Position* pos) {
+    if (pieces_p(QUEEN) != 0)
+        return false;
+
+    const Bitboard minor = popcount(pieces_pp(KNIGHT, BISHOP));
+    const Bitboard rooks = popcount(pieces_p(ROOK));
+
+    return (minor <= 3 && rooks == 0) || (minor <= 1 && rooks == 1);
 }
 
 void pos_set_check_info(Position* pos);
