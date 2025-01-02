@@ -54,7 +54,7 @@ void tt_allocate(size_t mbSize) {
     size_t size     = TT.clusterCount * sizeof(Cluster);
 
 #ifdef _WIN32
-    TT.mem = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    TT.mem   = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     TT.table = (Cluster*) TT.mem;
 #else /* Unix */
     TT.mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

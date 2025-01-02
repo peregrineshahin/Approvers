@@ -202,7 +202,6 @@ static Value stat_malus(Depth d) { return min((hm_v1 * d / 100 + hm_v2) * d - hm
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
-static void  update_pv(Move* pv, Move move, Move* childPv);
 static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value rawEval);
 static void
@@ -464,7 +463,7 @@ Value search(
     if (depth <= 0)
         return qsearch(pos, ss, alpha, beta, 0, PvNode);
 
-    Move     pv[3], capturesSearched[32], quietsSearched[32];
+    Move     capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
@@ -592,8 +591,8 @@ Value search(
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
-        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9
-        && !excludedMove && non_pawn_material_c(stm()))
+        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
+        && non_pawn_material_c(stm()))
     {
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
@@ -1062,7 +1061,6 @@ moves_loop:  // When in check search starts from here.
 Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT) {
     const bool PvNode = NT == PV;
 
-    Move     pv[3];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
@@ -1256,14 +1254,6 @@ static Value value_from_tt(Value v, int ply, int r50c) {
     return v;
 }
 
-// update_pv() adds current move and appends child pv[]
-
-static void        update_pv(Move* pv, Move move, Move* childPv) {
-#pragma clang loop unroll(disable)
-    for (*pv++ = move; childPv && *childPv;)
-        *pv++ = *childPv++;
-    *pv = 0;
-}
 
 // differential.
 static void
