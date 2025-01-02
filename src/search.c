@@ -871,7 +871,16 @@ moves_loop:  // When in check search starts from here.
 
             if (value > alpha && d < newDepth)
             {
-                value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+                // Adjust full-depth search based on LMR results - if the result was
+                // good enough search deeper, if it was bad enough search shallower.
+                const bool doDeeperSearch    = value > bestValue + 64;
+                const bool doShallowerSearch = value < bestValue + newDepth;
+
+                newDepth += doDeeperSearch - doShallowerSearch;
+
+                if (newDepth > d)
+                    value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+
                 if (!captureOrPromotion)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
@@ -1309,7 +1318,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
