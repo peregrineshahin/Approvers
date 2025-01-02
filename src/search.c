@@ -70,9 +70,13 @@ PARAM(iir_v1, 6)
 PARAM(iir_v2, 2)
 PARAM(cbp_v1, 3)
 PARAM(cbp_v2, 0)
+PARAM(cbp_v3, 0)
+PARAM(cbp_v4, 0)
 PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 214)
 PARAM(fpp_v3, 183)
+PARAM(fpp_v4, 64)
+PARAM(fpp_v5, 64)
 PARAM(sqsee_v1, 27)
 PARAM(sfpc_v1, 6)
 PARAM(sfpc_v3, 197)
@@ -147,6 +151,7 @@ PARAM(qb_v1, 193)
 PARAM(cms_v1, 29212)
 PARAM(hu_v1, 10216)
 PARAM(cpth_v1, 11664)
+PARAM(ded_v1, 64)
 
 PARAM(tm_v1, 329)
 PARAM(tm_v2, 555)
@@ -715,13 +720,13 @@ moves_loop:  // When in check search starts from here.
             {
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < 0
-                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
+                    && (*contHist0)[movedPiece][to_sq(move)] < -cbp_v3
+                    && (*contHist1)[movedPiece][to_sq(move)] < -cbp_v4)
                     continue;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
-                    && ss->staticEval + (bestValue < ss->staticEval - 64 ? fpp_v2 : 64)
+                    && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
                            + fpp_v3 * lmrDepth
                          <= alpha)
                     continue;
@@ -873,7 +878,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
-                const bool doDeeperSearch    = value > bestValue + 64;
+                const bool doDeeperSearch    = value > bestValue + ded_v1;
                 const bool doShallowerSearch = value < bestValue + newDepth;
 
                 newDepth += doDeeperSearch - doShallowerSearch;
