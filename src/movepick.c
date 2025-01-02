@@ -32,6 +32,9 @@ extern int mp_v8;
 
 #define LIMIT (-(1 << 30))
 
+Value PieceValue[16] = {0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0, 0,
+                        0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0};
+
 // An insertion sort which sorts moves in descending order up to and
 // including a given limit. The order of moves smaller than the limit is
 // left unspecified.

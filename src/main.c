@@ -29,7 +29,6 @@
 
 int main(int argc, char** argv) {
     nnue_init();
-    psqt_init();
     bitboards_init();
     zob_init();
     thread_init();

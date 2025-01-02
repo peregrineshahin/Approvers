@@ -41,7 +41,6 @@ struct Zob {
 
 extern struct Zob zob;
 
-void psqt_init(void);
 void zob_init(void);
 
 // Stack struct stores information needed to restore a Position struct to
