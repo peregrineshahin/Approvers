@@ -592,7 +592,7 @@ Value search(
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
         && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
-        && has_non_pawn_material(pos))
+        && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
@@ -699,7 +699,7 @@ moves_loop:  // When in check search starts from here.
         Depth r = reduction(improving, depth, moveCount);
 
         // Step 13. Pruning at shallow depth
-        if (!rootNode && has_non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
+        if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
             moveCountPruning = moveCount >= futility_move_count(improving, depth);

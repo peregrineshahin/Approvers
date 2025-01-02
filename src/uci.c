@@ -44,37 +44,25 @@ char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 // the moves given in the following move list ("moves").
 
 SMALL void position(Position* pos, char* str) {
-    char  fen[128];
-    char* moves;
+    // Start of circular buffer of 100 slots.
+    pos->st = pos->stack + 100;
 
-    moves = strstr(str, "moves");
+    if (strncmp(str, "fen", 3) == 0)
+        pos_set(pos, str + 4);
+#ifndef KAGGLE
+    else if (strncmp(str, "startpos", 8) == 0)
+        pos_set(pos, StartFEN);
+
+    // Parse move list (if any).
+    char* moves = strstr(str, "moves");
     if (moves)
     {
         if (moves > str)
             moves[-1] = 0;
         moves += 5;
-    }
 
-    if (strncmp(str, "fen", 3) == 0)
-    {
-        strncpy(fen, str + 4, 127);
-        fen[127] = 0;
-    }
-#ifndef DKAGGLE
-    else if (strncmp(str, "startpos", 8) == 0)
-        strcpy(fen, StartFEN);
-#endif
-    else
-        return;
-
-    pos->st = pos->stack + 100;  // Start of circular buffer of 100 slots.
-    pos_set(pos, fen);
-
-    // Parse move list (if any).
-    if (moves)
-    {
         int ply = 0;
-#pragma clang loop unroll(disable)
+    #pragma clang loop unroll(disable)
         for (moves = strtok(moves, " \t"); moves; moves = strtok(NULL, " \t"))
         {
             Move m = uci_to_move(pos, moves);
@@ -100,12 +88,11 @@ SMALL void position(Position* pos, char* str) {
         // Now move some of the game history at the end of the circular buffer
         // in front of that buffer.
         int k = (pos->st - (pos->stack + 100)) - max(7, pos->st->pliesFromNull);
-#pragma clang loop unroll(disable)
+    #pragma clang loop unroll(disable)
         for (; k < 0; k++)
             memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
     }
-
-    (pos->st - 1)->endMoves = pos->moveList;
+#endif
 }
 
 
@@ -174,7 +161,7 @@ static void go(Position* pos, char* str) {
             Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "binc") == 0)
             Limits.inc[BLACK] = atoi(strtok(NULL, " \t"));
-#ifndef DKAGGLE
+#ifndef KAGGLE
         else if (strcmp(token, "depth") == 0)
             Limits.depth = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "nodes") == 0)

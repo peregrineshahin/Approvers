@@ -233,7 +233,7 @@ static bool gives_check(const Position* pos, Stack* st, Move m) {
            : gives_check_special(pos, st, m);
 }
 
-static bool has_non_pawn_material(const Position* pos) {
+static bool non_pawn_material(const Position* pos) {
     return pieces_cpp(stm(), PAWN, KING) != pieces_c(stm());
 }
 
