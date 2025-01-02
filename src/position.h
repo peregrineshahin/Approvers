@@ -53,15 +53,6 @@ struct Stack {
     Key materialKey;
     union {
         struct {
-            Score psq;
-            union {
-                uint16_t nonPawnMaterial[2];
-                uint32_t nonPawn;
-            };
-        };
-    };
-    union {
-        struct {
             uint8_t pliesFromNull;
             uint8_t rule50;
         };

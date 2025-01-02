@@ -22,8 +22,6 @@
 
 Value PieceValue[16] = {0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue};
 
-uint32_t NonPawnPieceValue[16];
-
 // init() initializes piece-square tables: the white halves of the tables
 // are copied from Bonus[] adding the piece value, then the black  halves
 // of the tables are initialized by flipping and changing the sign of the
@@ -34,20 +32,5 @@ SMALL void         psqt_init(void) {
     for (int pt = PAWN; pt <= KING; pt++)
     {
         PieceValue[make_piece(BLACK, pt)] = PieceValue[pt];
-    }
-    union {
-        uint16_t val[2];
-        uint32_t combi;
-    } tmp;
-    NonPawnPieceValue[W_PAWN] = NonPawnPieceValue[B_PAWN] = 0;
-#pragma clang loop unroll(disable)
-    for (int pt = KNIGHT; pt < KING; pt++)
-    {
-        tmp.val[0]                = PieceValue[pt];
-        tmp.val[1]                = 0;
-        NonPawnPieceValue[pt]     = tmp.combi;
-        tmp.val[0]                = 0;
-        tmp.val[1]                = PieceValue[pt];
-        NonPawnPieceValue[pt + 8] = tmp.combi;
     }
 }
