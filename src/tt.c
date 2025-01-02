@@ -18,10 +18,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DKAGGLE
-    #include <inttypes.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>  // For memset
 #ifndef _WIN32
