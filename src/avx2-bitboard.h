@@ -67,15 +67,15 @@ static Bitboard attacks_bb_bishop(Square s, Bitboard occupied) {
     // flip vertical to simulate MS1B by LS1B
     const __m128i swapl2h   = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 2, 1, 0);
     __m128i       occupied2 = _mm_shuffle_epi8(_mm_cvtsi64_si128(occupied), swapl2h);
-    __m256i       occupied4 = _mm256_broadcastsi128_si256(occupied2);
 
-    const __m256i mask = bishop_mask_v4[s];
-    // set mask bits lower than occupied LS1B
-    __m256i slide4 = _mm256_and_si256(blsmsk64x4(_mm256_and_si256(occupied4, mask)), mask);
+    __m128i mask_lo = _mm_load_si128((__m128i*) &bishop_mask_v4[s]);
+    __m128i mask_hi = _mm_load_si128((__m128i*) &bishop_mask_v4[s] + 1);
 
-    __m128i slide2 =
-      _mm_or_si128(_mm256_castsi256_si128(slide4), _mm256_extracti128_si256(slide4, 1));
-    const __m128i swaph2l =
-      _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 8, 9, 10, 11, 12, 13, 14, 15);
+    __m128i slide_lo = _mm_and_si128(blsmsk64x2(_mm_and_si128(occupied2, mask_lo)), mask_lo);
+    __m128i slide_hi = _mm_and_si128(blsmsk64x2(_mm_and_si128(occupied2, mask_hi)), mask_hi);
+
+    __m128i slide2 = _mm_or_si128(slide_lo, slide_hi);
+
+    __m128i swaph2l = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 8, 9, 10, 11, 12, 13, 14, 15);
     return _mm_cvtsi128_si64(_mm_or_si128(slide2, _mm_shuffle_epi8(slide2, swaph2l)));
 }
