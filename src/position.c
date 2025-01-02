@@ -189,8 +189,6 @@ SMALL void pos_set(Position* pos, char* fen) {
 SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
-    st->nonPawn               = 0;
-    st->psq                   = 0;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -207,8 +205,6 @@ SMALL static void set_state(Position* pos, Stack* st) {
 
         if (pt == PAWN)
             st->pawnKey ^= zob.psq[piece_on(s)][s];
-        else
-            st->nonPawn += NonPawnPieceValue[pc];
     }
 
     if (st->epSquare != 0)
@@ -523,8 +519,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
             st->pawnKey ^= zob.psq[captured][capsq];
         }
-        else
-            st->nonPawn -= NonPawnPieceValue[captured];
 
         nnue_remove_piece(acc, captured, capsq, wksq, bksq);
 
@@ -593,9 +587,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
             st->pawnKey ^= zob.psq[piece][to];
             st->materialKey += matKey[promotion] - matKey[piece];
-
-            // Update material
-            st->nonPawn += NonPawnPieceValue[promotion];
         }
 
         // Update pawn hash key

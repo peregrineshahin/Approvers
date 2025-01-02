@@ -25,7 +25,6 @@ add_executable(Peregrine
         src/movepick.h
         src/position.c
         src/position.h
-        src/psqt.c
         src/search.c
         src/search.h
         src/thread.c
