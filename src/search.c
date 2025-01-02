@@ -78,7 +78,6 @@ PARAM(sfpc_v3, 197)
 PARAM(sfpc_v4, 219)
 PARAM(scsee_v1, 199)
 PARAM(se_v1, 5)
-PARAM(se_v2, 111)
 PARAM(se_v5, 27)
 PARAM(prb_v1, 125)
 PARAM(prb_v2, 43)
@@ -755,7 +754,7 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - ses_v1)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 100;
+            Value singularBeta  = ttValue - 2 * depth;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
