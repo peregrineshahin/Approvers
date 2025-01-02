@@ -32,13 +32,13 @@ SMALL static void init_sliding_attacks(void) {
     for (sq = SQ_A1; sq <= SQ_H8; ++sq)
     {
         rook_mask_NS[sq] = _mm_set_epi64x(
-          _mm256_extract_epi64(queen_mask_v4[SQUARE_FLIP(sq)][0], 1),  // SOUTH (vertically flipped)
+          _mm256_extract_epi64(queen_mask_v4[square_flip(sq)][0], 1),  // SOUTH (vertically flipped)
           _mm256_extract_epi64(queen_mask_v4[sq][0], 1));              // NORTH
         bishop_mask_v4[sq] =
-          _mm256_set_epi64x(_mm256_extract_epi64(queen_mask_v4[SQUARE_FLIP(sq)][0],
+          _mm256_set_epi64x(_mm256_extract_epi64(queen_mask_v4[square_flip(sq)][0],
                                                  2),  // SOUTH_EAST (vertically flipped)
                             _mm256_extract_epi64(queen_mask_v4[sq][0], 3),  // NORTH_WEST
-                            _mm256_extract_epi64(queen_mask_v4[SQUARE_FLIP(sq)][0],
+                            _mm256_extract_epi64(queen_mask_v4[square_flip(sq)][0],
                                                  3),  // SOUTH_WEST (vertically flipped)
                             _mm256_extract_epi64(queen_mask_v4[sq][0], 2));  // NORTH_EAST
     }

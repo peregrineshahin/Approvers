@@ -228,35 +228,61 @@ extern Value PieceValue[16];
 
 extern uint32_t NonPawnPieceValue[16];
 
-#define SQUARE_FLIP(s) (sq ^ 0x38)
+SMALL static Square square_flip(Square sq) { return (Square) (sq ^ 0x38); }
 
-#define mate_in(ply) ((Value) (VALUE_MATE - (ply)))
-#define mated_in(ply) ((Value) (-VALUE_MATE + (ply)))
-#define make_square(f, r) ((Square) (((r) << 3) + (f)))
-#define make_piece(c, pt) ((Piece) (((c) << 3) + (pt)))
-#define type_of_p(p) ((p) & 7)
-#define color_of(p) ((p) >> 3)
-// since Square is now unsigned, no need to test for s >= SQ_A1
-#define square_is_ok(s) ((Square) (s) <= SQ_H8)
-#define file_of(s) ((s) & 7)
-#define rank_of(s) ((s) >> 3)
-#define relative_square(c, s) ((Square) ((s) ^ ((c) * 56)))
-#define relative_rank(c, r) ((r) ^ ((c) * 7))
-#define pawn_push(c) ((c) == WHITE ? 8 : -8)
-#define from_sq(m) ((Square) ((m) >> 6) & 0x3f)
-#define to_sq(m) ((Square) ((m) & 0x3f))
-#define from_to(m) ((m) & 0xfff)
-#define type_of_m(m) ((m) >> 14)
-#define promotion_type(m) ((((m) >> 12) & 3) + KNIGHT)
-#define make_move(from, to) ((Move) ((to) | ((from) << 6)))
-#define reverse_move(m) (make_move(to_sq(m), from_sq(m)))
-#define make_promotion(from, to, pt) \
-    ((Move) ((to) | ((from) << 6) | (PROMOTION << 14) | (((pt) - KNIGHT) << 12)))
-#define make_enpassant(from, to) ((Move) ((to) | ((from) << 6) | (ENPASSANT << 14)))
-#define make_castling(from, to) ((Move) ((to) | ((from) << 6) | (CASTLING << 14)))
-#define move_is_ok(m) (m && m != MOVE_NULL)
+SMALL static Value mate_in(int ply) { return (Value) (VALUE_MATE - ply); }
 
-static Key make_key(uint64_t seed) {
+SMALL static Value mated_in(int ply) { return (Value) (-VALUE_MATE + ply); }
+
+SMALL static Square make_square(int file, int rank) { return (Square) (((rank) << 3) + (file)); }
+
+SMALL static Piece make_piece(Color c, PieceType pt) { return (Piece) (((c) << 3) + (pt)); }
+
+SMALL static PieceType type_of_p(Piece p) { return (PieceType) ((p) & 7); }
+
+SMALL static Color color_of(Piece p) { return (Color) ((p) >> 3); }
+
+SMALL static bool square_is_ok(Square s) { return (Square) (s) <= SQ_H8; }
+
+SMALL static int file_of(Square s) { return (s) & 7; }
+
+SMALL static int rank_of(Square s) { return (s) >> 3; }
+
+SMALL static Square relative_square(Color c, Square s) { return (Square) ((s) ^ ((c) * 56)); }
+
+SMALL static int relative_rank(Color c, int r) { return (r) ^ ((c) * 7); }
+
+SMALL static int pawn_push(Color c) { return (c) == WHITE ? 8 : -8; }
+
+SMALL static int from_to(Move m) { return (m) & 0xfff; }
+
+SMALL static int type_of_m(Move m) { return (int) ((m) >> 14); }
+
+SMALL static PieceType promotion_type(Move m) { return (PieceType) ((((m) >> 12) & 3) + KNIGHT); }
+
+SMALL static Move make_move(Square from, Square to) { return (Move) ((to) | ((from) << 6)); }
+
+SMALL static Move make_promotion(Square from, Square to, PieceType pt) {
+    return (Move) ((to) | ((from) << 6) | (PROMOTION << 14) | (((pt) -KNIGHT) << 12));
+}
+
+SMALL static Move make_enpassant(Square from, Square to) {
+    return (Move) ((to) | ((from) << 6) | (ENPASSANT << 14));
+}
+
+SMALL static Move make_castling(Square from, Square to) {
+    return (Move) ((to) | ((from) << 6) | (CASTLING << 14));
+}
+
+SMALL static bool move_is_ok(Move m) { return m && m != MOVE_NULL; }
+
+SMALL static Square from_sq(Move m) { return (Square) (((m) >> 6) & 0x3f); }
+
+SMALL static Square to_sq(Move m) { return (Square) ((m) & 0x3f); }
+
+SMALL static Move reverse_move(Move m) { return make_move(to_sq(m), from_sq(m)); }
+
+SMALL static Key make_key(uint64_t seed) {
     return seed * 6364136223846793005ULL + 1442695040888963407ULL;
 }
 
