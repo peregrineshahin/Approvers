@@ -238,9 +238,7 @@ static bool non_pawn_material(const Position* pos) {
 }
 
 static bool low_material(const Position* pos) {
-    const Bitboard rooks = pieces_p(ROOK);
-    return pieces_p(QUEEN) == 0 && !more_than_one(rooks)
-        && popcount(pieces_pp(KNIGHT, BISHOP)) + 2 * (rooks != 0) <= 3;
+    return pieces_pp(ROOK, QUEEN) == 0 && popcount(pieces_pp(KNIGHT, BISHOP)) <= 4;
 }
 
 void pos_set_check_info(Position* pos);
