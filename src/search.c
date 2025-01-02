@@ -48,6 +48,8 @@ int       parameters_count = 0;
 #endif
 
 
+PARAM(ttct_v1, 100)
+PARAM(ttct_v2, 100)
 PARAM(nmp_v1, 764)
 PARAM(nmp_v2, 56)
 PARAM(nmp_v3, 165)
@@ -533,12 +535,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!is_capture_or_promotion(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
+                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 100);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              -stat_malus(depth + 1));
+                                              ttct_v2 * -stat_malus(depth + 1) / 100);
         }
         if (rule50_count() < 90)
             return ttValue;
