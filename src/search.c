@@ -877,9 +877,10 @@ moves_loop:  // When in check search starts from here.
                 if (newDepth > d)
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
 
+                // Post LMR continuation history updates
                 if (!captureOrPromotion)
                 {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
+                    int bonus = value >= beta ? stat_bonus(newDepth) : -stat_malus(newDepth);
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
             }
