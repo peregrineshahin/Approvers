@@ -13,7 +13,10 @@ INCBIN(Network, "../default.nnue");
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
 
-alignas(64) int16_t in_biases[L1SIZE];
+alignas(64) int16_t in_biases[L1SIZE] = {
+  123, 50, 93, -91, -54, 41,  17,  50, -63, 1,  27,  94,  74,  68, 6,  -22, 63, 35,  14, 74, 36, -3,
+  7,   45, -8, 61,  78,  32,  26,  16, 87,  58, 91,  0,   18,  22, 81, 10,  15, 14,  -7, 47, -6, 4,
+  -37, 63, 82, 35,  0,   -49, -28, 27, 97,  14, -48, -61, -55, 43, 17, 81,  42, 126, 33, 59};
 alignas(64) int16_t l1_biases[OUTSIZE];
 
 SMALL void nnue_init() {
@@ -30,7 +33,7 @@ SMALL void nnue_init() {
     int16_t* data16 = (int16_t*) data8;
 
     for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data16++);
+        *(data16++);
 
     for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
         l1_weights[i] = *(data16++);
