@@ -896,7 +896,7 @@ moves_loop:  // When in check search starts from here.
         if (PvNode && (moveCount == 1 || value > alpha))
         {
             // Extend move from transposition table if we are about to dive into qsearch.
-            if (move == ttMove && ss->ply <= pos->rootDepth * 2)
+            if (move == ttMove && (ss->ply <= pos->rootDepth * 2 || pos->rootDepth >= 14))
                 newDepth = max(newDepth, 1);
 
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
