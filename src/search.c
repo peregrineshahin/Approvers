@@ -862,7 +862,7 @@ moves_loop:  // When in check search starts from here.
                 r -= ss->statScore / lmr_v8 * r_v13;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1000, 1, newDepth + (PvNode || cutNode));
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
