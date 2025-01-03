@@ -209,7 +209,7 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
-static void check_time(void);
+static void check_time(Position* pos);
 static void uci_print_pv(Position* pos, Depth depth);
 static bool extract_ponder_from_tt(Position* pos);
 
@@ -482,7 +482,7 @@ Value search(
 
     // Check for the available remaining time
     if ((pos->nodes & 1023) == 0)
-        check_time();
+        check_time(pos);
 
     if (!rootNode)
     {
@@ -1366,7 +1366,7 @@ static int peak_stdin() {
 
 // check_time() is used to print debug info and, more importantly, to detect
 // when we are out of available time and thus stop the search.
-static void check_time(void) {
+static void check_time(Position* pos) {
     if (Thread.ponder)
     {
         if (peak_stdin())
@@ -1380,7 +1380,7 @@ static void check_time(void) {
         || (Limits.nodes && Thread.pos->nodes >= Limits.nodes))
         Thread.stop = 1;
 #else
-    if (elapsed > time_maximum() - 10)
+    if (pos->completedDepth >= 1 && elapsed > time_maximum() - 10)
         Thread.stop = 1;
 #endif
 }
