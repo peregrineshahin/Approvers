@@ -270,7 +270,7 @@ struct PVariation {
 
 enum {
     CORRECTION_HISTORY_ENTRY_NB = 16384,
-    CORRECTION_HISTORY_MAX      = 8192,
+    CORRECTION_HISTORY_MAX      = 11000,
 };
 
 typedef int16_t        PieceToHistory[15][64];
