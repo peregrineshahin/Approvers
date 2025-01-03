@@ -203,7 +203,7 @@ static Value stat_malus(Depth d) { return min((hm_v1 * d / 100 + hm_v2) * d - hm
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
-Value        to_corrected(Position* pos, Value rawEval);
+Value        to_corrected(Position* pos, Value rawEval, int* correctionValue);
 static void
 add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth, int32_t diff);
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
@@ -468,7 +468,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, rawEval, probCutBeta;
+    Value    bestValue, value, ttValue, correctionValue, eval, rawEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
     bool     captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
@@ -477,8 +477,8 @@ Value search(
 
     // Step 1. Initialize node
     inCheck   = checkers();
-    moveCount = captureCount = quietCount = ss->moveCount = 0;
-    bestValue                                             = -VALUE_INFINITE;
+    moveCount = captureCount = quietCount = ss->moveCount = correctionValue = 0;
+    bestValue                                                               = -VALUE_INFINITE;
 
     // Check for the available remaining time
     if ((pos->nodes & 1023) == 0)
@@ -553,7 +553,7 @@ Value search(
         if ((rawEval = tte_eval(tte)) == VALUE_NONE)
             rawEval = evaluate(pos);
 
-        eval = ss->staticEval = to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval, &correctionValue);
 
         // Can ttValue be used as a better position evaluation?
         if (ttValue != VALUE_NONE
@@ -567,7 +567,7 @@ Value search(
         else
             rawEval = -(ss - 1)->staticEval + tempo;
 
-        eval = ss->staticEval = to_corrected(pos, rawEval);
+        eval = ss->staticEval = to_corrected(pos, rawEval, &correctionValue);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0, rawEval);
     }
@@ -815,13 +815,15 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
 
-        r = r * r_v1;
 
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
+            r = r * r_v1;
+
+            r += 330 - abs(correctionValue) * 4;
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
@@ -1064,13 +1066,14 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
-    Value    bestValue, value, rawEval, ttValue, futilityValue, futilityBase;
+    Value    bestValue, value, rawEval, ttValue, correctionValue, futilityValue, futilityBase;
     bool     ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
 
-    bestMove  = 0;
-    moveCount = 0;
+    bestMove        = 0;
+    moveCount       = 0;
+    correctionValue = 0;
 
     // Check for an instant draw or if the maximum ply has been reached
     if (is_draw(pos) || ss->ply >= MAX_PLY)
@@ -1108,7 +1111,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
             if ((rawEval = tte_eval(tte)) == VALUE_NONE)
                 rawEval = evaluate(pos);
 
-            ss->staticEval = bestValue = to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval, &correctionValue);
 
 
             // Can ttValue be used as a better position evaluation?
@@ -1121,7 +1124,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
             rawEval =
               (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
 
-            ss->staticEval = bestValue = to_corrected(pos, rawEval);
+            ss->staticEval = bestValue = to_corrected(pos, rawEval, &correctionValue);
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1266,13 +1269,12 @@ add_correction_history(CorrectionHistory hist, Color side, Key key, Depth depth,
     *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
 }
 
-Value to_corrected(Position* pos, Value rawEval) {
+Value to_corrected(Position* pos, Value rawEval, int* correctionValue) {
     int32_t mch = ch_v4 * (*pos->matCorrHist)[stm()][material_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t pch = ch_v5 * (*pos->pawnCorrHist)[stm()][pawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t cph = ch_v6 * (*pos->prevMoveCorrHist)[stm()][(pos->st - 1)->currentMove & 4095];
-
-    Value v = rawEval + (pch + mch + cph) / 100 / ch_v2;
-    return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
+    *correctionValue = (pch + mch + cph) / 100 / ch_v2;
+    return clamp(rawEval + *correctionValue, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
 // update_continuation_histories() updates countermove and follow-up move history.
