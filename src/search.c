@@ -73,9 +73,6 @@ PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 214)
 PARAM(fpp_v3, 183)
 PARAM(sqsee_v1, 27)
-PARAM(sfpc_v1, 6)
-PARAM(sfpc_v3, 197)
-PARAM(sfpc_v4, 219)
 PARAM(scsee_v1, 199)
 PARAM(se_v1, 5)
 PARAM(se_v2, 111)
@@ -727,19 +724,9 @@ moves_loop:  // When in check search starts from here.
                 if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
                     continue;
             }
-            else
-            {
-                // Futility pruning for captures
-                if (!givesCheck && lmrDepth < sfpc_v1 && !inCheck
-                    && ss->staticEval + sfpc_v3 + sfpc_v4 * lmrDepth
-                           + PieceValue[type_of_p(piece_on(to_sq(move)))]
-                         <= alpha)
-                    continue;
-
-                // See based pruning
-                if (!see_test(pos, move, -scsee_v1 * depth))
-                    continue;
-            }
+            // See based pruning
+            else if (!see_test(pos, move, -scsee_v1 * depth))
+                continue;
         }
 
         // Step 14. Extensions
