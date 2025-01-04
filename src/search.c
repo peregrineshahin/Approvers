@@ -481,7 +481,7 @@ Value search(
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
-    if ((pos->nodes & 1023) == 0)
+    if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
         check_time();
 
     if (!rootNode)
@@ -1305,7 +1305,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-    // Decrease all the other played capture moves
+        // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
