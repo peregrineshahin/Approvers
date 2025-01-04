@@ -48,9 +48,6 @@ int       parameters_count = 0;
 #endif
 
 
-PARAM(nmp_v1, 764)
-PARAM(nmp_v2, 56)
-PARAM(nmp_v3, 165)
 PARAM(nmp_v4, 182)
 PARAM(nmp_v5, 25312)
 PARAM(nmp_v6, 27)
@@ -595,7 +592,7 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
+        Depth R = 4 + depth / 3 + min((eval - beta) / nmp_v4, 5);
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &(*pos->contHist)[0][0];
