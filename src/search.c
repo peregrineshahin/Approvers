@@ -554,6 +554,8 @@ Value search(
         // Never assume anything about values stored in TT
         if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
             unadjustedStaticEval = evaluate(pos);
+        else if (PvNode)
+            evaluate(pos);
 
         eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
 
@@ -658,6 +660,7 @@ Value search(
                 }
             }
         ss->ttPv = ttPv;
+        evaluate(pos);
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
