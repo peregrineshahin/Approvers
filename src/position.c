@@ -62,10 +62,8 @@ static void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
 static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
-    st->blockersForKing[WHITE] =
-      slider_blockers(pos, pieces_c(BLACK), square_of(WHITE, KING), &st->pinnersForKing[WHITE]);
-    st->blockersForKing[BLACK] =
-      slider_blockers(pos, pieces_c(WHITE), square_of(BLACK, KING), &st->pinnersForKing[BLACK]);
+    update_slider_blockers(pos, WHITE);
+    update_slider_blockers(pos, BLACK);
 
     Color them = !stm();
     st->ksq    = square_of(them, KING);
@@ -216,42 +214,36 @@ SMALL static void set_state(Position* pos, Stack* st) {
     st->key ^= zob.castling[st->castlingRights];
 }
 
+/// update_slider_blockers() calculates st->blockersForKing[c] and st->pinners[~c],
+/// which store respectively the pieces preventing king of color c from being in check
+/// and the slider pieces of color ~c pinning pieces of color c to the king.
 
-// Turning slider_blockers() into an static function was slower, even
-// though it should only add a single slightly optimised copy to evaluate().
-#if 1
-// slider_blockers() returns a bitboard of all pieces that are blocking
-// attacks on the square 's' from 'sliders'. A piece blocks a slider if
-// removing that piece from the board would result in a position where
-// square 's' is attacked. Both pinned pieces and discovered check
-// candidates are slider blockers and are calculated by calling this
-// function.
+void update_slider_blockers(const Position* pos, Color c) {
+    Stack* st  = pos->st;
+    Square ksq = square_of(c, KING);
 
-Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
-    Bitboard blockers = 0, snipers;
-    *pinners          = 0;
+    st->blockersForKing[c] = 0;
+    st->pinnersForKing[c]  = 0;
 
     // Snipers are sliders that attack square 's'when a piece removed.
-    snipers = ((PseudoAttacks[ROOK][s] & pieces_pp(QUEEN, ROOK))
-               | (PseudoAttacks[BISHOP][s] & pieces_pp(QUEEN, BISHOP)))
-            & sliders;
+    Bitboard snipers = ((PseudoAttacks[ROOK][ksq] & pieces_pp(QUEEN, ROOK))
+                        | (PseudoAttacks[BISHOP][ksq] & pieces_pp(QUEEN, BISHOP)))
+                     & pieces_c(!c);
     Bitboard occupancy = pieces() ^ snipers;
 
     while (snipers)
     {
         Square   sniperSq = pop_lsb(&snipers);
-        Bitboard b        = between_bb(s, sniperSq) & occupancy;
+        Bitboard b        = between_bb(ksq, sniperSq) & occupancy;
 
         if (b && !more_than_one(b))
         {
-            blockers |= b;
-            if (b & pieces_c(color_of(piece_on(s))))
-                *pinners |= sq_bb(sniperSq);
+            st->blockersForKing[c] |= b;
+            if (b & pieces_c(c))
+                st->pinnersForKing[c] |= sq_bb(sniperSq);
         }
     }
-    return blockers;
 }
-#endif
 
 
 #if 0

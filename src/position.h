@@ -152,7 +152,7 @@ struct Position {
 void pos_set(Position* pos, char* fen);
 
 //PURE Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied);
-PURE Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners);
+void update_slider_blockers(const Position* pos, Color c);
 
 PURE bool is_legal(const Position* pos, Move m);
 PURE bool is_pseudo_legal(const Position* pos, Move m);
