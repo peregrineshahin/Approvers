@@ -33,10 +33,10 @@ extern void benchmark();
 
 extern Parameter parameters[255];
 extern int       parameters_count;
-#endif
 
 extern alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
 extern alignas(64) int16_t in_biases[L1SIZE];
+#endif
 
 // FEN string of the initial position, normal chess
 char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -104,6 +104,7 @@ SMALL void position(Position* pos, char* str) {
 // value ("value").
 
 void setoption(char* str) {
+#ifndef KAGGLE
     char* name  = strstr(str, "name") + 5;
     char* value = strstr(name, "value");
     if (value)
@@ -117,7 +118,6 @@ void setoption(char* str) {
             value++;
     }
 
-#ifndef KAGGLE
     for (int i = 0; i < parameters_count; i++)
     {
         if (strcmp(parameters[i].name, name) == 0)
@@ -126,7 +126,6 @@ void setoption(char* str) {
             return;
         }
     }
-#endif
 
     if (strcmp("Hash", name) == 0)
     {
@@ -143,19 +142,20 @@ void setoption(char* str) {
 
     if (strstr(name, "inb_v"))
     {
-        int i = atoi(name + 5);
+        int i        = atoi(name + 5);
         in_biases[i] = atoi(value);
         return;
     }
 
     if (strstr(name, "l1w_v"))
     {
-        int i = atoi(name + 5);
+        int i         = atoi(name + 5);
         l1_weights[i] = atoi(value);
         return;
     }
 
     fprintf(stderr, "No such option: %s\n", name);
+#endif
 }
 
 
@@ -246,12 +246,13 @@ SMALL void uci_loop(int argc, char** argv) {
         Thread.ponder = false;
         Thread.stop   = true;
 
-        if (strcmp(token, "quit") == 0)
-            break;
-
-        if (strcmp(token, "uci") == 0)
-        {
+        if (strcmp(token, "go") == 0)
+            go(&pos, str);
+        else if (strcmp(token, "position") == 0)
+            position(&pos, str);
 #ifndef KAGGLE
+        else if (strcmp(token, "uci") == 0)
+        {
             printf("id name\n");
             printf("option name Threads type spin default 1 min 1 max 2\n");
             printf("option name Hash type spin default 1 min 1 max 16\n");
@@ -265,14 +266,15 @@ SMALL void uci_loop(int argc, char** argv) {
 
             printf("uciok\n");
             fflush(stdout);
-#endif
         }
         else if (strcmp(token, "nnparams") == 0)
         {
             for (int i = 0; i < L1SIZE; i++)
-                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i], max(abs(in_biases[i]) / 20.0, 0.5));
+                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i],
+                       max(abs(in_biases[i]) / 20.0, 0.5));
             for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i], max(abs(l1_weights[i]) / 20.0, 0.5));
+                printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i],
+                       max(abs(l1_weights[i]) / 20.0, 0.5));
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
@@ -283,12 +285,11 @@ SMALL void uci_loop(int argc, char** argv) {
             printf("readyok\n");
             fflush(stdout);
         }
-        else if (strcmp(token, "go") == 0)
-            go(&pos, str);
-        else if (strcmp(token, "position") == 0)
-            position(&pos, str);
         else if (strcmp(token, "setoption") == 0)
             setoption(str);
+        else if (strcmp(token, "quit") == 0)
+            break;
+#endif
     }
 
     free(pos.stackAllocation);
