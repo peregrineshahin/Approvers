@@ -35,6 +35,9 @@ extern Parameter parameters[255];
 extern int       parameters_count;
 #endif
 
+extern alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
+extern alignas(64) int16_t in_biases[L1SIZE];
+
 // FEN string of the initial position, normal chess
 char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -135,6 +138,20 @@ void setoption(char* str) {
     if (strcmp("Pondering", name) == 0)
     {
         Thread.testPonder = strcmp("true", value) == 0;
+        return;
+    }
+
+    if (strstr(name, "inb_v"))
+    {
+        int i = atoi(name + 5);
+        in_biases[i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "l1w_v"))
+    {
+        int i = atoi(name + 5);
+        l1_weights[i] = atoi(value);
         return;
     }
 
@@ -243,9 +260,19 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < parameters_count; i++)
                 printf("option name %s type string\n", parameters[i].name);
 
+            for (int i = 0; i < L1SIZE; i++)
+                printf("option name inb_v%d type string\n", i);
+
             printf("uciok\n");
             fflush(stdout);
 #endif
+        }
+        else if (strcmp(token, "nnparams") == 0)
+        {
+            for (int i = 0; i < L1SIZE; i++)
+                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i], max(abs(in_biases[i]) / 20.0, 0.5));
+            for (int i = 0; i < L1SIZE * 2; i++)
+                printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i], max(abs(l1_weights[i]) / 20.0, 0.5));
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
