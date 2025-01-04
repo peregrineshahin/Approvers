@@ -157,11 +157,11 @@ enum {
 };
 
 enum {
-    PawnValue   = 201,
-    KnightValue = 653,
-    BishopValue = 812,
-    RookValue   = 1379,
-    QueenValue  = 2547,
+    PawnValue   = 208,
+    KnightValue = 781,
+    BishopValue = 825,
+    RookValue   = 1276,
+    QueenValue  = 2538,
 };
 
 // clang-format off
