@@ -784,6 +784,9 @@ moves_loop:  // When in check search starts from here.
             else if (cutNode || ttValue >= beta)
                 extension--;
 
+            if (extension < 0 && cutNode && ss->ttPv)
+                extension -= 2;
+
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
             mp_init(pos, ttMove, depth);
