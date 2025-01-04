@@ -949,6 +949,9 @@ moves_loop:  // When in check search starts from here.
                     break;
                 }
 
+                if (abs(value) < VALUE_MATE_IN_MAX_PLY)
+                    depth = max(1, depth - 2 + (depth < 14));
+
                 alpha = value;
             }
         }
