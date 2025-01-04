@@ -140,6 +140,7 @@ PARAM(r_v12, 1109)
 PARAM(r_v13, 993)
 PARAM(lce_v1, 2280)
 PARAM(qb_v1, 193)
+PARAM(qb_v2, 193)
 PARAM(cms_v1, 29212)
 PARAM(hu_v1, 10216)
 PARAM(cpth_v1, 11664)
@@ -980,15 +981,17 @@ moves_loop:  // When in check search starts from here.
         if (!is_capture_or_promotion(pos, bestMove))
         {
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
+            int malus = stat_malus(depth + (bestValue > beta + qb_v2));
+
             update_quiet_stats(pos, ss, bestMove, bonus);
 
             // Decrease all the other played quiet moves
 #pragma clang loop unroll(disable)
             for (int i = 0; i < quietCount; i++)
             {
-                history_update(*pos->mainHistory, stm(), quietsSearched[i], -bonus);
+                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
-                                              to_sq(quietsSearched[i]), -bonus);
+                                              to_sq(quietsSearched[i]), -malus);
             }
         }
 
