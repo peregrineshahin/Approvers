@@ -35,6 +35,8 @@ void thread_init() {
     pos->prevMoveCorrHist = calloc(sizeof(CorrectionHistory), 1);
     pos->wNonPawnCorrHist = calloc(sizeof(CorrectionHistory), 1);
     pos->bNonPawnCorrHist = calloc(sizeof(CorrectionHistory), 1);
+    pos->majorCorrHist    = calloc(sizeof(CorrectionHistory), 1);
+    pos->minorCorrHist    = calloc(sizeof(CorrectionHistory), 1);
     pos->stackAllocation  = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList         = calloc(10000 * sizeof(ExtMove), 1);
 
@@ -64,5 +66,7 @@ void thread_exit() {
     free(pos->prevMoveCorrHist);
     free(pos->wNonPawnCorrHist);
     free(pos->bNonPawnCorrHist);
+    free(pos->majorCorrHist);
+    free(pos->minorCorrHist);
     free(pos);
 }
