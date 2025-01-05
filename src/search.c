@@ -657,7 +657,7 @@ Value search(
                     if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
                         tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
                                  depth - 3, move, unadjustedStaticEval);
-                    return value;
+                    return value - (probCutBeta - beta);
                 }
             }
         ss->ttPv = ttPv;
