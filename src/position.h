@@ -138,11 +138,7 @@ struct Position {
     // Pointers to thread-specific tables.
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
-    CorrectionHistory*       matCorrHist;
-    CorrectionHistory*       pawnCorrHist;
-    CorrectionHistory*       prevMoveCorrHist;
-    CorrectionHistory*       wNonPawnCorrHist;
-    CorrectionHistory*       bNonPawnCorrHist;
+    CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
 
     // Thread-control data.
@@ -212,6 +208,7 @@ PURE bool is_draw(const Position* pos);
 #define pawn_key() (pos->st->pawnKey)
 #define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
 #define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])
+#define prev_move_key() (from_to((pos->st - 1)->currentMove))
 
 // Other properties of the position
 #define stm() (pos->sideToMove)
