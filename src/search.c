@@ -715,16 +715,16 @@ moves_loop:  // When in check search starts from here.
 
             if (!captureOrPromotion && !givesCheck)
             {
+
+                int history =
+                  (*contHist0)[movedPiece][to_sq(move)] + (*contHist1)[movedPiece][to_sq(move)];
+
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < 0
-                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
+                    && history < 0)
                     continue;
 
-                int history = 2 * (*pos->mainHistory)[stm()][from_to(move)]
-                            + (*contHist0)[movedPiece][to_sq(move)]
-                            + (*contHist1)[movedPiece][to_sq(move)];
-
+                history += 2 * (*pos->mainHistory)[stm()][from_to(move)];
                 lmrDepth += history / 9600;
 
                 // Futility pruning: parent node
