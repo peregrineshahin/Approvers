@@ -176,6 +176,12 @@ enum {
     PV
 };
 
+// https://tests.stockfishchess.org/tests/view/6123fb145318138ee12047c7
+int nw[2][2][2] = {{{3, 3}, {1, 1}}, {{3, 3}, {1, 1}}};
+int nb[2][2]    = {{157, 177}, {2, 5}};
+int nwo[2]      = {1, 1};
+int nbo         = 7;
+
 static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
 
 // Reductions lookup tables, initialized at startup
@@ -405,10 +411,24 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
 #endif
         {
-            double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
-                                  + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
-                               / (double) tm_v4;
-            fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
+            int ft[2] = {Thread.previousScore - bestValue, Thread.iterValue[iterIdx] - bestValue};
+            for (size_t m = 0; m < 2; ++m)
+            {
+                int temp[2] = {0};
+                for (size_t i = 0; i < 2; ++i)
+                {
+                    int sum = 0;
+                    for (size_t j = 0; j < 2; ++j)
+                        sum += ft[j] * nw[j][m][i];
+                    // ReLU activation
+                    temp[i] = max(0, sum + nb[m][i]);
+                }
+
+                for (size_t n = 0; n < 2; ++n)
+                    ft[n] = temp[n];
+            }
+
+            double fallingEval = clamp((ft[0] * nwo[0] + ft[1] * nwo[1] + nbo) / 1650.0, 0.5, 1.5);
 
             // If the best move is stable over several iterations, reduce time
             // accordingly
