@@ -654,9 +654,8 @@ Value search(
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
-                    if (!(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE))
-                        tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER,
-                                 depth - 3, move, unadjustedStaticEval);
+                    tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER, depth - 3,
+                             move, unadjustedStaticEval);
                     return value - (probCutBeta - beta);
                 }
             }
