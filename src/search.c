@@ -624,10 +624,6 @@ Value search(
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && is_capture_or_promotion(pos, ttMove))
-            return probCutBeta;
-
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
         int  probCutCount = 2 + 2 * cutNode;
         bool ttPv         = ss->ttPv;
