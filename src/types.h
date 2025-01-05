@@ -269,7 +269,7 @@ struct PVariation {
 };
 
 enum {
-    CORRECTION_HISTORY_ENTRY_NB = 16384,
+    CORRECTION_HISTORY_ENTRY_NB = 8192,
     CORRECTION_HISTORY_MAX      = 8192,
 };
 
