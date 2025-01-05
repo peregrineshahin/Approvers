@@ -376,11 +376,16 @@ void thread_search(Position* pos) {
             if (Thread.stop)
                 break;
 
-            if (bestValue > alpha)
+            if (bestValue <= alpha)
+            {
+                beta  = (alpha + beta) / 2;
+                alpha = max(bestValue - delta, -VALUE_INFINITE);
+            }
+            else if (bestValue >= beta && pos->rootDepth <= 10)
+                beta = min(bestValue + delta, VALUE_INFINITE);
+            else
                 break;
 
-            beta  = (alpha + beta) / 2;
-            alpha = max(bestValue - delta, -VALUE_INFINITE);
             delta += delta / 4 + asd_v1 / 100;
         }
 
