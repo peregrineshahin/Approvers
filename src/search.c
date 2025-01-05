@@ -725,7 +725,7 @@ moves_loop:  // When in check search starts from here.
                             + (*contHist0)[movedPiece][to_sq(move)]
                             + (*contHist1)[movedPiece][to_sq(move)];
 
-                lmrDepth += history / 4609;
+                lmrDepth += history / 7609;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
