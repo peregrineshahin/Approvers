@@ -1163,9 +1163,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
 
         givesCheck = gives_check(pos, ss, move);
 
-        if (bestValue > VALUE_MATED_IN_MAX_PLY)
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && non_pawn_material(pos))
         {
-
             // Futility pruning
             if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
                 && type_of_m(move) != PROMOTION)
