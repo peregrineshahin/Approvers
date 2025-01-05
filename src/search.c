@@ -252,7 +252,6 @@ SMALL void search_clear(void) {
     stats_clear(pos->prevMoveCorrHist);
     stats_clear(pos->wNonPawnCorrHist);
     stats_clear(pos->bNonPawnCorrHist);
-    stats_clear(pos->majorCorrHist);
     stats_clear(pos->minorCorrHist);
 
 #pragma clang loop unroll(disable)
@@ -1052,8 +1051,6 @@ moves_loop:  // When in check search starts from here.
                                bestValue - ss->staticEval);
         add_correction_history(*pos->bNonPawnCorrHist, stm(), b_nonpawn_key(), depth,
                                bestValue - ss->staticEval);
-        add_correction_history(*pos->majorCorrHist, stm(), major_key(), depth,
-                               bestValue - ss->staticEval);
         add_correction_history(*pos->minorCorrHist, stm(), minor_key(), depth,
                                bestValue - ss->staticEval);
         add_correction_history(*pos->prevMoveCorrHist, stm(), (ss - 1)->currentMove & 4095, depth,
@@ -1283,10 +1280,9 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
       100 * (*pos->wNonPawnCorrHist)[stm()][w_nonpawn_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t bnpch =
       100 * (*pos->bNonPawnCorrHist)[stm()][b_nonpawn_key() % CORRECTION_HISTORY_ENTRY_NB];
-    int32_t macv = 100 * (*pos->majorCorrHist)[stm()][major_key() % CORRECTION_HISTORY_ENTRY_NB];
     int32_t micv = 100 * (*pos->minorCorrHist)[stm()][minor_key() % CORRECTION_HISTORY_ENTRY_NB];
 
-    Value v = unadjustedStaticEval + (pch + mch + cph + wnpch + bnpch + macv + micv) / 100 / ch_v2;
+    Value v = unadjustedStaticEval + (pch + mch + cph + wnpch + bnpch + micv) / 100 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 

@@ -190,7 +190,7 @@ SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
     st->nonPawnKey[WHITE] = st->nonPawnKey[BLACK] = 0;
-    st->majorKey = st->minorKey = 0;
+    st->minorKey                                  = 0;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -211,9 +211,7 @@ SMALL static void set_state(Position* pos, Stack* st) {
         {
             st->nonPawnKey[color_of(pc)] ^= zob.psq[pc][s];
 
-            if (pt == ROOK || pt == QUEEN || pt == KING)
-                st->majorKey ^= zob.psq[pc][s];
-            if (pt == BISHOP || pt == KNIGHT || pt == KING)
+            if (pt == KNIGHT || pt == BISHOP || pt == KING)
                 st->minorKey ^= zob.psq[pc][s];
         }
     }
@@ -516,7 +514,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         st->nonPawnKey[us] ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
-        st->majorKey ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
     else if (captured)
@@ -536,9 +533,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         {
             st->nonPawnKey[them] ^= zob.psq[captured][capsq];
 
-            if (type_of_p(piece) == QUEEN || type_of_p(piece) == ROOK)
-                st->majorKey ^= zob.psq[captured][capsq];
-            else
+            if (type_of_p(captured) == KNIGHT || type_of_p(captured) == BISHOP)
                 st->minorKey ^= zob.psq[captured][capsq];
         }
 
@@ -610,9 +605,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
             st->pawnKey ^= zob.psq[piece][to];
             st->materialKey += matKey[promotion] - matKey[piece];
 
-            if (type_of_p(promotion) >= ROOK)
-                st->majorKey ^= zob.psq[promotion][to];
-            else
+            if (type_of_p(promotion) == KNIGHT || type_of_p(promotion) == BISHOP)
                 st->minorKey ^= zob.psq[promotion][to];
         }
 
@@ -626,14 +619,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     {
         st->nonPawnKey[us] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
 
-        if (type_of_p(piece) == KING)
-        {
-            st->majorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-            st->minorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-        }
-        else if (type_of_p(piece) >= ROOK)
-            st->majorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-        else
+        if (type_of_p(piece) == KNIGHT || type_of_p(piece) == BISHOP || type_of_p(piece) == KING)
             st->minorKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
     }
 
