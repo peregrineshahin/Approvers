@@ -822,6 +822,9 @@ moves_loop:  // When in check search starts from here.
 
             if (!captureOrPromotion)
             {
+                if (abs(ss->staticEval - unadjustedStaticEval) > 100)
+                    r -= 1000;
+
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;
