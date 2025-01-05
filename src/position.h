@@ -50,6 +50,7 @@ struct Stack {
     // Copied when making a move
     Key pawnKey;
     Key materialKey;
+    Key nonPawnKey[2];
     union {
         struct {
             uint8_t pliesFromNull;
@@ -140,6 +141,8 @@ struct Position {
     CorrectionHistory*       matCorrHist;
     CorrectionHistory*       pawnCorrHist;
     CorrectionHistory*       prevMoveCorrHist;
+    CorrectionHistory*       wNonPawnCorrHist;
+    CorrectionHistory*       bNonPawnCorrHist;
     ContinuationHistoryStat* contHist;
 
     // Thread-control data.
@@ -207,6 +210,8 @@ PURE bool is_draw(const Position* pos);
 #define key() (pos->st->key)
 #define material_key() (pos->st->materialKey)
 #define pawn_key() (pos->st->pawnKey)
+#define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
+#define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])
 
 // Other properties of the position
 #define stm() (pos->sideToMove)
