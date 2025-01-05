@@ -858,6 +858,9 @@ moves_loop:  // When in check search starts from here.
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
+            if (value > alpha && d + 6 < newDepth)
+                value = -search(pos, ss + 1, -(alpha + 1), -alpha, (d + newDepth) / 2, true, NonPV);
+
             if (value > alpha && d < newDepth)
             {
                 // Adjust full-depth search based on LMR results - if the result was
