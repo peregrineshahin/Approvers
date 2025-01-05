@@ -591,8 +591,8 @@ Value search(
 
     // Step 8. Futility pruning: child node
     if (!PvNode && depth < rfp_v1 && eval - futility_margin(depth, improving) >= beta
-        && eval < VALUE_KNOWN_WIN)  // Do not return unproven wins
-        return eval;                // - futility_margin(depth); (do not do the right thing)
+        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+        return eval;
 
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
@@ -748,7 +748,7 @@ moves_loop:  // When in check search starts from here.
         if (depth >= se_v1 && move == ttMove && !rootNode
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
-            && abs(ttValue) < VALUE_KNOWN_WIN && (tte_bound(tte) & BOUND_LOWER)
+            && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - ses_v1)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 100;
@@ -1164,8 +1164,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         givesCheck = gives_check(pos, ss, move);
 
         // Futility pruning
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck && futilityBase > -VALUE_KNOWN_WIN
-            && type_of_m(move) != PROMOTION)
+        if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck
+            && futilityBase > -VALUE_MATE_IN_MAX_PLY && type_of_m(move) != PROMOTION)
         {
             if (moveCount > 2)
                 continue;
