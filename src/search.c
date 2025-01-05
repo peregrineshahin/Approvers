@@ -1163,31 +1163,35 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
 
         givesCheck = gives_check(pos, ss, move);
 
-        // Futility pruning
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !givesCheck
-            && futilityBase > -VALUE_MATE_IN_MAX_PLY && type_of_m(move) != PROMOTION)
+        if (bestValue > VALUE_MATED_IN_MAX_PLY)
         {
-            if (moveCount > 2)
-                continue;
 
-            futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
-
-            if (futilityValue <= alpha)
+            // Futility pruning
+            if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
+                && type_of_m(move) != PROMOTION)
             {
-                bestValue = max(bestValue, futilityValue);
-                continue;
+                if (moveCount > 2)
+                    continue;
+
+                futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
+
+                if (futilityValue <= alpha)
+                {
+                    bestValue = max(bestValue, futilityValue);
+                    continue;
+                }
+
+                if (futilityBase <= alpha && !see_test(pos, move, 1))
+                {
+                    bestValue = max(bestValue, futilityBase);
+                    continue;
+                }
             }
 
-            if (futilityBase <= alpha && !see_test(pos, move, 1))
-            {
-                bestValue = max(bestValue, futilityBase);
+            // Do not search moves with negative SEE values
+            if (!see_test(pos, move, 0))
                 continue;
-            }
         }
-
-        // Do not search moves with negative SEE values
-        if (bestValue > VALUE_MATED_IN_MAX_PLY && !see_test(pos, move, 0))
-            continue;
 
         // Speculative prefetch as early as possible
         prefetch(tt_first_entry(key_after(pos, move)));
