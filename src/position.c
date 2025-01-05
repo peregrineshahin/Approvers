@@ -536,7 +536,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         {
             st->nonPawnKey[them] ^= zob.psq[captured][capsq];
 
-            if (type_of_p(captured) >= ROOK)
+            if (type_of_p(piece) == QUEEN || type_of_p(piece) == ROOK)
                 st->majorKey ^= zob.psq[captured][capsq];
             else
                 st->minorKey ^= zob.psq[captured][capsq];
