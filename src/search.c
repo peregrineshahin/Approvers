@@ -721,12 +721,20 @@ moves_loop:  // When in check search starts from here.
                     && (*contHist1)[movedPiece][to_sq(move)] < 0)
                     continue;
 
+                int history = 2 * (*pos->mainHistory)[stm()][from_to(move)]
+                            + (*contHist0)[movedPiece][to_sq(move)]
+                            + (*contHist1)[movedPiece][to_sq(move)];
+
+                lmrDepth += history / 3609;
+
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
                     && ss->staticEval + (bestValue < ss->staticEval - 64 ? fpp_v2 : 64)
                            + fpp_v3 * lmrDepth
                          <= alpha)
                     continue;
+
+                lmrDepth = max(lmrDepth, 0);
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths.
