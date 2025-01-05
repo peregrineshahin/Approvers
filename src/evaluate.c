@@ -24,15 +24,18 @@
 
 extern int eval_scale;
 extern int mat_scale;
+extern int mat_n;
+extern int mat_b;
+extern int mat_r;
+extern int mat_q;
 
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
 
     v = eval_scale * v / 100;
 
-    int non_pawn_material =
-      KnightValue * popcount(pieces_p(KNIGHT)) + BishopValue * popcount(pieces_p(BISHOP))
-      + RookValue * popcount(pieces_p(ROOK)) + QueenValue * popcount(pieces_p(QUEEN));
+    int non_pawn_material = mat_n * popcount(pieces_p(KNIGHT)) + mat_b * popcount(pieces_p(BISHOP))
+                          + mat_r * popcount(pieces_p(ROOK)) + mat_q * popcount(pieces_p(QUEEN));
 
     v = v * (mat_scale + non_pawn_material) / 32768;
 

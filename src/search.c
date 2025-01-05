@@ -47,6 +47,8 @@ int       parameters_count = 0;
 #endif
 
 
+PARAM(ttct_v1, 100)
+PARAM(ttct_v2, 100)
 PARAM(nmp_v1, 764)
 PARAM(nmp_v2, 56)
 PARAM(nmp_v3, 165)
@@ -68,9 +70,13 @@ PARAM(iir_v1, 6)
 PARAM(iir_v2, 2)
 PARAM(cbp_v1, 3)
 PARAM(cbp_v2, 0)
+PARAM(cbp_v3, 0)
+PARAM(cbp_v4, 0)
 PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 214)
 PARAM(fpp_v3, 183)
+PARAM(fpp_v4, 64)
+PARAM(fpp_v5, 64)
 PARAM(sqsee_v1, 27)
 PARAM(scsee_v1, 199)
 PARAM(se_v1, 5)
@@ -105,6 +111,8 @@ PARAM(ch_v3, 286)
 PARAM(ch_v4, 84)
 PARAM(ch_v5, 105)
 PARAM(ch_v6, 100)
+PARAM(ch_v7, 100)
+PARAM(ch_v8, 100)
 PARAM(tempo, 44)
 PARAM(mp_v1, 70)
 PARAM(mp_v2, 1064)
@@ -116,6 +124,10 @@ PARAM(mp_v7, 185)
 PARAM(mp_v8, 87)
 PARAM(eval_scale, 89)
 PARAM(mat_scale, 26273)
+PARAM(mat_n, 653)
+PARAM(mat_b, 812)
+PARAM(mat_r, 1379)
+PARAM(mat_q, 2547)
 PARAM(pcmb_v1, 100)
 PARAM(pcmb_v2, 4)
 PARAM(pcmb_v3, 29)
@@ -137,6 +149,7 @@ PARAM(r_v10, 860)
 PARAM(r_v11, 996)
 PARAM(r_v12, 1109)
 PARAM(r_v13, 993)
+PARAM(ded_v1, 64)
 PARAM(lce_v1, 2280)
 PARAM(qb_v1, 198)
 PARAM(qb_v2, 195)
@@ -531,12 +544,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!is_capture_or_promotion(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
+                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 100);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              -stat_malus(depth + 1));
+                                              ttct_v2 * -stat_malus(depth + 1) / 100);
         }
         if (rule50_count() < 90)
             return ttValue;
@@ -719,13 +732,13 @@ moves_loop:  // When in check search starts from here.
             {
                 // Countermoves based pruning
                 if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < 0
-                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
+                    && (*contHist0)[movedPiece][to_sq(move)] < cbp_v3
+                    && (*contHist1)[movedPiece][to_sq(move)] < cbp_v4)
                     continue;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
-                    && ss->staticEval + (bestValue < ss->staticEval - 64 ? fpp_v2 : 64)
+                    && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
                            + fpp_v3 * lmrDepth
                          <= alpha)
                     continue;
@@ -866,7 +879,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
-                const bool doDeeperSearch    = value > bestValue + 64;
+                const bool doDeeperSearch    = value > bestValue + ded_v1;
                 const bool doShallowerSearch = value < bestValue + newDepth;
 
                 newDepth += doDeeperSearch - doShallowerSearch;
@@ -1268,7 +1281,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     Key keys[]    = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, 100, 100};
+    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
