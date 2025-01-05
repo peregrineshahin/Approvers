@@ -189,6 +189,7 @@ SMALL void pos_set(Position* pos, char* fen) {
 SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
+    st->nonPawnKey[WHITE] = st->nonPawnKey[BLACK] = 0;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -205,6 +206,8 @@ SMALL static void set_state(Position* pos, Stack* st) {
 
         if (pt == PAWN)
             st->pawnKey ^= zob.psq[piece_on(s)][s];
+        else
+            st->nonPawnKey[color_of(pc)] ^= zob.psq[pc][s];
     }
 
     if (st->epSquare != 0)
@@ -504,6 +507,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         nnue_add_piece(acc, captured, rto, wksq, bksq);
 
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
+        st->nonPawnKey[us] ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         captured = 0;
     }
     else if (captured)
@@ -519,6 +523,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
             st->pawnKey ^= zob.psq[captured][capsq];
         }
+        else
+            st->nonPawnKey[them] ^= zob.psq[captured][capsq];
 
         nnue_remove_piece(acc, captured, capsq, wksq, bksq);
 
@@ -595,6 +601,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Reset ply counters.
         st->plyCounters = 0;
     }
+    else
+        st->nonPawnKey[us] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
 
     // Update the key with the final value
     st->key = key;
