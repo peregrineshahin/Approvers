@@ -980,8 +980,8 @@ moves_loop:  // When in check search starts from here.
 
             update_quiet_stats(pos, ss, bestMove, bonus);
 
-            // Decrease all the other played quiet moves
 #pragma clang loop unroll(disable)
+            // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
             {
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
