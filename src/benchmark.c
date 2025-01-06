@@ -88,7 +88,7 @@ static char* Defaults[] = {
 };
 
 void benchmark() {
-    Limits            = (LimitsType){0};
+    Limits            = (LimitsType) {0};
     Limits.depth      = 16;
     Thread.testPonder = 0;
 

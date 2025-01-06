@@ -19,7 +19,6 @@
 */
 
 #include "bitboard.h"
-#include "misc.h"
 
 uint8_t SquareDistance[64][64];
 

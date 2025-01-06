@@ -1,3 +1,4 @@
+#include "types.h"
 #include <immintrin.h>
 
 extern __m256i queen_mask_v4[64][2];

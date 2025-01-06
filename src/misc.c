@@ -19,11 +19,6 @@
 */
 
 #include "misc.h"
-#include "thread.h"
-
-// Version number. If Version is left empty, then compile date in the format
-// DD-MM-YY and show in engine_info.
-char Version[] = "";
 
 // xorshift64star Pseudo-Random Number Generator
 // This class is based on original code written and dedicated

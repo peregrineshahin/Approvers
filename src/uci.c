@@ -164,7 +164,7 @@ void setoption(char* str) {
 // the search.
 
 static void go(Position* pos, char* str) {
-    Limits           = (struct LimitsType){0};
+    Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
 #pragma clang loop unroll(disable)
