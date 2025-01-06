@@ -64,7 +64,7 @@ PARAM(rd_v1, 595)
 PARAM(rd_v2, 1237)
 PARAM(rd_v3, 848)
 PARAM(rd_init_v1, 2881)
-PARAM(d_v1, 17)
+PARAM(d_v1, 15)
 PARAM(iir_v1, 6)
 PARAM(iir_v2, 2)
 PARAM(cbp_v1, 3)
@@ -367,8 +367,9 @@ void thread_search(Position* pos) {
         {
             Value previousScore = pv->score;
             delta               = d_v1;
-            alpha               = max(previousScore - delta, -VALUE_INFINITE);
-            beta                = min(previousScore + delta, VALUE_INFINITE);
+            delta += previousScore * previousScore / 10000;
+            alpha = max(previousScore - delta, -VALUE_INFINITE);
+            beta  = min(previousScore + delta, VALUE_INFINITE);
         }
 
         while (true)
@@ -384,7 +385,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1 / 100;
+            delta += delta / 2;
         }
 
 #ifndef KAGGLE
@@ -1316,7 +1317,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-        // Decrease all the other played capture moves
+    // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
