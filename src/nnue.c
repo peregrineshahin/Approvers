@@ -114,24 +114,36 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
-    for (int i = 0; i < L1SIZE; i++)
+    for (int i = 0; i < L1SIZE; i += 16)
     {
-        acc->values[WHITE][i] += in_weights[white * L1SIZE + i];
-        acc->values[BLACK][i] += in_weights[black * L1SIZE + i];
+        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
+        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
+
+        w_acc = _mm256_adds_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
+        b_acc = _mm256_adds_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
+
+        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
+        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
     }
 }
 
 void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
-    for (int i = 0; i < L1SIZE; i++)
+    for (int i = 0; i < L1SIZE; i += 16)
     {
-        acc->values[WHITE][i] -= in_weights[white * L1SIZE + i];
-        acc->values[BLACK][i] -= in_weights[black * L1SIZE + i];
+        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
+        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
+
+        w_acc = _mm256_subs_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
+        b_acc = _mm256_subs_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
+
+        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
+        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
     }
 }
 
