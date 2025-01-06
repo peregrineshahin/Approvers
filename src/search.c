@@ -47,9 +47,7 @@ int       parameters_count = 0;
     #define PARAM(Name, Value, Step) int Name = Value;
 #endif
 
-
-PARAM(ttct_v1, 100, 8)
-PARAM(ttct_v2, 100, 8)
+// Disabled parameters
 PARAM(nmp_v1, 764, 0)
 PARAM(nmp_v2, 56, 0)
 PARAM(nmp_v3, 165, 0)
@@ -58,6 +56,13 @@ PARAM(nmp_v5, 25312, 0)
 PARAM(nmp_v6, 27, 0)
 PARAM(nmp_v8, 92, 0)
 PARAM(nmp_v9, 194, 0)
+PARAM(lmr_v8, 14416, 0)
+PARAM(mp_v1, 70, 0)
+PARAM(mp_v2, 1064, 0)
+
+// Search parameters
+PARAM(ttct_v1, 100, 8)
+PARAM(ttct_v2, 100, 8)
 PARAM(qmo_v1, 367, 25)
 PARAM(qmo_v2, 1230, 100)
 PARAM(qmo_v3, 1010, 100)
@@ -67,9 +72,6 @@ PARAM(rd_v2, 1237, 40)
 PARAM(rd_v3, 848, 60)
 PARAM(rd_init_v1, 2881, 100)
 PARAM(d_v1, 17, 2)
-PARAM(iir_v1, 6, 0)
-PARAM(iir_v2, 2, 0)
-PARAM(cbp_v1, 3, 0)
 PARAM(cbp_v2, 0, 8)
 PARAM(cbp_v3, 0, 8)
 PARAM(cbp_v4, 0, 8)
@@ -80,7 +82,6 @@ PARAM(fpp_v4, 64, 6)
 PARAM(fpp_v5, 64, 6)
 PARAM(sqsee_v1, 27, 3)
 PARAM(scsee_v1, 199, 10)
-PARAM(se_v1, 5, 0)
 PARAM(se_v2, 111, 10)
 PARAM(se_v5, 27, 5)
 PARAM(prb_v1, 125, 15)
@@ -91,10 +92,6 @@ PARAM(lmr_v4, 102, 10)
 PARAM(lmr_v5, 92, 10)
 PARAM(lmr_v6, 93, 10)
 PARAM(lmr_v7, 112, 10)
-PARAM(lmr_v8, 14416, 0)
-PARAM(fmc_v1, 3, 0)
-PARAM(fmc_v2, 2, 0)
-PARAM(fmc_v3, 2, 0)
 PARAM(hb_v1, 648, 50)
 PARAM(hb_v2, 201, 15)
 PARAM(hb_v3, 161, 25)
@@ -104,7 +101,6 @@ PARAM(hm_v2, 190, 15)
 PARAM(hm_v3, 153, 25)
 PARAM(hm_v4, 1709, 150)
 PARAM(asd_v1, 487, 50)
-PARAM(ses_v1, 3, 0)
 PARAM(qsf_v1, 185, 15)
 PARAM(ch_v1, 22, 4)
 PARAM(ch_v2, 162, 15)
@@ -115,8 +111,6 @@ PARAM(ch_v6, 100, 10)
 PARAM(ch_v7, 100, 10)
 PARAM(ch_v8, 100, 10)
 PARAM(tempo, 44, 5)
-PARAM(mp_v1, 70, 0)
-PARAM(mp_v2, 1064, 0)
 PARAM(mp_v3, 2724, 150)
 PARAM(mp_v4, 137, 10)
 PARAM(mp_v5, 256, 10)
@@ -130,7 +124,6 @@ PARAM(mat_b, 812, 65)
 PARAM(mat_r, 1379, 100)
 PARAM(mat_q, 2547, 200)
 PARAM(pcmb_v1, 100, 10)
-PARAM(pcmb_v2, 4, 0)
 PARAM(pcmb_v3, 29, 5)
 PARAM(pcmb_v4, 163, 10)
 PARAM(pcmb_v5, 7, 0.5)
@@ -158,6 +151,7 @@ PARAM(cms_v1, 29265, 250)
 PARAM(hu_v1, 10081, 250)
 PARAM(cpth_v1, 11833, 250)
 
+// Time management parameters
 PARAM(tm_v1, 329, 28)
 PARAM(tm_v2, 555, 63)
 PARAM(tm_v3, 657, 63)
@@ -201,8 +195,7 @@ static Depth reduction(int i, Depth d, int mn) {
 }
 
 static int futility_move_count(bool improving, Depth depth) {
-    //  return (3 + depth * depth) / (2 - improving);
-    return improving ? fmc_v1 + depth * depth : (fmc_v2 + depth * depth) / fmc_v3;
+    return improving ? 3 + depth * depth : (2 + depth * depth) / 2;
 }
 
 // History and stats update bonus, based on depth
@@ -670,8 +663,8 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * iir_v1 && !ttMove)
-        depth -= iir_v2;
+    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
+        depth -= 2;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -722,7 +715,7 @@ moves_loop:  // When in check search starts from here.
             if (!captureOrPromotion && !givesCheck)
             {
                 // Countermoves based pruning
-                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
+                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
                     && (*contHist0)[movedPiece][to_sq(move)] < cbp_v3
                     && (*contHist1)[movedPiece][to_sq(move)] < cbp_v4)
                     continue;
@@ -751,11 +744,11 @@ moves_loop:  // When in check search starts from here.
         // that move is singular and should be extended. To verify this we do a
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
-        if (depth >= se_v1 && move == ttMove && !rootNode
+        if (depth >= 5 && move == ttMove && !rootNode
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - ses_v1)
+            && tte_depth(tte) >= depth - 3)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 100;
             Depth singularDepth = (depth - 1) / 2;
@@ -1015,7 +1008,7 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > pcmb_v2) + pcmb_v3 * !(PvNode || cutNode)
+        int bonus = pcmb_v1 * (depth > 4) + pcmb_v3 * !(PvNode || cutNode)
                   + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
                   + pcmb_v6 * (!inCheck && bestValue <= ss->staticEval - pcmb_v7);
 
