@@ -454,7 +454,7 @@ Value search(
 
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
-        return qsearch(pos, ss, alpha, beta, 0, PvNode);
+        return qsearch(pos, ss, alpha, beta, 0);
 
     Move     capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
@@ -638,7 +638,7 @@ Value search(
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
-                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0, false);
+                value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0);
 
                 // If the qsearch held, perform the regular search
                 if (value >= probCutBeta)
@@ -1043,9 +1043,7 @@ moves_loop:  // When in check search starts from here.
 // qsearch() is the quiescence search function template, which is
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
-Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, const int NT) {
-    const bool PvNode = NT == PV;
-
+Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
@@ -1073,7 +1071,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     ttMove  = ttHit ? tte_move(tte) : 0;
     pvHit   = ttHit && tte_is_pv(tte);
 
-    if (!PvNode && ttHit && tte_depth(tte) >= ttDepth
+    if (ttHit && tte_depth(tte) >= ttDepth
         && ttValue != VALUE_NONE  // Only in case of TT access race
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
@@ -1119,7 +1117,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
             return bestValue;
         }
 
-        if (PvNode && bestValue > alpha)
+        if (bestValue > alpha)
             alpha = bestValue;
 
         futilityBase = bestValue + qsf_v1;
@@ -1185,7 +1183,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
         // Make and search the move
         do_move(pos, move, givesCheck);
 
-        value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode);
+        value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
 
         // Check for a new best move
