@@ -177,7 +177,7 @@ enum {
 };
 
 static int futility_margin(Depth d, bool improving, bool stuff) {
-    return ft_v1 * (d - improving - stuff);
+    return ft_v1 * (d - improving + stuff);
 }
 
 // Reductions lookup tables, initialized at startup
