@@ -608,9 +608,13 @@ Value search(
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
     }
 
+    // Step 1. If the position is not in TT, decrease depth by 2
+    if ((PvNode || cutNode) && depth >= (1 + cutNode) * iir_v1 && !ttMove)
+        depth -= iir_v2;
+
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
-    // Step 10. ProbCut
+    // Step 11. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move.
     if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
@@ -654,10 +658,6 @@ Value search(
             }
         ss->ttPv = ttPv;
     }
-
-    // Step 11. If the position is not in TT, decrease depth by 2
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * iir_v1 && !ttMove)
-        depth -= iir_v2;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
