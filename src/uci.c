@@ -267,6 +267,20 @@ SMALL void uci_loop(int argc, char** argv) {
             printf("uciok\n");
             fflush(stdout);
         }
+        else if (strcmp(token, "params") == 0)
+        {
+            for (int i = 0; i < parameters_count; i++)
+            {
+                if (parameters[i].step == 0)
+                    continue;
+
+                const int min = (int) (*parameters[i].value - 10 * parameters[i].step);
+                const int max = (int) (*parameters[i].value + 10 * parameters[i].step);
+
+                printf("%s, int, %d, %d, %d, %.1f, 0.002\n", parameters[i].name,
+                       *parameters[i].value, min, max, parameters[i].step);
+            }
+        }
         else if (strcmp(token, "nnparams") == 0)
         {
             for (int i = 0; i < L1SIZE; i++)
