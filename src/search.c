@@ -590,7 +590,7 @@ Value search(
     // Step 9. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
-        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
+        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v9 && !excludedMove
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
