@@ -72,8 +72,9 @@
 #define AVX2_BITBOARD
 
 typedef struct Parameter {
-    char name[32];
-    int* value;
+    char   name[32];
+    int*   value;
+    double step;
 } Parameter;
 
 typedef uint64_t Key;
