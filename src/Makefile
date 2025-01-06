@@ -19,7 +19,7 @@ CC      = clang
 CFLAGS  = -O3 -fno-common -ffunction-sections -fdata-sections -mavx2   \
           -g0 -fno-asynchronous-unwind-tables -fstrict-aliasing        \
           -fmerge-all-constants -fvisibility=hidden -ffast-math        \
-          -fno-math-errno -falign-functions=1 -falign-loops=1
+          -fno-math-errno -falign-functions=1 -falign-loops=1 -fno-vectorize \
 
 ifeq ($(comp),$(filter $(comp),gcc clang icc))
     ifeq ($(KERNEL),Darwin)
