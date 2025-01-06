@@ -27,16 +27,12 @@ ThreadStruct Thread = {0};
 void thread_init() {
     Thread.testPonder = 0;
 
-    Position* pos         = calloc(sizeof(Position), 1);
-    pos->mainHistory      = calloc(sizeof(ButterflyHistory), 1);
-    pos->captureHistory   = calloc(sizeof(CapturePieceToHistory), 1);
-    pos->matCorrHist      = calloc(sizeof(CorrectionHistory), 1);
-    pos->pawnCorrHist     = calloc(sizeof(CorrectionHistory), 1);
-    pos->prevMoveCorrHist = calloc(sizeof(CorrectionHistory), 1);
-    pos->wNonPawnCorrHist = calloc(sizeof(CorrectionHistory), 1);
-    pos->bNonPawnCorrHist = calloc(sizeof(CorrectionHistory), 1);
-    pos->stackAllocation  = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
-    pos->moveList         = calloc(10000 * sizeof(ExtMove), 1);
+    Position* pos        = calloc(sizeof(Position), 1);
+    pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
+    pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
+    pos->corrHists       = calloc(sizeof(CorrectionHistory), 1);
+    pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
+    pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
     pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
@@ -58,11 +54,7 @@ void thread_exit() {
     free(pos->captureHistory);
     free(pos->stackAllocation);
     free(pos->moveList);
+    free(pos->corrHists);
     free(pos->contHist);
-    free(pos->matCorrHist);
-    free(pos->pawnCorrHist);
-    free(pos->prevMoveCorrHist);
-    free(pos->wNonPawnCorrHist);
-    free(pos->bNonPawnCorrHist);
     free(pos);
 }
