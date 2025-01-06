@@ -2,41 +2,34 @@
 #include <stdalign.h>
 #include <stdint.h>
 
-#include "incbin.h"
 #include "nnue.h"
 
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
-
-alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
-
-alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_biases[OUTSIZE];
+#include "weights.c"
 
 SMALL void nnue_init() {
-    int8_t* data8 = (int8_t*) gNetworkData;
-
-    for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data8++);
-    }
-
-    int16_t* data16 = (int16_t*) data8;
-
-    for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data16++);
-
-    for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
-        l1_weights[i] = *(data16++);
-
-    for (int i = 0; i < OUTSIZE; i++)
-        l1_biases[i] = *(data16++);
+    // int8_t* data8 = (int8_t*) gNetworkData;
+    //
+    // for (int i = 0; i < INSIZE * L1SIZE; i++)
+    // {
+    //     int x = i / L1SIZE;
+    //     if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
+    //           || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
+    //         in_weights[i] = *(data8++);
+    // }
+    //
+    // int16_t* data16 = (int16_t*) data8;
+    //
+    // for (int i = 0; i < L1SIZE; i++)
+    //     in_biases[i] = *(data16++);
+    //
+    // for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
+    //     l1_weights[i] = *(data16++);
+    //
+    // for (int i = 0; i < OUTSIZE; i++)
+    //     l1_biases[i] = *(data16++);
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {

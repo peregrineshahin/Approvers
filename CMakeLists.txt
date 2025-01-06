@@ -36,6 +36,5 @@ add_executable(Peregrine
         src/types.h
         src/uci.c
         src/uci.h
-        src/incbin.h
         src/nnue.c
         src/nnue.h)
