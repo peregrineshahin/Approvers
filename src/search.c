@@ -1034,7 +1034,8 @@ moves_loop:  // When in check search starts from here.
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
-        update_correction_histories(pos, depth, bestValue - ss->staticEval);
+        update_correction_histories(pos, depth + (tte_bound(tte) == BOUND_EXACT),
+                                    bestValue - ss->staticEval);
     }
 
     return bestValue;
