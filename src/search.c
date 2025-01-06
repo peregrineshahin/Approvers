@@ -793,15 +793,14 @@ moves_loop:  // When in check search starts from here.
         newDepth += extension;
 
         // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key_after(pos, move)));
+        do_move(pos, move, givesCheck);
+        // Step 15. Make the move.
+        prefetch(tt_first_entry(key()));
 
         // Update the current move (this must be done after singular extension
         // search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
-
-        // Step 15. Make the move.
-        do_move(pos, move, givesCheck);
 
         r = r * r_v1;
 
@@ -1053,6 +1052,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
     bool     ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
+    Piece    movedPiece;
 
     bestMove  = 0;
     moveCount = 0;
@@ -1176,14 +1176,15 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, co
                 continue;
         }
 
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key_after(pos, move)));
-
-        ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
+        movedPiece = moved_piece(move);
 
         // Make and search the move
         do_move(pos, move, givesCheck);
+        // Speculative prefetch as early as possible
+        prefetch(tt_first_entry(key()));
+
+        ss->currentMove         = move;
+        ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1, PvNode);
         undo_move(pos, move);

@@ -166,7 +166,6 @@ static void undo_null_move(Position* pos);
 // Static exchange evaluation
 PURE bool see_test(const Position* pos, Move m, int value);
 
-PURE Key  key_after(const Position* pos, Move m);
 PURE bool is_draw(const Position* pos);
 
 // Position representation
