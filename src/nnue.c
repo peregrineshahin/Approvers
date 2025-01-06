@@ -11,32 +11,29 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
+alignas(64) int16_t l1_weights[L1SIZE * 2];
 
 alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_biases[OUTSIZE];
+alignas(64) int16_t l1_bias;
 
 SMALL void nnue_init() {
-    int8_t* data8 = (int8_t*) gNetworkData;
+    int8_t* data = (int8_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
     {
         int x = i / L1SIZE;
         if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
               || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data8++);
+            in_weights[i] = *(data++);
     }
 
-    int16_t* data16 = (int16_t*) data8;
-
     for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data16++);
+        in_biases[i] = *(data++);
 
-    for (int i = 0; i < L1SIZE * OUTSIZE * 2; i++)
-        l1_weights[i] = *(data16++);
+    for (int i = 0; i < L1SIZE * 2; i++)
+        l1_weights[i] = *(data++);
 
-    for (int i = 0; i < OUTSIZE; i++)
-        l1_biases[i] = *(data16++);
+    l1_bias = *((int16_t*) data);
 }
 
 static Value forward(const int16_t* acc, const int16_t* weights) {
@@ -79,7 +76,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     const int16_t* nstm = acc->values[!pos->sideToMove];
 
     Value output = forward(stm, l1_weights) + forward(nstm, l1_weights + L1SIZE);
-    return (output / QA + l1_biases[0]) * SCALE / (QA * QB);
+    return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {

@@ -34,7 +34,7 @@ extern void benchmark();
 extern Parameter parameters[255];
 extern int       parameters_count;
 
-extern alignas(64) int16_t l1_weights[L1SIZE * OUTSIZE * 2];
+extern alignas(64) int16_t l1_weights[L1SIZE * 2];
 extern alignas(64) int16_t in_biases[L1SIZE];
 #endif
 
