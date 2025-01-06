@@ -176,7 +176,9 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
+static int futility_margin(Depth d, bool improving, bool stuff) {
+    return ft_v1 * (d - improving - stuff);
+}
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -583,7 +585,8 @@ Value search(
     }
 
     // Step 8. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 && eval - futility_margin(depth, improving) >= beta
+    if (!PvNode && depth < rfp_v1
+        && eval - futility_margin(depth, improving, cutNode && !ttHit) >= beta
         && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
