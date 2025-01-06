@@ -726,8 +726,14 @@ moves_loop:  // When in check search starts from here.
                     continue;
             }
             // See based pruning
-            else if (!see_test(pos, move, -scsee_v1 * depth))
-                continue;
+            else
+            {
+                int captHist = (*pos->captureHistory)[moved_piece(move)][to_sq(move)]
+                                                     [type_of_p(piece_on(to_sq(move)))];
+                int seeHist = clamp(captHist / 33, -scsee_v1 * depth, 156 * depth);
+                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
+                    continue;
+            }
         }
 
         // Step 14. Extensions

@@ -56,16 +56,15 @@ NOINLINE static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int li
 // highest values will be picked first.
 
 static void score_captures(const Position* pos) {
-    Stack*                 st      = pos->st;
-    CapturePieceToHistory* history = pos->captureHistory;
+    Stack* st = pos->st;
 
     // Winning and equal captures in the main search are ordered by MVV,
     // preferring captures near our with a good history.
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
-        m->value =
-          PieceValue[piece_on(to_sq(m->move))] * 6
-          + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
+        m->value = PieceValue[piece_on(to_sq(m->move))] * 6
+                 + (*pos->captureHistory)[moved_piece(m->move)][to_sq(m->move)]
+                                         [type_of_p(piece_on(to_sq(m->move)))];
 }
 
 SMALL static void score_quiets(const Position* pos) {
