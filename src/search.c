@@ -814,50 +814,46 @@ moves_loop:  // When in check search starts from here.
 
         r = r * r_v1;
 
+        // Decrease reduction if position is or has been on the PV
+        if (ss->ttPv)
+            r -= r_v2;
+
+        // Increase reduction if ttMove is a capture
+        if (ttCapture)
+            r += r_v6;
+
+        if ((ss + 1)->cutoffCnt > 3)
+            r += r_v7;
+
+        // Increase reduction for cut nodes
+        if (cutNode)
+            r += r_v8;
+
+        // Decrease reduction for moves that escape a capture. Filter out
+        // castling moves, because they are coded as "king captures rook" and
+        // hence break make_move().
+        else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
+            r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
+
+        if (!captureOrPromotion)
+        {
+            ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
+                          + (*contHist1)[movedPiece][to_sq(move)]
+                          + (*contHist2)[movedPiece][to_sq(move)]
+                          + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+        }
+        else
+            ss->statScore = 0;
+
+        // Decrease/increase reduction for moves with a good/bad history.
+        r -= ss->statScore / lmr_v8 * r_v13;
+
+
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
-
-            if (!captureOrPromotion)
-            {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
-                // Increase reduction for cut nodes
-                if (cutNode)
-                    r += r_v8;
-
-                // Decrease reduction for moves that escape a capture. Filter out
-                // castling moves, because they are coded as "king captures rook" and
-                // hence break make_move().
-                else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
-
-                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
-                              + (*contHist1)[movedPiece][to_sq(move)]
-                              + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-
-                // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
-
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
-
-                // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
-            }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
