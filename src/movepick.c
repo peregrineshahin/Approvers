@@ -67,6 +67,7 @@ static void score_captures(const Position* pos) {
           PieceValue[piece_on(to_sq(m->move))] * 6
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
+Bitboard square_bb(Square s) { return (1ULL << s); }
 
 SMALL static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
@@ -77,21 +78,52 @@ SMALL static void score_quiets(const Position* pos) {
     PieceToHistory* contHist2 = (st - 4)->continuationHistory;
     PieceToHistory* contHist3 = (st - 6)->continuationHistory;
 
-    Color c = stm();
+    Color us   = stm();
+    Color them = !us;
+
+    // Calculate threatened bitboards
+    Bitboard threatenedByPawn = attacks_by(pos, them, PAWN);
+    Bitboard threatenedByMinor =
+      attacks_by(pos, them, KNIGHT) | attacks_by(pos, them, BISHOP) | threatenedByPawn;
+    Bitboard threatenedByRook = attacks_by(pos, them, ROOK) | threatenedByMinor;
+
+    // Pieces threatened by pieces of lesser material value
+    Bitboard threatenedPieces = (pieces_cp(us, QUEEN) & threatenedByRook)
+                              | (pieces_cp(us, ROOK) & threatenedByMinor)
+                              | (pieces_cp(us, KNIGHT) | pieces_cp(us, BISHOP)) & threatenedByPawn;
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
     {
-        uint32_t move = m->move & 4095;
-        Square   to   = move & 63;
-        Square   from = move >> 6;
+        uint32_t  move = m->move & 4095;
+        Square    to   = move & 63;
+        Square    from = move >> 6;
+        Piece     pc   = piece_on(from);
+        PieceType pt   = type_of_p(pc);
 
         m->value =
-          (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
+          (mp_v4 * (*history)[us][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
            + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
            + mp_v8 * (*contHist3)[piece_on(from)][to])
           / 100;
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
+
+        // bonus for escaping from capture
+        m->value += threatenedPieces & from ? (pt == QUEEN && !(to & threatenedByRook)   ? 75000
+                                               : pt == ROOK && !(to & threatenedByMinor) ? 37500
+                                               : !(to & threatenedByPawn)                ? 18750
+                                                                                         : 0)
+                                            : 0;
+
+        m->value -= !(threatenedPieces & from)
+                    ? (pt == QUEEN ? (bool) (to & threatenedByRook) * 75000
+                                       + (bool) (to & threatenedByMinor) * 15000
+                                       + (bool) (to & threatenedByPawn) * 30000
+                       : pt == ROOK ? (bool) (to & threatenedByMinor) * 37500
+                                        + (bool) (to & threatenedByPawn) * 15000
+                       : pt != PAWN ? (bool) (to & threatenedByPawn) * 22500
+                                    : 0)
+                    : 0;
     }
 }
 
