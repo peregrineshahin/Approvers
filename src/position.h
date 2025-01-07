@@ -167,7 +167,9 @@ static void undo_null_move(Position* pos);
 PURE bool see_test(const Position* pos, Move m, int value);
 
 PURE bool is_draw(const Position* pos);
-PURE bool has_game_cycle(const Position *pos, int ply);
+PURE bool has_game_cycle(const Position* pos, int ply);
+Bitboard  pawn_attacks_bb(Bitboard b, Color C);
+Bitboard  attacks_by(const Position* pos, Color c, PieceType pt);
 
 // Position representation
 #define pieces() (pos->byTypeBB[0])

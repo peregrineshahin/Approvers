@@ -657,6 +657,25 @@ void do_move(Position* pos, Move m, int givesCheck) {
     set_check_info(pos);
 }
 
+Bitboard pawn_attacks_bb(Bitboard b, Color C) {
+    return C == WHITE ? shift_bb(NORTH_WEST, b) | shift_bb(NORTH_EAST, b)
+                      : shift_bb(SOUTH_WEST, b) | shift_bb(SOUTH_EAST, b);
+}
+
+Bitboard attacks_by(const Position* pos, Color c, PieceType pt) {
+
+    if (pt == PAWN)
+        return c == WHITE ? pawn_attacks_bb(pieces_cp(WHITE, PAWN), WHITE)
+                          : pawn_attacks_bb(pieces_cp(BLACK, PAWN), BLACK);
+    else
+    {
+        Bitboard threats   = 0;
+        Bitboard attackers = pieces_cp(c, pt);
+        while (attackers)
+            threats |= attacks_bb(pt, pop_lsb(&attackers), pieces());
+        return threats;
+    }
+}
 
 // undo_move() unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
