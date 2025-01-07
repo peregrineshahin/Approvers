@@ -187,8 +187,7 @@ static Depth reduction(int i, Depth d, int mn) {
 }
 
 static int futility_move_count(bool improving, Depth depth) {
-    //  return (3 + depth * depth) / (2 - improving);
-    return improving ? fmc_v1 + depth * depth : (fmc_v2 + depth * depth) / fmc_v3;
+    return (3 + depth * depth) / (2 - improving);
 }
 
 // History and stats update bonus, based on depth
