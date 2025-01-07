@@ -1154,7 +1154,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         {
 
             // Futility pruning
-            if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
+            if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY && to_sq(move) != prevSq
                 && type_of_m(move) != PROMOTION)
             {
                 if (moveCount > 2)
@@ -1176,7 +1176,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             }
 
             // Do not search moves with negative SEE values
-            if (!see_test(pos, move, 0))
+            if (!see_test(pos, move, -108))
                 continue;
         }
 
