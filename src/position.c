@@ -704,24 +704,6 @@ void do_null_move(Position* pos) {
 // See position.h for undo_null_move()
 
 
-// key_after() computes the new hash key after the given move. Needed
-// for speculative prefetch. It does not recognize special moves like
-// castling, en-passant and promotions.
-
-Key key_after(const Position* pos, Move m) {
-    Square from     = from_sq(m);
-    Square to       = to_sq(m);
-    Piece  pc       = piece_on(from);
-    Piece  captured = piece_on(to);
-    Key    k        = key() ^ zob.side;
-
-    if (captured)
-        k ^= zob.psq[captured][to];
-
-    return k ^ zob.psq[pc][to] ^ zob.psq[pc][from];
-}
-
-
 // Test whether SEE >= value.
 bool see_test(const Position* pos, Move m, int value) {
     if (unlikely(type_of_m(m) != NORMAL))
