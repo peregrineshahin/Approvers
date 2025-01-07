@@ -452,6 +452,16 @@ Value search(
 
     ss->pv.length = 0;
 
+    // Check if we have an upcoming move which draws by repetition, or if the
+    // opponent had an alternative move earlier to this position.
+    if (pos->st->pliesFromNull >= 3 && alpha < VALUE_DRAW && !rootNode
+        && has_game_cycle(pos, ss->ply))
+    {
+        alpha = VALUE_DRAW;
+        if (alpha >= beta)
+            return alpha;
+    }
+
     // Dive into quiescense search when the depth reaches zero
     if (depth <= 0)
         return qsearch(pos, ss, alpha, beta, 0);
@@ -1299,7 +1309,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     if (is_capture_or_promotion(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
 
-    // Decrease all the other played capture moves
+        // Decrease all the other played capture moves
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
