@@ -500,16 +500,7 @@ Value search(
     (ss + 2)->cutoffCnt                         = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
-    // Initialize statScore to zero for the grandchildren of the current
-    // position. So the statScore is shared between all grandchildren and only
-    // the first grandchild starts with startScore = 0. Later grandchildren
-    // start with the last calculated statScore of the previous grandchild.
-    // This influences the reduction rules in LMR which are based on the
-    // statScore of the parent position.
-    if (rootNode)
-        (ss + 4)->statScore = 0;
-    else
-        (ss + 2)->statScore = 0;
+    ss->statScore = 0;
 
     // Step 4. Transposition table lookup. We don't want the score of a
     // partial search to overwrite a previous full search TT value, so we
@@ -818,9 +809,6 @@ moves_loop:  // When in check search starts from here.
         if (ss->ttPv)
             r -= r_v2;
 
-        // Increase reduction if ttMove is a capture
-        if (ttCapture)
-            r += r_v6;
 
         if ((ss + 1)->cutoffCnt > 3)
             r += r_v7;
@@ -837,6 +825,10 @@ moves_loop:  // When in check search starts from here.
 
         if (!captureOrPromotion)
         {
+            // Increase reduction if ttMove is a capture
+            if (ttCapture)
+                r += r_v6;
+
             ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                           + (*contHist1)[movedPiece][to_sq(move)]
                           + (*contHist2)[movedPiece][to_sq(move)]
@@ -938,7 +930,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
