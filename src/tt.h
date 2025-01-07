@@ -78,14 +78,12 @@ typedef struct TranspositionTable TranspositionTable;
 extern TranspositionTable TT;
 
 static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
-    // Preserve any existing move for the same position
-    if (m || (uint16_t) k != tte->key16)
+    if (!tte->move16 || (uint16_t) k != tte->key16 || (m && b != BOUND_UPPER))
         tte->move16 = (uint16_t) m;
 
     // Don't overwrite more valuable entries
     if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4 || b == BOUND_EXACT)
     {
-
         tte->key16     = (uint16_t) k;
         tte->depth8    = (uint8_t) (d - DEPTH_OFFSET);
         tte->genBound8 = (uint8_t) (TT.generation8 | ((uint8_t) pv << 2) | b);
