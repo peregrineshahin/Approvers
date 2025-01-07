@@ -109,9 +109,9 @@ SMALL static void score_quiets(const Position* pos) {
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
 
         // bonus for escaping from capture
-        m->value += threatenedPieces & from ? (pt == QUEEN && !(to & threatenedByRook)   ? 100000
-                                               : pt == ROOK && !(to & threatenedByMinor) ? 50000
-                                               : !(to & threatenedByPawn)                ? 30000
+        m->value += threatenedPieces & from ? (pt == QUEEN && !(to & threatenedByRook)   ? 120000
+                                               : pt == ROOK && !(to & threatenedByMinor) ? 70000
+                                               : !(to & threatenedByPawn)                ? 50000
                                                                                          : 0)
                                             : 0;
     }
