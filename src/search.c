@@ -452,6 +452,10 @@ Value search(
 
     ss->pv.length = 0;
 
+    // Dive into quiescense search when the depth reaches zero
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0);
+
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
     if (pos->st->pliesFromNull >= 3 && alpha < VALUE_DRAW && !rootNode
@@ -461,10 +465,6 @@ Value search(
         if (alpha >= beta)
             return alpha;
     }
-
-    // Dive into quiescense search when the depth reaches zero
-    if (depth <= 0)
-        return qsearch(pos, ss, alpha, beta, 0);
 
     Move     capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
@@ -1049,6 +1049,15 @@ moves_loop:  // When in check search starts from here.
 // called by the main search function with zero depth, or recursively with
 // further decreasing depth per call.
 Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
+    // Check if we have an upcoming move which draws by repetition, or if the
+    // opponent had an alternative move earlier to this position.
+    if (pos->st->pliesFromNull >= 3 && alpha < VALUE_DRAW && has_game_cycle(pos, ss->ply))
+    {
+        alpha = VALUE_DRAW;
+        if (alpha >= beta)
+            return alpha;
+    }
+
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, bestMove;
