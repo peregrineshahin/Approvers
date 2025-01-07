@@ -633,7 +633,7 @@ Value search(
                 probCutCount--;
 
                 ss->currentMove         = move;
-                ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
+                ss->continuationHistory = &(*pos->contHist)[type_of_p(moved_piece(move))][to_sq(move)];
                 givesCheck              = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
@@ -798,7 +798,7 @@ moves_loop:  // When in check search starts from here.
         // Update the current move (this must be done after singular extension
         // search)
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[type_of_p(movedPiece)][to_sq(move)];
 
         // Step 15. Make the move.
         do_move(pos, move, givesCheck);
@@ -1178,7 +1178,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         prefetch(tt_first_entry(key_after(pos, move)));
 
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[moved_piece(move)][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[type_of_p(moved_piece(move))][to_sq(move)];
 
         // Make and search the move
         do_move(pos, move, givesCheck);
