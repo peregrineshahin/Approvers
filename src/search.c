@@ -1244,7 +1244,8 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
-    Key keys[] = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
+    Key keys[] = {material_key(),  pawn_key(),         w_nonpawn_key(),
+                  b_nonpawn_key(), counter_move_key(), follouwp_move_key()};
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
@@ -1260,8 +1261,9 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 }
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
-    Key keys[]    = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, 100, 100};
+    Key keys[]    = {material_key(),  pawn_key(),         w_nonpawn_key(),
+                     b_nonpawn_key(), counter_move_key(), follouwp_move_key()};
+    int weights[] = {ch_v4, ch_v5, 100, 100, ch_v6, 100};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)

@@ -208,7 +208,8 @@ PURE bool is_draw(const Position* pos);
 #define pawn_key() (pos->st->pawnKey)
 #define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
 #define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])
-#define prev_move_key() (from_to((pos->st - 1)->currentMove))
+#define counter_move_key() (from_to((pos->st - 1)->currentMove))
+#define follouwp_move_key() (from_to((pos->st - 2)->currentMove))
 
 // Other properties of the position
 #define stm() (pos->sideToMove)
