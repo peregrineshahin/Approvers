@@ -80,6 +80,12 @@ static void set_check_info(Position* pos) {
 
 // zob_init() initializes at startup the various arrays used to compute
 // hash keys.
+Key H1(Key h) { return h & 0x1fff; }
+
+Key H2(Key h) { return (h >> 16) & 0x1fff; }
+
+static Key      cuckoo[8192];
+static uint16_t cuckooMove[8192];
 
 SMALL void zob_init(void) {
 
@@ -102,6 +108,41 @@ SMALL void zob_init(void) {
 
     zob.side    = prng_rand(&rng);
     zob.noPawns = prng_rand(&rng);
+
+    // Prepare the cuckoo tables
+    int count = 0;
+#pragma clang loop unroll(disable)
+    for (int c = 0; c < 2; c++)
+#pragma clang loop unroll(disable)
+        for (int pt = PAWN; pt <= KING; pt++)
+        {
+            int pc = make_piece(c, pt);
+#pragma clang loop unroll(disable)
+            for (Square s1 = 0; s1 < 64; s1++)
+#pragma clang loop unroll(disable)
+                for (Square s2 = s1 + 1; s2 < 64; s2++)
+                    if (PseudoAttacks[pt][s1] & sq_bb(s2))
+                    {
+                        //            Move move = between_bb(s1, s2) ? make_move(s1, s2)
+                        //                                           : make_move(SQ_C3, SQ_D5);
+                        Move     move = make_move(s1, s2);
+                        Key      key  = zob.psq[pc][s1] ^ zob.psq[pc][s2] ^ zob.side;
+                        uint32_t i    = H1(key);
+                        while (true)
+                        {
+                            Key tmpKey    = cuckoo[i];
+                            cuckoo[i]     = key;
+                            key           = tmpKey;
+                            Move tmpMove  = cuckooMove[i];
+                            cuckooMove[i] = move;
+                            move          = tmpMove;
+                            if (!move)
+                                break;
+                            i = (i == H1(key)) ? H2(key) : H1(key);
+                        }
+                        count++;
+                    }
+        }
 }
 
 
@@ -802,5 +843,31 @@ SMALL bool is_draw(const Position* pos) {
     return false;
 }
 
+bool has_game_cycle(const Position* pos, int ply) {
+    unsigned int j;
+
+    int end = pos->st->pliesFromNull;
+
+    Key    originalKey = pos->st->key;
+    Stack* stp         = pos->st - 1;
+
+    for (int i = 3; i <= end; i += 2)
+    {
+        stp -= 2;
+
+        Key moveKey = originalKey ^ stp->key;
+        if ((j = H1(moveKey), cuckoo[j] == moveKey) || (j = H2(moveKey), cuckoo[j] == moveKey))
+        {
+            Move m = cuckooMove[j];
+            if (!((((Bitboard*) BetweenBB)[m] ^ sq_bb(to_sq(m))) & pieces()))
+            {
+                if (ply > i
+                    || color_of(piece_on(is_empty(from_sq(m)) ? to_sq(m) : from_sq(m))) == stm())
+                    return true;
+            }
+        }
+    }
+    return false;
+}
 
 void pos_set_check_info(Position* pos) { set_check_info(pos); }
