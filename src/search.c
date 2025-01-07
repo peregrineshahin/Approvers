@@ -959,10 +959,6 @@ moves_loop:  // When in check search starts from here.
     return VALUE_DRAW;
   */
 
-    if (!PvNode && bestValue >= beta && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
-        && abs(beta) < VALUE_MATE_IN_MAX_PLY && abs(alpha) < VALUE_MATE_IN_MAX_PLY)
-        bestValue = (bestValue * depth + beta) / (depth + 1);
-
     // Step 20. Check for mate and stalemate
     // All legal moves have been searched and if there are no legal moves,
     // it must be a mate or a stalemate. If we are in a singular extension
