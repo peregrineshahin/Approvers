@@ -1205,9 +1205,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     if (ss->checkersBB && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
-    if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
-        bestValue = (3 * bestValue + beta) / 4;
-
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
              bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, ttDepth, bestMove,
              unadjustedStaticEval);
