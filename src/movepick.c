@@ -108,12 +108,27 @@ SMALL static void score_quiets(const Position* pos) {
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
 
+        // bonus for checks
+        m->value +=
+          ((bool) (st->checkSquares[type_of_p(moved_piece(m->move))] & sq_bb(to_sq(m->move))))
+          * 32768;
+
         // bonus for escaping from capture
         m->value += threatenedPieces & from ? (pt == QUEEN && !(to & threatenedByRook)   ? 100000
                                                : pt == ROOK && !(to & threatenedByMinor) ? 50000
                                                : !(to & threatenedByPawn)                ? 30000
                                                                                          : 0)
                                             : 0;
+
+        m->value -= !(threatenedPieces & from)
+                    ? (pt == QUEEN ? (bool) (to & threatenedByRook) * 100000
+                                       + (bool) (to & threatenedByMinor) * 20000
+                                       + (bool) (to & threatenedByPawn) * 40000
+                       : pt == ROOK ? (bool) (to & threatenedByMinor) * 50000
+                                        + (bool) (to & threatenedByPawn) * 20000
+                       : pt != PAWN ? (bool) (to & threatenedByPawn) * 30000
+                                    : 0)
+                    : 0;
     }
 }
 
