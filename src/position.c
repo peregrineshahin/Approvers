@@ -647,6 +647,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     // Update the key with the final value
     st->key = key;
+    prefetch(tt_first_entry(key));
 
     // Calculate checkers bitboard (if move gives check)
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;

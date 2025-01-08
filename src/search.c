@@ -802,10 +802,8 @@ moves_loop:  // When in check search starts from here.
         // Add extension to new depth
         newDepth += extension;
 
-        // Speculative prefetch as early as possible
-        do_move(pos, move, givesCheck);
         // Step 15. Make the move.
-        prefetch(tt_first_entry(key()));
+        do_move(pos, move, givesCheck);
 
         // Update the current move (this must be done after singular extension
         // search)
@@ -1184,8 +1182,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
         // Make and search the move
         do_move(pos, move, givesCheck);
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
