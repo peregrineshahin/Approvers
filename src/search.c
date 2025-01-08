@@ -822,7 +822,7 @@ moves_loop:  // When in check search starts from here.
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2;
+                r -= 335 + (ttValue > alpha) * 1024 + (tte_depth(tte) >= depth) * 1024;
 
             if (!captureOrPromotion)
             {
