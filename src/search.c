@@ -245,6 +245,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
+    stats_clear(pos->accumulator);
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 15; pc++)
@@ -334,7 +335,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
 
-    ss->accumulator.needs_refresh = 1;
+    pos->accumulator->needs_refresh = true;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;

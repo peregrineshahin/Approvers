@@ -72,6 +72,7 @@ SMALL void position(Position* pos, char* str) {
             if (!m)
                 break;
             do_move(pos, m, gives_check(pos, pos->st, m));
+            pos->accumulator--;
             pos->gamePly++;
             // Roll over if we reach 100 plies.
             if (++ply == 100)

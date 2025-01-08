@@ -32,6 +32,7 @@ void thread_init() {
     pos->corrHists       = calloc(sizeof(CorrectionHistory), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
+    pos->accumulator     = _mm_malloc(sizeof(Accumulator) * MAX_PLY, 64);
 
     pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
@@ -55,5 +56,6 @@ void thread_exit() {
     free(pos->moveList);
     free(pos->corrHists);
     free(pos->contHist);
+    _mm_free(pos->accumulator);
     free(pos);
 }

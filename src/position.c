@@ -7,6 +7,8 @@
 #include "misc.h"
 #include "movegen.h"
 #include "position.h"
+
+#include "thread.h"
 #include "tt.h"
 
 static void set_state(Position* pos, Stack* st);
@@ -158,6 +160,8 @@ SMALL void pos_set(Position* pos, char* fen) {
     memset(pos, 0, offsetof(Position, moveList));
     pos->st = st;
     memset(st, 0, StateSize);
+
+    pos->accumulator = Thread.pos->accumulator;
 
     // Piece placement
     while ((token = *fen++) && token != ' ')
@@ -509,8 +513,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+    Accumulator* acc = ++pos->accumulator;
+    memcpy(acc, (pos->accumulator - 1), sizeof(Accumulator));
 
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
@@ -662,7 +666,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 // be restored to exactly the same state as before the move was made.
 
 void undo_move(Position* pos, Move m) {
-
+    pos->accumulator--;
     pos->sideToMove = !pos->sideToMove;
 
     Color  us   = stm();
@@ -722,8 +726,6 @@ void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
-
-    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
 
     if (unlikely(st->epSquare))
     {
