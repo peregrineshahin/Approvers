@@ -8,6 +8,8 @@
 #include "bitboard.h"
 #include "position.h"
 
+static FinnyEntry FinnyTable[2];
+
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
@@ -34,6 +36,12 @@ SMALL void nnue_init() {
         l1_weights[i] = *(data++);
 
     l1_bias = *((int16_t*) data);
+
+    for (int i = 0; i < 2; i++)
+    {
+        memcpy(&FinnyTable[i].accumulator.values[0], in_biases, sizeof(in_biases));
+        memcpy(&FinnyTable[i].accumulator.values[1], in_biases, sizeof(in_biases));
+    }
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -72,34 +80,60 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    const __m256i* biases                 = (__m256i*) in_biases;
-    __m256i        registers[L1SIZE / 16] = {
-      biases[0],
-      biases[1],
-      biases[2],
-      biases[3],
-    };
+    Square ksq = square_of(side, KING);
 
-    const Square ksq = square_of(side, KING);
-    for (Bitboard pieces = pieces(); pieces;)
+    // 64 bucket
+    // FinnyEntry* entry = &FinnyTable[ksq];
+
+    // 16 buckets
+    // FinnyEntry* entry = &FinnyTable[rank_of(ksq) + 8 * (file_of(ksq) > 3)];
+
+    // 2 buckets
+    FinnyEntry* entry = &FinnyTable[file_of(ksq) > 3];
+
+    __m256i* values                 = (__m256i*) entry->accumulator.values[side];
+    __m256i  registers[L1SIZE / 16] = {values[0], values[1], values[2], values[3]};
+
+    for (int c = WHITE; c <= BLACK; c++)
     {
-        const Square sq = pop_lsb(&pieces);
-        const Piece  pc = piece_on(sq);
+        for (int pt = PAWN; pt <= KING; pt++)
+        {
+            Bitboard pieces = pieces_cp(c, pt);
+            Bitboard adds   = pieces & ~entry->occupancy[side][c][pt - 1];
+            Bitboard subs   = ~pieces & entry->occupancy[side][c][pt - 1];
 
-        const int      index   = make_index(type_of_p(pc), color_of(pc), sq, ksq, side);
-        const __m256i* weights = (__m256i*) &in_weights[index * L1SIZE];
+            while (adds)
+            {
+                const int      idx     = make_index(pt, c, pop_lsb(&adds), ksq, side) * L1SIZE;
+                const __m256i* weights = (__m256i*) &in_weights[idx];
 
-        registers[0] = _mm256_add_epi16(registers[0], weights[0]);
-        registers[1] = _mm256_add_epi16(registers[1], weights[1]);
-        registers[2] = _mm256_add_epi16(registers[2], weights[2]);
-        registers[3] = _mm256_add_epi16(registers[3], weights[3]);
+                registers[0] = _mm256_adds_epi16(registers[0], weights[0]);
+                registers[1] = _mm256_adds_epi16(registers[1], weights[1]);
+                registers[2] = _mm256_adds_epi16(registers[2], weights[2]);
+                registers[3] = _mm256_adds_epi16(registers[3], weights[3]);
+            }
+
+            while (subs)
+            {
+                const int      idx     = make_index(pt, c, pop_lsb(&subs), ksq, side) * L1SIZE;
+                const __m256i* weights = (__m256i*) &in_weights[idx];
+
+                registers[0] = _mm256_subs_epi16(registers[0], weights[0]);
+                registers[1] = _mm256_subs_epi16(registers[1], weights[1]);
+                registers[2] = _mm256_subs_epi16(registers[2], weights[2]);
+                registers[3] = _mm256_subs_epi16(registers[3], weights[3]);
+            }
+
+            entry->occupancy[side][c][pt - 1] = pieces;
+        }
     }
 
-    __m256i* values = (__m256i*) &acc->values[side];
-    values[0]       = registers[0];
-    values[1]       = registers[1];
-    values[2]       = registers[2];
-    values[3]       = registers[3];
+    values[0] = registers[0];
+    values[1] = registers[1];
+    values[2] = registers[2];
+    values[3] = registers[3];
+
+    memcpy(acc->values[side], entry->accumulator.values[side], sizeof(acc->values[side]));
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {

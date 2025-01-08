@@ -19,6 +19,13 @@ struct Accumulator {
     alignas(64) int16_t values[2][L1SIZE];
 };
 
+typedef struct FinnyEntry FinnyEntry;
+
+struct FinnyEntry {
+    Accumulator accumulator;
+    Bitboard occupancy[2][2][6];
+};
+
 void nnue_init();
 
 void  nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq);
