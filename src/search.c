@@ -1258,11 +1258,9 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     {
         int16_t* entry = &(*pos->corrHists)[stm()][i][keys[i] & (CORRECTION_HISTORY_ENTRY_NB - 1)];
 
-        int32_t newWeight  = min(ch_v1, 1 + depth);
-        int32_t scaledDiff = diff * ch_v2;
-        int32_t update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
-
-        *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
+        int bonus        = diff * depth / 8;
+        int clampedBonus = clamp(bonus, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
+        *entry += clampedBonus - *entry * abs(clampedBonus) / CORRECTION_HISTORY_MAX;
     }
 }
 
