@@ -32,6 +32,7 @@ extern int mp_v8;
 
 #define LIMIT (-(1 << 30))
 
+int   MVVAugment[6]  = {0, 0, 2400, 2400, 4800, 9600};
 Value PieceValue[16] = {0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0, 0,
                         0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0};
 
@@ -64,7 +65,7 @@ static void score_captures(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         m->value =
-          PieceValue[piece_on(to_sq(m->move))] * 6
+          MVVAugment[type_of_p(piece_on(to_sq(m->move)))]
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
