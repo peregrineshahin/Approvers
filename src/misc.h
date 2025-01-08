@@ -53,6 +53,12 @@ void     prng_init(PRNG* rng, uint64_t seed);
 uint64_t prng_rand(PRNG* rng);
 uint64_t prng_sparse_rand(PRNG* rng);
 
+void dbg_hit_on(int cond, int slot);
+void dbg_mean_of(int64_t value, int slot);
+void dbg_stdev_of(int64_t value, int slot);
+void dbg_correl_of(int64_t value1, int64_t value2, int slot);
+void dbg_print();
+
 static uint64_t mul_hi64(uint64_t a, uint64_t b) {
     return ((unsigned __int128) a * (unsigned __int128) b) >> 64;
 }

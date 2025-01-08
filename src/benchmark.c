@@ -124,6 +124,8 @@ void benchmark() {
 
     elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'
 
+    dbg_print();
+
     fprintf(stdout,
             "\n==========================="
             "\nTotal time (ms) : %" PRIu64 "\nNodes searched  : %" PRIu64
