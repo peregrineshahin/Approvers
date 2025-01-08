@@ -1016,9 +1016,6 @@ moves_loop:  // When in check search starts from here.
         bonus = max(bonus, 0);
         update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
                                       stat_bonus(depth) * bonus / pcmb_v10);
-
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
-                       stat_bonus(depth) * bonus / pcmb_v11);
     }
 
     // If no good move is found and the previous position was ttPv, then the
