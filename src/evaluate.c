@@ -31,8 +31,9 @@ Value evaluate(Position* pos) {
     v = eval_scale * v / 100;
 
     int non_pawn_material =
-      KnightValue * popcount(pieces_p(KNIGHT)) + BishopValue * popcount(pieces_p(BISHOP))
-      + RookValue * popcount(pieces_p(ROOK)) + QueenValue * popcount(pieces_p(QUEEN));
+      PawnValue * popcount(pieces_p(PAWN)) + KnightValue * popcount(pieces_p(KNIGHT))
+      + BishopValue * popcount(pieces_p(BISHOP)) + RookValue * popcount(pieces_p(ROOK))
+      + QueenValue * popcount(pieces_p(QUEEN));
 
     v = v * (mat_scale + non_pawn_material) / 32768;
 
