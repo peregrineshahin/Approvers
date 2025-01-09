@@ -631,7 +631,7 @@ Value search(
             && ttMove && is_capture_or_promotion(pos, ttMove))
             return probCutBeta;
 
-        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
+        mp_init_pc(pos, ttMove, 10 * (probCutBeta - ss->staticEval) / 16);
         int  probCutCount = 2 + 2 * cutNode;
         bool ttPv         = ss->ttPv;
         ss->ttPv          = false;
