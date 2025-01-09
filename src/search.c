@@ -479,7 +479,7 @@ Value search(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
-    bool     captureOrPromotion, inCheck, moveCountPruning;
+    bool     priorCapture, captureOrPromotion, inCheck, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
     int      moveCount, captureCount, quietCount;
@@ -523,6 +523,7 @@ Value search(
     excludedMove = ss->excludedMove;
     posKey       = key();
     tte          = tt_probe(posKey, &ttHit);
+    ss->ttHit    = ttHit;
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = ttHit ? tte_move(tte) : 0;
     if (!excludedMove)
@@ -548,6 +549,7 @@ Value search(
             return ttValue;
     }
 
+    priorCapture = captured_piece();
     // Step 6. Static evaluation of the position
     if (inCheck)
     {
@@ -883,6 +885,11 @@ moves_loop:  // When in check search starts from here.
                 if (!captureOrPromotion)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
+
+                    if (value >= beta && prevSq != SQ_NONE
+                        && ((ss - 1)->moveCount == 1 + (ss - 1)->ttHit) && !priorCapture)
+                        bonus *= 2;
+
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
             }
