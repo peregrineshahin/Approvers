@@ -499,6 +499,8 @@ Value search(
         if (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY)
             return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : VALUE_DRAW;
     }
+    else
+        pos->rootDelta = beta - alpha;
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
@@ -829,6 +831,9 @@ moves_loop:  // When in check search starts from here.
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2;
+
+            if (PvNode && beta - alpha >= pos->rootDelta / 4)
+                r -= 1024;
 
             if (!captureOrPromotion)
             {
@@ -1445,6 +1450,7 @@ SMALL void prepare_for_search(Position* root) {
 
     Position* pos  = Thread.pos;
     pos->rootDepth = 0;
+    pos->rootDelta = 0;
     pos->nodes     = 0;
 
     root->st->pv.length = 0;

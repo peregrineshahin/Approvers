@@ -133,6 +133,7 @@ struct Position {
     Stack*   stack;
     uint64_t nodes;
     Depth    rootDepth;
+    Value    rootDelta;
     Depth    completedDepth;
 
     // Pointers to thread-specific tables.
