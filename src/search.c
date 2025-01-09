@@ -877,7 +877,7 @@ moves_loop:  // When in check search starts from here.
 
                 newDepth += doDeeperSearch - doShallowerSearch;
 
-                if (newDepth > d)
+                if (newDepth > d + (!PvNode && (cutNode || (ss + 1)->cutoffCnt > 3)))
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
 
                 if (!captureOrPromotion)
