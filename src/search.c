@@ -618,6 +618,9 @@ Value search(
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
     }
 
+    if (ttHit && !ttMove && tte_depth(tte) + 6 < depth)
+        depth--;
+
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
     // Step 10. ProbCut
