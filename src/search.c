@@ -84,7 +84,7 @@ PARAM(lmr_v4, 102)
 PARAM(lmr_v5, 92)
 PARAM(lmr_v6, 93)
 PARAM(lmr_v7, 112)
-PARAM(lmr_v8, 14416)
+PARAM(lmr_v8, 24)
 PARAM(fmc_v1, 3)
 PARAM(fmc_v2, 2)
 PARAM(fmc_v3, 2)
@@ -856,7 +856,7 @@ moves_loop:  // When in check search starts from here.
                     r += r_v12;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                r -= clamp(ss->statScore / lmr_v8, -3, 3);
             }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
