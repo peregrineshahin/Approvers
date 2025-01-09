@@ -525,6 +525,8 @@ Value search(
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = ttHit ? tte_move(tte) : 0;
+    ttCapture    = ttMove && is_capture_or_promotion(pos, ttMove);
+
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -596,6 +598,13 @@ Value search(
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+    }
+
+    if (eval < alpha - 456 - (252 - 200 * ttCapture) * depth * depth)
+    {
+        value = qsearch(pos, ss, alpha - 1, alpha, false);
+        if (value < alpha)
+            return value;
     }
 
     // Step 8. Futility pruning: child node
@@ -685,7 +694,6 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
-    ttCapture        = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta
