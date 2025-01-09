@@ -618,7 +618,7 @@ Value search(
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
     }
 
-    if (ttHit && !ttMove && tte_depth(tte) + 6 < depth)
+    if ((!ttHit || tte_depth(tte) + 4 < depth) && depth > 4)
         depth--;
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
