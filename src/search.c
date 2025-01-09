@@ -59,10 +59,6 @@ PARAM(qmo_v1, 367)
 PARAM(qmo_v2, 1230)
 PARAM(qmo_v3, 1010)
 PARAM(ft_v1, 197)
-PARAM(rd_v1, 595)
-PARAM(rd_v2, 1237)
-PARAM(rd_v3, 848)
-PARAM(rd_init_v1, 2881)
 PARAM(d_v1, 17)
 PARAM(iir_v1, 6)
 PARAM(iir_v2, 2)
@@ -179,12 +175,7 @@ enum {
 static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
 
 // Reductions lookup tables, initialized at startup
-static int Reductions[MAX_MOVES];  // [depth or moveNumber]
-
-static Depth reduction(int i, Depth d, int mn) {
-    int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
-}
+static int Reductions[MAX_PLY][MAX_MOVES];
 
 static int futility_move_count(bool improving, Depth depth) {
     //  return (3 + depth * depth) / (2 - improving);
@@ -229,8 +220,9 @@ SMALL double my_log(double x) {
 // search_init() is called during startup to initialize various lookup tables
 
 SMALL void search_init(void) {
-    for (int i = 1; i < MAX_MOVES; i++)
-        Reductions[i] = rd_init_v1 / 100.0 * my_log(i);
+    for (int d = 1; d < MAX_PLY; d++)
+        for (int mn = 1; mn < MAX_MOVES; mn++)
+            Reductions[d][mn] = (int) (1.0 + my_log(d) * my_log(mn) / 2.25);
 }
 
 
@@ -704,7 +696,7 @@ moves_loop:  // When in check search starts from here.
         // Calculate new depth for this move
         newDepth = depth - 1;
 
-        Depth r = reduction(improving, depth, moveCount);
+        Depth r = Reductions[depth][moveCount];
 
         // Step 13. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
@@ -836,6 +828,9 @@ moves_loop:  // When in check search starts from here.
                 // Increase reduction for cut nodes
                 if (cutNode)
                     r += r_v8;
+
+                if (!improving)
+                    r += 1000;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
