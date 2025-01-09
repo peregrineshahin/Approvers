@@ -24,7 +24,6 @@
 
 int MoveOverhead = 10;
 
-extern int mtg;
 extern int tm_v13;
 extern int tm_v14;
 extern int tm_v15;
@@ -54,6 +53,8 @@ void time_init(Color us, int ply) {
     double opt_scale, max_scale;
 
     Time.startTime = Limits.startTime;
+
+    const int mtg = (ply > 100) ? 50 - (ply - 100) / 3 : 50;
 
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =
