@@ -37,7 +37,7 @@ SMALL void nnue_init() {
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
-    if (file_of(ksq) > 3)
+    if (ksq & 4)
         sq ^= 7;
 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);

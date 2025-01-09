@@ -1262,7 +1262,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
     {
-        int16_t* entry = &(*pos->corrHists)[stm()][i][keys[i] & (CORRECTION_HISTORY_ENTRY_NB - 1)];
+        int16_t* entry = &(*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
 
         int32_t newWeight  = min(ch_v1, 1 + depth);
         int32_t scaledDiff = diff * ch_v2;
@@ -1278,8 +1278,7 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
-        correction +=
-          weights[i] * (*pos->corrHists)[stm()][i][keys[i] & (CORRECTION_HISTORY_ENTRY_NB - 1)];
+        correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
 
     Value v = unadjustedStaticEval + correction / 100 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
