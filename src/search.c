@@ -1099,7 +1099,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
             ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
 
-
             // Can ttValue be used as a better position evaluation?
             if (ttValue != VALUE_NONE
                 && (tte_bound(tte) & (ttValue > bestValue ? BOUND_LOWER : BOUND_UPPER)))
@@ -1146,8 +1145,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         // Check for legality just before making the move
         if (!is_legal(pos, move))
             continue;
-        moveCount++;
 
+        moveCount++;
         givesCheck = gives_check(pos, ss, move);
 
         if (bestValue > VALUE_MATED_IN_MAX_PLY)
@@ -1157,7 +1156,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
                 && type_of_m(move) != PROMOTION)
             {
-                if (moveCount > 2)
+                if (moveCount >= 2)
                     continue;
 
                 futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
