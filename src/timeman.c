@@ -35,6 +35,18 @@ extern int tm_v20;
 
 struct TimeManagement Time;  // Our global time management struct
 
+SMALL double my_log10(double x) {
+    if (x <= 0)
+        return -1e30;
+    int e = 0;
+    for (; x >= 10; x /= 10, e++)
+        ;
+    for (; x < 1; x *= 10, e--)
+        ;
+    double m = x - 1;
+    return e + m * (1 - m * (0.5 - 0.333 * m));
+}
+
 SMALL double my_sqrt(double x) {
     if (x <= 0)
         return 0;
@@ -48,10 +60,6 @@ SMALL double my_sqrt(double x) {
 // tm_init() is called at the beginning of the search and calculates
 // the time bounds allowed for the current game ply.
 void time_init(Color us, int ply) {
-    // opt_scale is a percentage of available time to use for the current move.
-    // max_scale is a multiplier applied to optimumTime.
-    double opt_scale, max_scale;
-
     Time.startTime = Limits.startTime;
 
     int mtg = 50;
@@ -62,13 +70,13 @@ void time_init(Color us, int ply) {
     TimePoint timeLeft =
       max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
 
-    timeLeft = 100 * timeLeft / 100;
+    double logTimeInSec = my_log10(Limits.time[us] / 1000.0);
+    double optConstant  = min(0.00308 + 0.000319 * logTimeInSec, 0.00506);
+    double maxConstant  = max(3.39 + 3.01 * logTimeInSec, 2.93);
 
-    // If there is a healthy increment, timeLeft can exceed actual available
-    // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
-                    tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
+    double opt_scale =
+      min(0.0089 + my_sqrt(ply + 2.96) * optConstant, 0.21 * Limits.time[us] / timeLeft);
+    double max_scale = min(6.64, maxConstant + ply / 12.0);
 
     // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
