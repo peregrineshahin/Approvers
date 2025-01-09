@@ -423,9 +423,7 @@ void thread_search(Position* pos) {
             totBestMoveChanges += Thread.pos->bestMoveChanges;
             Thread.pos->bestMoveChanges = 0;
 
-            double bestMoveInstability =
-              tm_v21 / 1000.0
-              + max(1.0, tm_v22 / 100.0 - tm_v23 / 100.0 / (pos->rootDepth)) * totBestMoveChanges;
+            double bestMoveInstability = 1 + 1.7 * totBestMoveChanges;
 
             double totalTime = time_optimum() * fallingEval * reduction * bestMoveInstability;
 
