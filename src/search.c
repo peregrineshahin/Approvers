@@ -251,6 +251,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
+    stats_clear(pos->nodeTable);
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 15; pc++)
@@ -340,7 +341,8 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
 
-    ss->accumulator.needs_refresh = 1;
+    stats_clear(pos->nodeTable);
+    ss->accumulator.needs_refresh = true;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
@@ -407,6 +409,9 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
 #endif
         {
+            uint32_t nodesEffort =
+              pos->nodeTable[from_to(pv->line[0])] * 100 / max(1, nodes_searched());
+
             double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
                                   + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
                                / (double) tm_v4;
@@ -428,6 +433,10 @@ void thread_search(Position* pos) {
               + max(1.0, tm_v22 / 100.0 - tm_v23 / 100.0 / (pos->rootDepth)) * totBestMoveChanges;
 
             double totalTime = time_optimum() * fallingEval * reduction * bestMoveInstability;
+
+            if (pos->completedDepth >= 10 && nodesEffort >= 95 && time_elapsed() > totalTime * 0.7
+                && !Thread.ponder)
+                Thread.stop = true;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -808,6 +817,8 @@ moves_loop:  // When in check search starts from here.
         // Add extension to new depth
         newDepth += extension;
 
+        uint32_t nodeCount = nodes_searched();
+
         // Speculative prefetch as early as possible
         do_move(pos, move, givesCheck);
         // Step 15. Make the move.
@@ -919,6 +930,8 @@ moves_loop:  // When in check search starts from here.
 
         if (rootNode)
         {
+            pos->nodeTable[from_to(move)] += nodes_searched() - nodeCount;
+
             if (moveCount == 1 || value > alpha)
             {
                 ss->pv.score = value;
