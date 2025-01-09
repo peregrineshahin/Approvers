@@ -35,139 +35,147 @@ Parameter parameters[255];
 int       parameters_count = 0;
 
     #define STRINGIFY(x) #x
-    #define PARAM(Name, Value) \
+    #define PARAM(Name, Value, Step) \
         int                                               Name = Value; \
         __attribute__((constructor(__LINE__ + 100))) void ctor_##Name(void) { \
             Parameter* param = &parameters[parameters_count++]; \
             strncpy(param->name, STRINGIFY(Name), sizeof(param->name)); \
             param->value = &Name; \
+            param->step  = Step; \
         }
 #else
-    #define PARAM(Name, Value) int Name = Value;
+    #define PARAM(Name, Value, Step) int Name = Value;
 #endif
 
+// Disabled parameters
+PARAM(nmp_v1, 764, 0)
+PARAM(nmp_v2, 56, 0)
+PARAM(nmp_v3, 165, 0)
+PARAM(nmp_v4, 182, 0)
+PARAM(nmp_v5, 25312, 0)
+PARAM(nmp_v6, 27, 0)
+PARAM(nmp_v8, 92, 0)
+PARAM(nmp_v9, 194, 0)
+PARAM(lmr_v8, 14416, 0)
+PARAM(mp_v1, 70, 0)
+PARAM(mp_v2, 1064, 0)
+PARAM(r_v1, 1056, 0)
 
-PARAM(nmp_v1, 764)
-PARAM(nmp_v2, 56)
-PARAM(nmp_v3, 165)
-PARAM(nmp_v4, 182)
-PARAM(nmp_v5, 25312)
-PARAM(nmp_v6, 27)
-PARAM(nmp_v8, 92)
-PARAM(nmp_v9, 194)
-PARAM(qmo_v1, 367)
-PARAM(qmo_v2, 1230)
-PARAM(qmo_v3, 1010)
-PARAM(ft_v1, 197)
-PARAM(rd_v1, 595)
-PARAM(rd_v2, 1237)
-PARAM(rd_v3, 848)
-PARAM(rd_init_v1, 2881)
-PARAM(d_v1, 17)
-PARAM(iir_v1, 6)
-PARAM(iir_v2, 2)
-PARAM(cbp_v1, 3)
-PARAM(cbp_v2, 0)
-PARAM(fpp_v1, 7)
-PARAM(fpp_v2, 214)
-PARAM(fpp_v3, 183)
-PARAM(sqsee_v1, 27)
-PARAM(scsee_v1, 199)
-PARAM(se_v1, 5)
-PARAM(se_v2, 111)
-PARAM(se_v5, 27)
-PARAM(prb_v1, 125)
-PARAM(prb_v2, 43)
-PARAM(rfp_v1, 9)
-PARAM(lmr_v3, 3919)
-PARAM(lmr_v4, 102)
-PARAM(lmr_v5, 92)
-PARAM(lmr_v6, 93)
-PARAM(lmr_v7, 112)
-PARAM(lmr_v8, 14416)
-PARAM(fmc_v1, 3)
-PARAM(fmc_v2, 2)
-PARAM(fmc_v3, 2)
-PARAM(hb_v1, 648)
-PARAM(hb_v2, 201)
-PARAM(hb_v3, 161)
-PARAM(hb_v4, 2491)
-PARAM(hm_v1, 589)
-PARAM(hm_v2, 190)
-PARAM(hm_v3, 153)
-PARAM(hm_v4, 1709)
-PARAM(asd_v1, 487)
-PARAM(ses_v1, 3)
-PARAM(qsf_v1, 185)
-PARAM(ch_v1, 22)
-PARAM(ch_v2, 162)
-PARAM(ch_v3, 286)
-PARAM(ch_v4, 84)
-PARAM(ch_v5, 105)
-PARAM(ch_v6, 100)
-PARAM(tempo, 44)
-PARAM(mp_v1, 70)
-PARAM(mp_v2, 1064)
-PARAM(mp_v3, 2724)
-PARAM(mp_v4, 137)
-PARAM(mp_v5, 256)
-PARAM(mp_v6, 226)
-PARAM(mp_v7, 185)
-PARAM(mp_v8, 87)
-PARAM(eval_scale, 89)
-PARAM(mat_scale, 26273)
-PARAM(pcmb_v1, 100)
-PARAM(pcmb_v2, 4)
-PARAM(pcmb_v3, 29)
-PARAM(pcmb_v4, 163)
-PARAM(pcmb_v5, 7)
-PARAM(pcmb_v6, 114)
-PARAM(pcmb_v7, 101)
-PARAM(pcmb_v8, 126)
-PARAM(pcmb_v9, 238)
-PARAM(pcmb_v10, 122)
-PARAM(pcmb_v11, 144)
-PARAM(r_v1, 1056)
-PARAM(r_v2, 2183)
-PARAM(r_v6, 1290)
-PARAM(r_v7, 1089)
-PARAM(r_v8, 1975)
-PARAM(r_v9, 1727)
-PARAM(r_v10, 860)
-PARAM(r_v11, 996)
-PARAM(r_v12, 1109)
-PARAM(r_v13, 993)
-PARAM(lce_v1, 2280)
-PARAM(qb_v1, 198)
-PARAM(qb_v2, 195)
-PARAM(cms_v1, 29265)
-PARAM(hu_v1, 10081)
-PARAM(cpth_v1, 11833)
+// Search parameters
+PARAM(ttct_v1, 110, 9.6)
+PARAM(ttct_v2, 104, 9.6)
+PARAM(qmo_v1, 373, 30.0)
+PARAM(qmo_v2, 1296, 120.0)
+PARAM(qmo_v3, 936, 120.0)
+PARAM(ft_v1, 169, 18.0)
+PARAM(rd_v1, 583, 60.0)
+PARAM(rd_v2, 1228, 48.0)
+PARAM(rd_v3, 872, 72.0)
+PARAM(rd_init_v1, 2885, 120.0)
+PARAM(d_v1, 18, 1.2)
+PARAM(cbp_v2, 5, 9.6)
+PARAM(cbp_v3, -6, 9.6)
+PARAM(cbp_v4, -12, 9.6)
+PARAM(fpp_v1, 7, 0.6)
+PARAM(fpp_v2, 221, 24.0)
+PARAM(fpp_v3, 178, 21.6)
+PARAM(fpp_v4, 67, 7.2)
+PARAM(fpp_v5, 69, 7.2)
+PARAM(sqsee_v1, 27, 2.4)
+PARAM(scsee_v1, 198, 12.0)
+PARAM(se_v2, 116, 12.0)
+PARAM(se_v5, 26, 3.6)
+PARAM(prb_v1, 118, 14.4)
+PARAM(prb_v2, 46, 4.8)
+PARAM(rfp_v1, 9, 0.6)
+PARAM(lmr_v3, 3690, 300.0)
+PARAM(lmr_v4, 100, 12.0)
+PARAM(lmr_v5, 95, 12.0)
+PARAM(lmr_v6, 88, 12.0)
+PARAM(lmr_v7, 117, 12.0)
+PARAM(hb_v1, 703, 60.0)
+PARAM(hb_v2, 203, 18.0)
+PARAM(hb_v3, 142, 24.0)
+PARAM(hb_v4, 2502, 180.0)
+PARAM(hm_v1, 588, 60.0)
+PARAM(hm_v2, 183, 18.0)
+PARAM(hm_v3, 151, 24.0)
+PARAM(hm_v4, 1813, 180.0)
+PARAM(asd_v1, 4, 0.6)
+PARAM(qsf_v1, 185, 18.0)
+PARAM(ch_v1, 23, 3.6)
+PARAM(ch_v2, 186, 18.0)
+PARAM(ch_v3, 270, 24.0)
+PARAM(ch_v4, 80, 9.6)
+PARAM(ch_v5, 110, 9.6)
+PARAM(ch_v6, 101, 9.6)
+PARAM(ch_v7, 97, 9.6)
+PARAM(ch_v8, 100, 9.6)
+PARAM(tempo, 43, 4.8)
+PARAM(mp_v3, 2632, 180.0)
+PARAM(mp_v4, 136, 9.6)
+PARAM(mp_v5, 256, 9.6)
+PARAM(mp_v6, 227, 9.6)
+PARAM(mp_v7, 188, 9.6)
+PARAM(mp_v8, 94, 9.6)
+PARAM(eval_scale, 91, 3.0)
+PARAM(mat_scale, 26148, 420.0)
+PARAM(mat_n, 662, 60.0)
+PARAM(mat_b, 739, 78.0)
+PARAM(mat_r, 1416, 120.0)
+PARAM(mat_q, 2555, 240.0)
+PARAM(pcmb_v1, 85, 12.0)
+PARAM(pcmb_v3, 22, 4.8)
+PARAM(pcmb_v4, 156, 12.0)
+PARAM(pcmb_v5, 7, 0.6)
+PARAM(pcmb_v6, 117, 12.0)
+PARAM(pcmb_v7, 97, 12.0)
+PARAM(pcmb_v8, 126, 8.4)
+PARAM(pcmb_v9, 257, 30.0)
+PARAM(pcmb_v10, 120, 8.4)
+PARAM(pcmb_v11, 143, 8.4)
+PARAM(r_v2, 2401, 250.0)
+PARAM(r_v6, 1157, 150.0)
+PARAM(r_v7, 1087, 150.0)
+PARAM(r_v8, 2296, 250.0)
+PARAM(r_v9, 1551, 250.0)
+PARAM(r_v10, 936, 100.0)
+PARAM(r_v11, 1019, 100.0)
+PARAM(r_v12, 905, 100.0)
+PARAM(r_v13, 985, 50.0)
+PARAM(ded_v1, 64, 7.2)
+PARAM(lce_v1, 2272, 18.0)
+PARAM(qb_v1, 187, 18.0)
+PARAM(qb_v2, 193, 18.0)
+PARAM(cms_v1, 29079, 300.0)
+PARAM(hu_v1, 10211, 300.0)
+PARAM(cpth_v1, 11729, 300.0)
 
-PARAM(tm_v1, 329)
-PARAM(tm_v2, 555)
-PARAM(tm_v3, 657)
-PARAM(tm_v4, 809)
-PARAM(tm_v5, 52)
-PARAM(tm_v6, 155)
-PARAM(tm_v7, 869)
-PARAM(tm_v8, 187)
-PARAM(tm_v9, 101)
-PARAM(tm_v10, 147)
-PARAM(tm_v11, 216)
-PARAM(tm_v12, 57)
-PARAM(tm_v13, 89)
-PARAM(tm_v14, 296)
-PARAM(tm_v15, 248)
-PARAM(tm_v16, 21)
-PARAM(tm_v17, 674)
-PARAM(tm_v18, 416)
-PARAM(tm_v19, 1186)
-PARAM(tm_v20, 801)
-PARAM(tm_v21, 1069)
-PARAM(tm_v22, 225)
-PARAM(tm_v23, 990)
-PARAM(mtg, 50)
+// Time management parameters
+PARAM(tm_v1, 329, 28)
+PARAM(tm_v2, 555, 63)
+PARAM(tm_v3, 657, 63)
+PARAM(tm_v4, 809, 40)
+PARAM(tm_v5, 52, 7)
+PARAM(tm_v6, 155, 7)
+PARAM(tm_v7, 869, 75)
+PARAM(tm_v8, 187, 17)
+PARAM(tm_v9, 101, 11)
+PARAM(tm_v10, 147, 7)
+PARAM(tm_v11, 216, 16)
+PARAM(tm_v12, 57, 3)
+PARAM(tm_v13, 89, 4)
+PARAM(tm_v14, 296, 14)
+PARAM(tm_v15, 248, 14)
+PARAM(tm_v16, 21, 2)
+PARAM(tm_v17, 674, 29)
+PARAM(tm_v18, 416, 14)
+PARAM(tm_v19, 1186, 14)
+PARAM(tm_v20, 801, 14)
+PARAM(tm_v21, 1069, 7)
+PARAM(tm_v22, 225, 8)
+PARAM(tm_v23, 990, 12)
+PARAM(mtg, 50, 0.5)
 
 LimitsType Limits;
 
@@ -187,8 +195,7 @@ static Depth reduction(int i, Depth d, int mn) {
 }
 
 static int futility_move_count(bool improving, Depth depth) {
-    //  return (3 + depth * depth) / (2 - improving);
-    return improving ? fmc_v1 + depth * depth : (fmc_v2 + depth * depth) / fmc_v3;
+    return improving ? 3 + depth * depth : (2 + depth * depth) / 2;
 }
 
 // History and stats update bonus, based on depth
@@ -377,7 +384,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1 / 100;
+            delta += delta / 4 + asd_v1;
         }
 
 #ifndef KAGGLE
@@ -531,12 +538,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!is_capture_or_promotion(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth));
+                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 100);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              -stat_malus(depth + 1));
+                                              ttct_v2 * -stat_malus(depth + 1) / 100);
         }
         if (rule50_count() < 90)
             return ttValue;
@@ -666,8 +673,8 @@ Value search(
     }
 
     // Step 11. If the position is not in TT, decrease depth by 2
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * iir_v1 && !ttMove)
-        depth -= iir_v2;
+    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
+        depth -= 2;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -718,14 +725,14 @@ moves_loop:  // When in check search starts from here.
             if (!captureOrPromotion && !givesCheck)
             {
                 // Countermoves based pruning
-                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < 0
-                    && (*contHist1)[movedPiece][to_sq(move)] < 0)
+                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
+                    && (*contHist0)[movedPiece][to_sq(move)] < cbp_v3
+                    && (*contHist1)[movedPiece][to_sq(move)] < cbp_v4)
                     continue;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !inCheck
-                    && ss->staticEval + (bestValue < ss->staticEval - 64 ? fpp_v2 : 64)
+                    && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
                            + fpp_v3 * lmrDepth
                          <= alpha)
                     continue;
@@ -747,11 +754,11 @@ moves_loop:  // When in check search starts from here.
         // that move is singular and should be extended. To verify this we do a
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
-        if (depth >= se_v1 && move == ttMove && !rootNode
+        if (depth >= 5 && move == ttMove && !rootNode
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - ses_v1)
+            && tte_depth(tte) >= depth - 3)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 100;
             Depth singularDepth = (depth - 1) / 2;
@@ -866,7 +873,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
-                const bool doDeeperSearch    = value > bestValue + 64;
+                const bool doDeeperSearch    = value > bestValue + ded_v1;
                 const bool doShallowerSearch = value < bestValue + newDepth;
 
                 newDepth += doDeeperSearch - doShallowerSearch;
@@ -1006,7 +1013,7 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > pcmb_v2) + pcmb_v3 * !(PvNode || cutNode)
+        int bonus = pcmb_v1 * (depth > 4) + pcmb_v3 * !(PvNode || cutNode)
                   + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
                   + pcmb_v6 * (!inCheck && bestValue <= ss->staticEval - pcmb_v7);
 
@@ -1268,7 +1275,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     Key keys[]    = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, 100, 100};
+    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
