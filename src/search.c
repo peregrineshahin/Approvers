@@ -577,10 +577,7 @@ Value search(
     }
     else
     {
-        if ((ss - 1)->currentMove != MOVE_NULL)
-            unadjustedStaticEval = evaluate(pos);
-        else
-            unadjustedStaticEval = -(ss - 1)->staticEval + tempo;
+        unadjustedStaticEval = evaluate(pos);
 
         eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
 
