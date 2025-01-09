@@ -259,12 +259,11 @@ static void undo_null_move(Position* pos) {
 // square. Slider attacks use the occupied bitboard to indicate occupancy.
 
 static Bitboard attackers_to_occ(const Position* pos, Square s, Bitboard occupied) {
-    return (attacks_from_pawn(s, BLACK) & pieces_cp(WHITE, PAWN))
-         | (attacks_from_pawn(s, WHITE) & pieces_cp(BLACK, PAWN))
-         | (attacks_from_knight(s) & pieces_p(KNIGHT))
-         | (attacks_bb_rook(s, occupied) & pieces_pp(ROOK, QUEEN))
+    return (attacks_bb_rook(s, occupied) & pieces_pp(ROOK, QUEEN))
          | (attacks_bb_bishop(s, occupied) & pieces_pp(BISHOP, QUEEN))
-         | (attacks_from_king(s) & pieces_p(KING));
+         | (attacks_from_pawn(s, BLACK) & pieces_cp(WHITE, PAWN))
+         | (attacks_from_pawn(s, WHITE) & pieces_cp(BLACK, PAWN))
+         | (attacks_from_knight(s) & pieces_p(KNIGHT)) | (attacks_from_king(s) & pieces_p(KING));
 }
 
 #endif
