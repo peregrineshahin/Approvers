@@ -193,8 +193,8 @@ static Depth reduction(int i, Depth d, int mn) {
     return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
 }
 
-static int futility_move_count(bool improving, Depth depth) {
-    return improving ? 3 + depth * depth : (2 + depth * depth) / 2;
+static int futility_move_count(bool ttPvNoPv, bool improving, Depth depth) {
+    return (3 + depth * depth) / (2 - (improving || ttPvNoPv));
 }
 
 // History and stats update bonus, based on depth
@@ -716,7 +716,8 @@ moves_loop:  // When in check search starts from here.
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
-            moveCountPruning = moveCount >= futility_move_count(improving, depth);
+            moveCountPruning =
+              moveCount >= futility_move_count(!PvNode && ss->ttPv, improving, depth);
 
             // Reduced depth of the next LMR search
             int lmrDepth = max(newDepth - r, 0);
