@@ -222,7 +222,7 @@ SMALL double my_log(double x) {
 SMALL void search_init(void) {
     for (int d = 1; d < MAX_PLY; d++)
         for (int mn = 1; mn < MAX_MOVES; mn++)
-            Reductions[d][mn] = (int) (1.0 + my_log(d) * my_log(mn) / 2.25);
+            Reductions[d][mn] = (int) (1.0 + my_log(d) * my_log(mn) / 2.0);
 }
 
 
@@ -696,7 +696,7 @@ moves_loop:  // When in check search starts from here.
         // Calculate new depth for this move
         newDepth = depth - 1;
 
-        Depth r = Reductions[depth][moveCount];
+        Depth r = Reductions[depth][moveCount] + !improving;
 
         // Step 13. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
@@ -811,7 +811,6 @@ moves_loop:  // When in check search starts from here.
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2;
@@ -828,9 +827,6 @@ moves_loop:  // When in check search starts from here.
                 // Increase reduction for cut nodes
                 if (cutNode)
                     r += r_v8;
-
-                if (!improving)
-                    r += 1000;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
