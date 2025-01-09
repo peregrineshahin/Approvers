@@ -804,29 +804,28 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
 
-        r = r * r_v1;
+        r *= 1000;
 
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
-        if (depth >= 2 && moveCount > 1 + 2 * rootNode
-            && (!captureOrPromotion || cutNode || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1 + 2 * rootNode && (!captureOrPromotion || !ss->ttPv))
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
+            // Increase reduction for cut nodes
+            if (cutNode)
+                r += r_v8;
 
             if (!captureOrPromotion)
             {
+                // Decrease reduction if position is or has been on the PV
+                if (ss->ttPv)
+                    r -= r_v2;
+
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
-
-                // Increase reduction for cut nodes
-                if (cutNode)
-                    r += r_v8;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
