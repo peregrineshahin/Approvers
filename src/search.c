@@ -839,6 +839,9 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
+                if (!PvNode)
+                    r += 1024;
+
                 // Increase reduction for cut nodes
                 if (cutNode)
                     r += r_v8;
