@@ -886,9 +886,8 @@ moves_loop:  // When in check search starts from here.
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
 
-                    if (value >= beta && prevSq != SQ_NONE
-                        && ((ss - 1)->moveCount == 1 + (ss - 1)->ttHit) && !priorCapture)
-                        bonus *= 2;
+                    if (value >= beta)
+                        bonus *= (1 + 2 * (moveCount > depth));
 
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
