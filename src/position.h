@@ -156,10 +156,10 @@ PURE bool is_pseudo_legal(const Position* pos, Move m);
 PURE bool gives_check_special(const Position* pos, Stack* st, Move m);
 
 // Doing and undoing moves
-void        do_move(Position* pos, Move m, int givesCheck);
-void        undo_move(Position* pos, Move m);
-void        do_null_move(Position* pos);
-static void undo_null_move(Position* pos);
+void do_move(Position* pos, Move m, int givesCheck);
+void undo_move(Position* pos, Move m);
+void do_null_move(Position* pos);
+void undo_null_move(Position* pos);
 
 // Static exchange evaluation
 PURE bool see_test(const Position* pos, Move m, int value);
@@ -245,13 +245,6 @@ static bool low_material(const Position* pos) {
 
 void pos_set_check_info(Position* pos);
 
-// undo_null_move is used to undo a null move.
-
-static void undo_null_move(Position* pos) {
-
-    pos->st--;
-    pos->sideToMove = !pos->sideToMove;
-}
 
 // Computes a bitboard of all pieces which attack a given
 // square. Slider attacks use the occupied bitboard to indicate occupancy.

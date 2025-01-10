@@ -710,7 +710,12 @@ void do_null_move(Position* pos) {
     set_check_info(pos);
 }
 
-// See position.h for undo_null_move()
+
+// Must be used to undo a "null move"
+void undo_null_move(Position* pos) {
+    pos->st--;
+    pos->sideToMove = !pos->sideToMove;
+}
 
 
 // Tests if the SEE (Static Exchange Evaluation) value of move
