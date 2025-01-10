@@ -156,11 +156,13 @@ static void update_accumulators(Stack* st, Square wksq, Square bksq) {
 }
 
 static bool can_update(const Position* pos) {
-    Stack* st = pos->st;
+    int    gain = popcount(pieces()) - 2;
+    Stack* st   = pos->st;
     while (st != pos->stack)
     {
         DirtyPiece* dp = &st->dirtyPiece;
-        if (dp->len && type_of_p(dp->piece[0]) == KING && (dp->from[0] & 4) != (dp->to[0] & 4))
+        if ((dp->len && type_of_p(dp->piece[0]) == KING && (dp->from[0] & 4) != (dp->to[0] & 4))
+            || (gain -= dp->len + 1) < 0)
             return false;
 
         st = st - 1;
