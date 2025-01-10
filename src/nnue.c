@@ -102,7 +102,7 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
     values[3]       = registers[3];
 }
 
-void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
+static void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
@@ -119,7 +119,7 @@ void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square b
     }
 }
 
-void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
+static void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
