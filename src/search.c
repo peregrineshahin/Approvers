@@ -163,7 +163,6 @@ PARAM(tm_v8, 187, 17)
 PARAM(tm_v9, 101, 11)
 PARAM(tm_v10, 147, 7)
 PARAM(tm_v11, 216, 16)
-PARAM(tm_v12, 57, 3)
 PARAM(tm_v13, 89, 4)
 PARAM(tm_v14, 296, 14)
 PARAM(tm_v15, 248, 14)
@@ -434,9 +433,6 @@ void thread_search(Position* pos) {
                 if (!Thread.ponder)
                     Thread.stop = true;
             }
-            else
-                Thread.increaseDepth = !(Thread.increaseDepth && !Thread.ponder
-                                         && time_elapsed() > totalTime * tm_v12 / 100.0);
         }
 
         Thread.iterValue[iterIdx] = bestValue;
@@ -1437,8 +1433,7 @@ void start_thinking(Position* root) {
 }
 
 SMALL void prepare_for_search(Position* root) {
-    Thread.stop          = false;
-    Thread.increaseDepth = true;
+    Thread.stop = false;
 
     Position* pos  = Thread.pos;
     pos->rootDepth = 0;
