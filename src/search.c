@@ -474,12 +474,9 @@ Value search(
     if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
         check_time();
 
-    if (!rootNode)
-    {
-        // Step 2. Check for aborted search and immediate draw
-        if (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY)
-            return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : VALUE_DRAW;
-    }
+    // Step 2. Check for aborted search and immediate draw
+    if (!rootNode && (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
+        return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : VALUE_DRAW;
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
@@ -509,8 +506,7 @@ Value search(
 
     // At non-PV nodes we check for an early TT cutoff
     if (!PvNode && ttHit && tte_depth(tte) >= depth && !excludedMove
-        && ttValue != VALUE_NONE  // Possible in case of TT access race.
-        && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
+        && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
         if (ttMove && ttValue >= beta)
@@ -1053,8 +1049,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     pvHit   = ttHit && tte_is_pv(tte);
 
     if (ttHit && tte_depth(tte) >= ttDepth
-        && ttValue != VALUE_NONE  // Only in case of TT access race
-        && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
+        && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
         return ttValue;
 
     // Step 4. Static evaluation of the position
@@ -1076,7 +1071,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
             // ttValue can be used as a better position evaluation
             if (ttValue != VALUE_NONE
-                && (tte_bound(tte) & (ttValue > bestValue ? BOUND_LOWER : BOUND_UPPER)))
+                && tte_bound(tte) & (ttValue > bestValue ? BOUND_LOWER : BOUND_UPPER))
                 bestValue = ttValue;
         }
         else

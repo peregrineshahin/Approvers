@@ -180,9 +180,10 @@ top:
                 if (move != st->ttMove)
                     return move;
             }
+        // Return to bad captures.
+        st->cur = (st - 1)->endMoves;
         st->stage++;
-        st->cur = (st - 1)->endMoves;  // Return to bad captures.
-                                       /* fallthrough */
+        /* fallthrough */
 
     case ST_BAD_CAPTURES :
         if (st->cur < st->endBadCaptures)
