@@ -706,8 +706,6 @@ void do_null_move(Position* pos) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
 
-    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
-
     if (unlikely(st->epSquare))
     {
         st->key ^= zob.enpassant[file_of(st->epSquare)];
