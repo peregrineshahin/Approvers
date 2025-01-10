@@ -99,10 +99,8 @@ SMALL void position(Position* pos, char* str) {
 }
 
 
-// setoption() is called when the engine receives the "setoption" UCI
-// command. The function updates the UCI option ("name") to the given
-// value ("value").
-
+// Called when the engine receives the "setoption" UCI. The function
+// updates the UCI option ("name") to the given value ("value").
 void setoption(char* str) {
 #ifndef KAGGLE
     char* name  = strstr(str, "name") + 5;
@@ -159,10 +157,9 @@ void setoption(char* str) {
 }
 
 
-// go() is called when engine receives the "go" UCI command. The function sets
-// the thinking time and other parameters from the input string, then starts
-// the search.
-
+// Called when engine receives the "go" UCI command. The function sets
+// the thinking time and other parameters from the input string, then
+// starts the search.
 static void go(Position* pos, char* str) {
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
@@ -190,13 +187,12 @@ static void go(Position* pos, char* str) {
 }
 
 
-// uci_loop() waits for a command from stdin, parses it and calls the
+// Waits for a command from stdin, parses it and calls the
 // appropriate function. Also intercepts EOF from stdin to ensure
 // gracefully exiting if the GUI dies unexpectedly. When called with some
 // command line arguments, e.g. to run 'bench', once the command is
 // executed the function returns immediately. In addition to the UCI ones,
 // also some additional debug commands are supported.
-
 SMALL void uci_loop(int argc, char** argv) {
 #ifndef KAGGLE
     if (argc == 2 && strcmp(argv[1], "bench") == 0)
@@ -311,13 +307,12 @@ SMALL void uci_loop(int argc, char** argv) {
 }
 
 
-// uci_value() converts a Value to a string suitable for use with the UCI
-// protocol specification:
+// Converts a Value to a string suitable for use with the UCI protocol
+// specification:
 //
 // cp <x>    The score from the engine's point of view in centipawns.
 // mate <y>  Mate in y moves, not plies. If the engine is getting mated
 //           use negative values for y.
-
 char* uci_value(char* str, Value v) {
     if (abs(v) < VALUE_MATE_IN_MAX_PLY)
         sprintf(str, "cp %d", v);
@@ -328,9 +323,7 @@ char* uci_value(char* str, Value v) {
 }
 
 
-// uci_square() converts a Square to a string in algebraic notation
-// (g1, a7, etc.)
-
+// Converts a Square to a string in algebraic notation (g1, a7, etc.)
 char* uci_square(char* str, Square s) {
     str[0] = 'a' + file_of(s);
     str[1] = '1' + rank_of(s);
@@ -340,9 +333,8 @@ char* uci_square(char* str, Square s) {
 }
 
 
-// uci_move() converts a Move to a string in coordinate notation (g1f3, a7a8q).
+// Converts a Move to a string in coordinate notation (g1f3, a7a8q).
 // Internally all castling moves are always encoded as 'king captures rook'.
-
 char* uci_move(char* str, Move m) {
     char   buf1[8], buf2[8];
     Square from = from_sq(m);
@@ -363,9 +355,8 @@ char* uci_move(char* str, Move m) {
 }
 
 
-// uci_to_move() converts a string representing a move in coordinate
-// notation (g1f3, a7a8q) to the corresponding legal Move, if any.
-
+// Converts a string representing a move in coordinate notation (g1f3, a7a8q)
+// to the corresponding legal Move, if any.
 Move uci_to_move(const Position* pos, char* str) {
     ExtMove  list[MAX_MOVES];
     ExtMove* last = generate_pseudo_legal(pos, list);

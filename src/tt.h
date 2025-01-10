@@ -24,7 +24,7 @@
 #include "misc.h"
 #include "types.h"
 
-// TTEntry struct is the 10 bytes transposition table entry, defined as below:
+// TTEntry struct is the 10 bytes transposition table entry, defined as:
 //
 // key        16 bit
 // depth       8 bit
@@ -34,7 +34,6 @@
 // move       16 bit
 // value      16 bit
 // eval value 16 bit
-
 struct TTEntry {
     uint16_t key16;
     uint8_t  depth8;

@@ -35,10 +35,8 @@ extern int mp_v8;
 Value PieceValue[16] = {0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0, 0,
                         0, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, 0};
 
-// An insertion sort which sorts moves in descending order up to and
-// including a given limit. The order of moves smaller than the limit is
-// left unspecified.
-
+// Sort moves in descending order up to and including a given limit.
+// The order of moves smaller than the limit is left unspecified.
 NOINLINE static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int limit) {
     for (ExtMove *sortedEnd = begin, *p = begin + 1; p < end; p++)
         if (p->value >= limit)
@@ -52,9 +50,8 @@ NOINLINE static void partial_insertion_sort(ExtMove* begin, ExtMove* end, int li
 }
 
 
-// score() assigns a numerical value to each move in a move list. The moves with
-// highest values will be picked first.
-
+// Assigns a numerical value to each move in a move list.
+// The moves with the highest values will be picked first.
 static void score_captures(const Position* pos) {
     Stack*                 st      = pos->st;
     CapturePieceToHistory* history = pos->captureHistory;
@@ -113,8 +110,8 @@ static void score_evasions(const Position* pos) {
 }
 
 
-// next_move() returns the next pseudo-legal move to be searched.
-
+// Returns a new pseudo-legal move every time it is called until there are no more
+// moves left, picking the move with the highest score from a list of generated moves.
 Move next_move(const Position* pos, bool skipQuiets) {
     Stack* st = pos->st;
     Move   move;
@@ -162,6 +159,7 @@ top:
             }
         }
         st->stage++;
+        /* fallthrough */
 
     case ST_QUIET_INIT :
         if (!skipQuiets)
@@ -197,6 +195,7 @@ top:
         score_evasions(pos);
         partial_insertion_sort(st->cur, st->endMoves, LIMIT);
         st->stage++;
+        /* fallthrough */
 
     case ST_ALL_EVASIONS :
         while (st->cur < st->endMoves)

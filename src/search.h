@@ -25,10 +25,7 @@
 #include "position.h"
 #include "types.h"
 
-/// LimitsType struct stores information sent by GUI about available time to
-/// search the current move, maximum depth/time, if we are in analysis mode or
-/// if we have to ponder while it's our opponent's turn to move.
-
+// LimitsType struct stores information sent by the caller about the analysis required.
 struct LimitsType {
     int       time[2];
     int       inc[2];

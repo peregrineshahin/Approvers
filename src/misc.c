@@ -26,6 +26,7 @@
     #include <stdatomic.h>
     #include <math.h>
 #endif
+
 // xorshift64star Pseudo-Random Number Generator
 // This class is based on original code written and dedicated
 // to the public domain by Sebastiano Vigna (2014).

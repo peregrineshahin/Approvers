@@ -59,39 +59,34 @@ static Bitboard rank_bb(Rank r) { return Rank1BB << (r << 3); }
 static Bitboard file_bb(File f) { return FileABB << f; }
 
 
-// shift_bb() moves a bitboard one step along direction Direction.
-static Bitboard shift_bb(int Direction, Bitboard b) {
-    return Direction == NORTH         ? b << 8
-         : Direction == SOUTH         ? b >> 8
-         : Direction == NORTH + NORTH ? b << 16
-         : Direction == SOUTH + SOUTH ? b >> 16
-         : Direction == EAST          ? (b & ~FileHBB) << 1
-         : Direction == WEST          ? (b & ~FileABB) >> 1
-         : Direction == NORTH_EAST    ? (b & ~FileHBB) << 9
-         : Direction == SOUTH_EAST    ? (b & ~FileHBB) >> 7
-         : Direction == NORTH_WEST    ? (b & ~FileABB) << 7
-         : Direction == SOUTH_WEST    ? (b & ~FileABB) >> 9
+// Moves a bitboard one or two steps as specified by the direction.
+static Bitboard shift_bb(int direction, Bitboard b) {
+    return direction == NORTH         ? b << 8
+         : direction == SOUTH         ? b >> 8
+         : direction == NORTH + NORTH ? b << 16
+         : direction == SOUTH + SOUTH ? b >> 16
+         : direction == EAST          ? (b & ~FileHBB) << 1
+         : direction == WEST          ? (b & ~FileABB) >> 1
+         : direction == NORTH_EAST    ? (b & ~FileHBB) << 9
+         : direction == SOUTH_EAST    ? (b & ~FileHBB) >> 7
+         : direction == NORTH_WEST    ? (b & ~FileABB) << 7
+         : direction == SOUTH_WEST    ? (b & ~FileABB) >> 9
                                       : 0;
 }
 
 
-// between_bb() returns a bitboard representing all the squares between
-// the two given ones. For instance, between_bb(SQ_C4, SQ_F7) returns a
-// bitboard with the bits for square d5 and e6 set. If s1 and s2 are not
-// on the same rank, file or diagonal, 0 is returned.
-
+// Returns a bitboard representing the squares in the semi-open
+// segment between the squares s1 and s2 (excluding s1 but including s2).
 static Bitboard between_bb(Square s1, Square s2) { return BetweenBB[s1][s2]; }
 
 
-// aligned() returns true if square s is on the line determined by move m.
-
+// Returns true if the squares s1, s2 and s3 are aligned either
+// on a straight or on a diagonal line.
 static uint64_t aligned(Move m, Square s) { return ((Bitboard*) LineBB)[m & 4095] & sq_bb(s); }
 
 
-// distance() functions return the distance between x and y, defined as
-// the number of steps for a king in x to reach y. Works with squares,
-// ranks, files.
-
+// Returns the distance between x and y, defined as the number of steps
+// for a king in x to reach y. Works with squares, ranks, files.
 static int distance(Square x, Square y) { return SquareDistance[x][y]; }
 
 static unsigned distance_f(Square x, Square y) {
@@ -131,19 +126,14 @@ static Bitboard attacks_bb(int pt, Square s, Bitboard occupied) {
 }
 
 
-// popcount() counts the number of non-zero bits in a bitboard.
-
+// Counts the number of non-zero bits in a bitboard.
 static int popcount(Bitboard b) { return __builtin_popcountll(b); }
 
 
-// lsb() return the least significant bit in a non-zero
-// bitboard.
-
+// Returns the least significant bit in a non-zero bitboard.
 static int lsb(Bitboard b) { return __builtin_ctzll(b); }
 
-// pop_lsb() finds and clears the least significant bit in a non-zero
-// bitboard.
-
+// Finds and clears the least significant bit in a non-zero bitboard.
 static Square pop_lsb(Bitboard* b) {
     const Square s = lsb(*b);
     *b &= *b - 1;

@@ -29,8 +29,7 @@
 
 TranspositionTable TT;  // Our global transposition table
 
-// tt_free() frees the allocated transposition table memory.
-
+// Frees the allocated transposition table memory.
 void tt_free(void) {
 #ifdef _WIN32
     if (TT.mem)
@@ -43,8 +42,7 @@ void tt_free(void) {
 }
 
 
-// tt_allocate() allocates the transposition table, measured in megabytes.
-
+// Allocates the transposition table, measured in megabytes.
 void tt_allocate(size_t mbSize) {
     TT.clusterCount = mbSize * 1024 * 1024 / sizeof(Cluster);
     size_t size     = TT.clusterCount * sizeof(Cluster);
@@ -65,8 +63,7 @@ void tt_allocate(size_t mbSize) {
 }
 
 
-// tt_clear() initialises the entire transposition table to zero.
-
+// Initialises the entire transposition table to zero.
 void tt_clear(void) {
     if (TT.table)
     {
@@ -75,14 +72,13 @@ void tt_clear(void) {
 }
 
 
-// tt_probe() looks up the current position in the transposition table.
+// Looks up the current position in the transposition table.
 // It returns true and a pointer to the TTEntry if the position is found.
 // Otherwise, it returns false and a pointer to an empty or least valuable
 // TTEntry to be replaced later. The replace value of an entry is
 // calculated as its depth minus 8 times its relative age. TTEntry t1 is
 // considered more valuable than TTEntry t2 if its replace value is greater
 // than that of t2.
-
 TTEntry* tt_probe(Key key, bool* found) {
     TTEntry* tte   = tt_first_entry(key);
     uint16_t key16 = key;  // Use the low 16 bits as key inside the cluster
