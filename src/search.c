@@ -172,9 +172,8 @@ PARAM(tm_v17, 674, 29)
 PARAM(tm_v18, 416, 14)
 PARAM(tm_v19, 1186, 14)
 PARAM(tm_v20, 801, 14)
-PARAM(tm_v21, 1069, 7)
-PARAM(tm_v22, 225, 8)
-PARAM(tm_v23, 990, 12)
+PARAM(tm_v21, 100, 4)
+PARAM(tm_v22, 170, 7)
 
 LimitsType Limits;
 
@@ -423,7 +422,7 @@ void thread_search(Position* pos) {
             totBestMoveChanges += Thread.pos->bestMoveChanges;
             Thread.pos->bestMoveChanges = 0;
 
-            double bestMoveInstability = 1 + 1.7 * totBestMoveChanges;
+            double bestMoveInstability = (tm_v21 / 100.0) + (tm_v22 / 100.0) * totBestMoveChanges;
 
             double totalTime = time_optimum() * fallingEval * reduction * bestMoveInstability;
 
