@@ -639,10 +639,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     set_check_info(pos);
 
-    if (type_of_p(piece) == KING && (from & 4) != (to & 4))
-        acc->needs_refresh = true;
-    else
-        update_accumulator(acc, pos);
+    acc->accurate = false;
 }
 
 
@@ -726,6 +723,9 @@ void do_null_move(Position* pos) {
     pos->sideToMove = !pos->sideToMove;
 
     set_check_info(pos);
+
+    st->accumulator.accurate = false;
+    st->dirtyPiece.len       = 0;
 }
 
 

@@ -136,12 +136,14 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
     }
 }
 
-void update_accumulator(Accumulator* acc, const Position* pos) {
-    memcpy(acc, &(pos->st - 1)->accumulator, sizeof(pos->st->accumulator));
+static void update_accumulators(Stack* st, Square wksq, Square bksq) {
+    if (!(st - 1)->accumulator.accurate)
+        update_accumulators(st - 1, wksq, bksq);
 
-    DirtyPiece* dp   = &pos->st->dirtyPiece;
-    Square      wksq = square_of(WHITE, KING);
-    Square      bksq = square_of(BLACK, KING);
+    Accumulator* acc = &st->accumulator;
+    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+
+    DirtyPiece* dp = &st->dirtyPiece;
 
     for (int i = 0; i < dp->len; i++)
     {
@@ -153,15 +155,36 @@ void update_accumulator(Accumulator* acc, const Position* pos) {
     }
 }
 
+static bool can_update(const Position* pos) {
+    Stack* st = pos->st;
+    while (st != pos->stack)
+    {
+        if (st->dirtyPiece.len && type_of_p(st->dirtyPiece.piece[0]) == KING)
+            return false;
+
+        st = st - 1;
+        if (st->accumulator.accurate)
+            return true;
+    }
+    return false;
+}
+
 Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
-    if (acc->needs_refresh)
+    if (can_update(pos))
+    {
+        Square wksq = square_of(WHITE, KING);
+        Square bksq = square_of(BLACK, KING);
+        update_accumulators(pos->st, wksq, bksq);
+    }
+    else
     {
         build_accumulator(acc, pos, WHITE);
         build_accumulator(acc, pos, BLACK);
-        acc->needs_refresh = false;
     }
+
+    acc->accurate = true;
 
     return output_transform(acc, pos);
 }
