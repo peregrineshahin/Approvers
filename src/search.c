@@ -212,7 +212,6 @@ static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
 static void check_time(void);
 static void uci_print_pv(Position* pos, Depth depth);
-static bool extract_ponder_from_tt(Position* pos);
 
 SMALL double my_log(double x) {
     double result = 0.0;
@@ -283,17 +282,13 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    const int pvSize = pos->st->pv.length;
-    if (pvSize >= 2 || (pvSize == 1 && extract_ponder_from_tt(pos)))
+    if (pos->st->pv.length >= 1)
     {
         Thread.ponder = true;
         Thread.stop   = false;
 
         const Move bestMove = pos->st->pv.line[0];
-        const Move ponder   = pos->st->pv.line[1];
-
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
-        do_move(pos, ponder, gives_check(pos, pos->st, ponder));
 
         pos->completedDepth = 0;
         pos->rootDepth      = 0;
@@ -1410,23 +1405,6 @@ static void uci_print_pv(Position* pos, Depth depth) {
     fflush(stdout);
 }
 
-SMALL static bool extract_ponder_from_tt(Position* pos) {
-    PVariation* pv   = &pos->st->pv;
-    Move        move = pv->line[0];
-
-    do_move(pos, move, gives_check(pos, pos->st, move));
-
-    bool     ttHit;
-    TTEntry* tte = tt_probe(key(), &ttHit);
-    if (ttHit && is_pseudo_legal(pos, tte_move(tte)))
-    {
-        pv->line[1] = tte_move(tte);
-        pv->length  = 2;
-    }
-
-    undo_move(pos, move);
-    return pv->length >= 2;
-}
 
 // start_thinking() wakes up the main thread to start a new search,
 // then returns immediately.
