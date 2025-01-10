@@ -153,6 +153,8 @@ static void update_accumulators(Stack* st, Square wksq, Square bksq) {
         if (dp->to[i] != SQ_NONE)
             nnue_add_piece(acc, dp->piece[i], dp->to[i], wksq, bksq);
     }
+
+    acc->accurate = true;
 }
 
 static bool can_update(const Position* pos) {
@@ -185,9 +187,8 @@ Value nnue_evaluate(Position* pos) {
     {
         build_accumulator(acc, pos, WHITE);
         build_accumulator(acc, pos, BLACK);
+        acc->accurate = true;
     }
-
-    acc->accurate = true;
 
     return output_transform(acc, pos);
 }
