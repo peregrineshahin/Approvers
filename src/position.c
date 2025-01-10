@@ -473,7 +473,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
     Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+    DirtyPiece*  dp  = &st->dirtyPiece;
+    dp->len          = 1;
 
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
@@ -485,11 +486,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square to       = to_sq(m);
     Piece  piece    = piece_on(from);
     Piece  captured = type_of_m(m) == ENPASSANT ? make_piece(them, PAWN) : piece_on(to);
-    Square wksq     = square_of(WHITE, KING);
-    Square bksq     = square_of(BLACK, KING);
-
-    if (type_of_p(piece) == KING && (from & 4) != (to & 4))
-        acc->needs_refresh = true;
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
@@ -504,11 +500,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_remove_piece(acc, captured, rfrom, wksq, bksq);
-
-        nnue_add_piece(acc, piece, to, wksq, bksq);
-        nnue_add_piece(acc, captured, rto, wksq, bksq);
+        dp->len      = 2;
+        dp->piece[1] = captured;
+        dp->from[1]  = rfrom;
+        dp->to[1]    = rto;
 
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         st->nonPawnKey[us] ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
@@ -538,7 +533,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
                 st->minorKey ^= zob.psq[captured][capsq];
         }
 
-        nnue_remove_piece(acc, captured, capsq, wksq, bksq);
+        dp->len      = 2;
+        dp->piece[1] = captured;
+        dp->from[1]  = capsq;
+        dp->to[1]    = SQ_NONE;
 
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
@@ -569,14 +567,13 @@ void do_move(Position* pos, Move m, int givesCheck) {
         key ^= zob.castling[st->castlingRights];
     }
 
+    dp->piece[0] = piece;
+    dp->from[0]  = from;
+    dp->to[0]    = to;
+
     // Move the piece. The tricky Chess960 castling is handled earlier.
     if (likely(type_of_m(m) != CASTLING))
-    {
         move_piece(pos, us, piece, from, to);
-
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_add_piece(acc, piece, to, wksq, bksq);
-    }
 
     // If the moving piece is a pawn do some special extra work
     if (type_of_p(piece) == PAWN)
@@ -594,8 +591,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
 
-            nnue_remove_piece(acc, piece, to, wksq, bksq);
-            nnue_add_piece(acc, promotion, to, wksq, bksq);
+            dp->to[0]          = SQ_NONE;
+            dp->piece[dp->len] = promotion;
+            dp->from[dp->len]  = SQ_NONE;
+            dp->to[dp->len]    = to;
+            dp->len++;
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
@@ -638,6 +638,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
     pos->nodes++;
 
     set_check_info(pos);
+
+    if (type_of_p(piece) == KING && (from & 4) != (to & 4))
+        acc->needs_refresh = true;
+    else
+        update_accumulator(acc, pos);
 }
 
 

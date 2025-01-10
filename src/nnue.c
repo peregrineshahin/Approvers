@@ -136,6 +136,23 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
     }
 }
 
+void update_accumulator(Accumulator* acc, const Position* pos) {
+    memcpy(acc, &(pos->st - 1)->accumulator, sizeof(pos->st->accumulator));
+
+    DirtyPiece* dp   = &pos->st->dirtyPiece;
+    Square      wksq = square_of(WHITE, KING);
+    Square      bksq = square_of(BLACK, KING);
+
+    for (int i = 0; i < dp->len; i++)
+    {
+        if (dp->from[i] != SQ_NONE)
+            nnue_remove_piece(acc, dp->piece[i], dp->from[i], wksq, bksq);
+
+        if (dp->to[i] != SQ_NONE)
+            nnue_add_piece(acc, dp->piece[i], dp->to[i], wksq, bksq);
+    }
+}
+
 Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
