@@ -866,7 +866,11 @@ moves_loop:  // When in check search starts from here.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
                 newDepth = max(newDepth, 1);
 
-            value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
+            Value newAlpha = alpha;
+            if (moveCount > 1 && !rootNode)
+                newAlpha = (value + alpha) / 2;
+
+            value = -search(pos, ss + 1, -beta, -newAlpha, newDepth, false, true);
         }
 
         // Step 14. Undo move
