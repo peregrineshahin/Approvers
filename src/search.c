@@ -56,7 +56,7 @@ PARAM(nmp_v5, 25312, 0)
 PARAM(nmp_v6, 27, 0)
 PARAM(nmp_v8, 92, 0)
 PARAM(nmp_v9, 194, 0)
-PARAM(lmr_v8, 14416, 0)
+PARAM(lmr_v8, 14200, 0)
 PARAM(mp_v1, 70, 0)
 PARAM(mp_v2, 1064, 0)
 PARAM(r_v1, 1056, 0)
@@ -134,15 +134,6 @@ PARAM(pcmb_v8, 126, 8.4)
 PARAM(pcmb_v9, 257, 30.0)
 PARAM(pcmb_v10, 120, 8.4)
 PARAM(pcmb_v11, 143, 8.4)
-PARAM(r_v2, 2401, 250.0)
-PARAM(r_v6, 1157, 150.0)
-PARAM(r_v7, 1087, 150.0)
-PARAM(r_v8, 2296, 250.0)
-PARAM(r_v9, 1551, 250.0)
-PARAM(r_v10, 936, 100.0)
-PARAM(r_v11, 1019, 100.0)
-PARAM(r_v12, 905, 100.0)
-PARAM(r_v13, 985, 50.0)
 PARAM(ded_v1, 64, 7.2)
 PARAM(lce_v1, 2272, 18.0)
 PARAM(qb_v1, 187, 18.0)
@@ -818,36 +809,33 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
 
-        r = r * r_v1;
-
         // Step 16. Reduced depth search (LMR). If the move fails high it will be
         // re-searched at full depth.
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2;
+                r -= 2;
 
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r += r_v6;
+                    r++;
 
                 if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
+                    r++;
 
                 // Increase reduction for cut nodes
                 if (cutNode)
-                    r += r_v8;
+                    r++;
 
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
                 // hence break make_move().
                 else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
+                    r -= 1 + (ss->ttPv - (type_of_p(movedPiece) == PAWN));
 
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
@@ -856,16 +844,16 @@ moves_loop:  // When in check search starts from here.
 
                 // Decrease/increase reduction by comparing with opponent's stat score.
                 if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
+                    r--;
 
                 else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
+                    r++;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                r -= ss->statScore / lmr_v8;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            Depth d = clamp(newDepth - r, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
