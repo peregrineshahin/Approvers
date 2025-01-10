@@ -159,7 +159,8 @@ static bool can_update(const Position* pos) {
     Stack* st = pos->st;
     while (st != pos->stack)
     {
-        if (st->dirtyPiece.len && type_of_p(st->dirtyPiece.piece[0]) == KING)
+        DirtyPiece* dp = &st->dirtyPiece;
+        if (dp->len && type_of_p(dp->piece[0]) == KING && (dp->from[0] & 4) != (dp->to[0] & 4))
             return false;
 
         st = st - 1;
