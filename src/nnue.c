@@ -177,17 +177,20 @@ static bool can_update(const Position* pos) {
 Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
-    if (can_update(pos))
+    if (!acc->accurate)
     {
-        Square wksq = square_of(WHITE, KING);
-        Square bksq = square_of(BLACK, KING);
-        update_accumulators(pos->st, wksq, bksq);
-    }
-    else
-    {
-        build_accumulator(acc, pos, WHITE);
-        build_accumulator(acc, pos, BLACK);
-        acc->accurate = true;
+        if (can_update(pos))
+        {
+            Square wksq = square_of(WHITE, KING);
+            Square bksq = square_of(BLACK, KING);
+            update_accumulators(pos->st, wksq, bksq);
+        }
+        else
+        {
+            build_accumulator(acc, pos, WHITE);
+            build_accumulator(acc, pos, BLACK);
+            acc->accurate = true;
+        }
     }
 
     return output_transform(acc, pos);
