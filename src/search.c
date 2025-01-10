@@ -1032,10 +1032,11 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     int      moveCount;
     Piece    movedPiece;
 
+    // Step 1. Initialize node
     bestMove  = 0;
     moveCount = 0;
 
-    // Check for an instant draw or if the maximum ply has been reached
+    // Step 2. Check for an immediate draw or maximum ply reached
     if (is_draw(pos) || ss->ply >= MAX_PLY)
         return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
 
@@ -1044,7 +1045,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     // only two types of depth in TT: DEPTH_QS_CHECKS or DEPTH_QS_NO_CHECKS.
     ttDepth = ss->checkersBB || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS : DEPTH_QS_NO_CHECKS;
 
-    // Transposition table lookup
+    // Step 3. Transposition table lookup
     posKey  = key();
     tte     = tt_probe(posKey, &ttHit);
     ttValue = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
@@ -1056,7 +1057,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
 
-    // Evaluate the position statically
+    // Step 4. Static evaluation of the position
     if (ss->checkersBB)
     {
         unadjustedStaticEval = VALUE_NONE;
@@ -1104,28 +1105,26 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
     ss->continuationHistory = &(*pos->contHist)[0][0];
 
-    // Initialize move picker data for the current position, and prepare
-    // to search the moves. Because the depth is <= 0 here, only captures,
-    // queen promotions and checks (only if depth >= DEPTH_QS_CHECKS) will
-    // be generated.
-
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
+    // Initialize move picker data for the current position, and prepare to search
+    // the moves. Because the depth is <= 0 here, only captures, queen promotions
+    // and checks (only if depth >= DEPTH_QS_CHECKS) will be generated.
     mp_init_q(pos, ttMove, depth, prevSq);
 
-    // Loop through the moves until no moves remain or a beta cutoff occurs
+    // Step 5. Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
     {
         // Check for legality just before making the move
         if (!is_legal(pos, move))
             continue;
-        moveCount++;
 
         givesCheck = gives_check(pos, ss, move);
+        moveCount++;
 
+        // Step 6. Pruning
         if (bestValue > VALUE_MATED_IN_MAX_PLY)
         {
-
             // Futility pruning
             if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
                 && type_of_m(move) != PROMOTION)
@@ -1155,8 +1154,9 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
         movedPiece = moved_piece(move);
 
-        // Make and search the move
+        // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
+
         // Speculative prefetch as early as possible
         prefetch(tt_first_entry(key()));
 
@@ -1166,7 +1166,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
 
-        // Check for a new best move
+        // Step 8. Check for a new best move
         if (value > bestValue)
         {
             bestValue = value;
@@ -1183,14 +1183,17 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         }
     }
 
-    // All legal moves have been searched. A special case: If we're in check
-    // and no legal moves were found, it is checkmate.
+    // Step 9. Check for mate
+    // All legal moves have been searched. A special case: if we are
+    // in check and no legal moves were found, it is checkmate.
     if (ss->checkersBB && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
     if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
         bestValue = (3 * bestValue + beta) / 4;
 
+    // Save gathered info in transposition table. The static evaluation
+    // is saved as it was before adjustment by correction history.
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
              bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, ttDepth, bestMove,
              unadjustedStaticEval);
