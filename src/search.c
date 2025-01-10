@@ -594,7 +594,17 @@ Value search(
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
-    // Step 7. ProbCut
+    // Step 7. Internal iterative reductions
+    if (PvNode && !ttMove)
+        depth -= 2 + 2 * (ttHit && tte_depth(tte) >= depth);
+
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0);
+
+    if (cutNode && !ttMove && depth >= 8)
+        depth--;
+
+    // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
     if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
@@ -638,10 +648,6 @@ Value search(
             }
         ss->ttPv = ttPv;
     }
-
-    // Step 8. Internal iterative reductions
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
-        depth -= 2;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
