@@ -48,30 +48,12 @@ SMALL double my_sqrt(double x) {
 // tm_init() is called at the beginning of the search and calculates
 // the time bounds allowed for the current game ply.
 void time_init(Color us, int ply) {
-    // opt_scale is a percentage of available time to use for the current move.
-    // max_scale is a multiplier applied to optimumTime.
-    double opt_scale, max_scale;
-
     Time.startTime = Limits.startTime;
 
     int mtg = 50;
     if (Limits.time[us] < 1000 && (double) mtg / Limits.time[us] > 0.05)
         mtg = (int) (Limits.time[us] * 0.05);
 
-    // Make sure that timeLeft > 0 since we may use it as a divisor
-    TimePoint timeLeft =
-      max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
-
-    timeLeft = 100 * timeLeft / 100;
-
-    // If there is a healthy increment, timeLeft can exceed actual available
-    // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
-                    tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
-
-    // Never use more than 80% of the available time for this move
-    Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime =
-      min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+    Time.optimumTime = 1.8 * (Limits.time[us] - MoveOverhead) / (mtg + 5) + Limits.inc[us];
+    Time.maximumTime = 10 * (Limits.time[us] - MoveOverhead) / (mtg + 10) + Limits.inc[us];
 }
