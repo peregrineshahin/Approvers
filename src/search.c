@@ -829,7 +829,7 @@ moves_loop:  // When in check search starts from here.
                 if (ttCapture)
                     r += r_v6;
 
-                if ((ss + 1)->cutoffCnt > 3)
+                if ((ss + 1)->cutoffCnt > 3 - (moveCount <= 16 && ttHit))
                     r += r_v7;
 
                 // Increase reduction for cut nodes
