@@ -24,6 +24,7 @@
 
 int MoveOverhead = 10;
 
+extern int mtg;
 extern int tm_v13;
 extern int tm_v14;
 extern int tm_v15;
@@ -53,10 +54,6 @@ void time_init(Color us, int ply) {
     double opt_scale, max_scale;
 
     Time.startTime = Limits.startTime;
-
-    int mtg = 50;
-    if (Limits.time[us] < 1000 && (double) mtg / Limits.time[us] > 0.05)
-        mtg = (int) (Limits.time[us] * 0.05);
 
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =

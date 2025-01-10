@@ -174,6 +174,7 @@ PARAM(tm_v20, 801, 14)
 PARAM(tm_v21, 1069, 7)
 PARAM(tm_v22, 225, 8)
 PARAM(tm_v23, 990, 12)
+PARAM(mtg, 50, 0.5)
 
 LimitsType Limits;
 
