@@ -74,4 +74,7 @@ void time_init(Color us, int ply) {
     Time.optimumTime = opt_scale * timeLeft;
     Time.maximumTime =
       min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+
+    if (IsKaggle || Thread.testPonder)
+        Time.optimumTime += Time.optimumTime / 4;
 }
