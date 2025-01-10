@@ -14,10 +14,14 @@
 
 typedef struct Accumulator Accumulator;
 
+enum {
+    ACC_EMPTY,
+    ACC_FORCED,
+    ACC_COMPUTED,
+};
+
 struct Accumulator {
-    // TODO: Replace flags with a state variable
-    bool forced;
-    bool accurate;
+    uint8_t state;
     alignas(64) int16_t values[2][L1SIZE];
 };
 

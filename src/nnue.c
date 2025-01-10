@@ -137,7 +137,7 @@ static void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq
 }
 
 static void update_accumulators(Stack* st, Square wksq, Square bksq) {
-    if (!(st - 1)->accumulator.accurate)
+    if ((st - 1)->accumulator.state != ACC_COMPUTED)
         update_accumulators(st - 1, wksq, bksq);
 
     Accumulator* acc = &st->accumulator;
@@ -154,7 +154,7 @@ static void update_accumulators(Stack* st, Square wksq, Square bksq) {
             nnue_add_piece(acc, dp->piece[i], dp->to[i], wksq, bksq);
     }
 
-    acc->accurate = true;
+    acc->state = ACC_COMPUTED;
 }
 
 static bool can_update(const Position* pos) {
@@ -162,12 +162,11 @@ static bool can_update(const Position* pos) {
     Stack* st   = pos->st;
     while (st != pos->stack)
     {
-        DirtyPiece* dp = &st->dirtyPiece;
-        if ((dp->len && st->accumulator.forced) || (gain -= dp->len + 1) < 0)
+        if (st->accumulator.state == ACC_FORCED || (gain -= st->dirtyPiece.len + 1) < 0)
             return false;
 
         st = st - 1;
-        if (st->accumulator.accurate)
+        if (st->accumulator.state == ACC_COMPUTED)
             return true;
     }
     return false;
@@ -176,7 +175,7 @@ static bool can_update(const Position* pos) {
 Value nnue_evaluate(Position* pos) {
     Accumulator* acc = &pos->st->accumulator;
 
-    if (!acc->accurate)
+    if (acc->state != ACC_COMPUTED)
     {
         if (can_update(pos))
         {
@@ -188,7 +187,7 @@ Value nnue_evaluate(Position* pos) {
         {
             build_accumulator(acc, pos, WHITE);
             build_accumulator(acc, pos, BLACK);
-            acc->accurate = true;
+            acc->state = ACC_COMPUTED;
         }
     }
 

@@ -639,8 +639,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     set_check_info(pos);
 
-    acc->forced    = type_of_p(piece) == KING && (from & 4) != (to & 4);
-    acc->accurate = false;
+    acc->state = type_of_p(piece) == KING && (from & 4) != (to & 4);
 }
 
 
@@ -723,8 +722,8 @@ void do_null_move(Position* pos) {
 
     set_check_info(pos);
 
-    st->accumulator.accurate = false;
-    st->dirtyPiece.len       = 0;
+    st->accumulator.state = ACC_EMPTY;
+    st->dirtyPiece.len    = 0;
 }
 
 

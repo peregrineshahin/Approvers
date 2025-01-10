@@ -323,8 +323,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
 
-    ss->accumulator.accurate = false;
-    ss->accumulator.forced   = true;
+    ss->accumulator.state = ACC_FORCED;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
