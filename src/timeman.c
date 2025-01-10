@@ -45,7 +45,7 @@ SMALL double my_sqrt(double x) {
     return guess;
 }
 
-// tm_init() is called at the beginning of the search and calculates
+// Called at the beginning of the search and calculates
 // the time bounds allowed for the current game ply.
 void time_init(Color us, int ply) {
     // opt_scale is a percentage of available time to use for the current move.

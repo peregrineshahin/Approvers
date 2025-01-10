@@ -56,9 +56,8 @@ Bitboard DistanceRingBB[64][8];
 Bitboard PseudoAttacks[8][64];
 Bitboard PawnAttacks[2][64];
 
-// bitboards_init() initializes various bitboard tables. It is called at
-// startup and relies on global objects to be already zero-initialized.
-
+// Initializes various bitboard tables. It is called at startup
+// and relies on global objects to be already zero-initialized.
 SMALL void bitboards_init(void) {
     for (Square s1 = 0; s1 < 64; s1++)
         for (Square s2 = 0; s2 < 64; s2++)

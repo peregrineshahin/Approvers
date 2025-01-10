@@ -45,7 +45,6 @@ void zob_init(void);
 
 // Stack struct stores information needed to restore a Position struct to
 // its previous state when we retract a move.
-
 struct Stack {
     // Copied when making a move
     Key pawnKey;
@@ -116,7 +115,6 @@ typedef struct Stack Stack;
 // pieces, side to move, hash keys, castling info, etc. The search uses
 // the functions do_move() and undo_move() on a Position struct to traverse
 // the search tree.
-
 struct Position {
     Stack* st;
     // Board / game representation.
@@ -150,7 +148,7 @@ struct Position {
 // FEN string input/output
 void pos_set(Position* pos, char* fen);
 
-//PURE Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied);
+// PURE Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied);
 PURE Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners);
 
 PURE bool is_legal(const Position* pos, Move m);
@@ -158,10 +156,10 @@ PURE bool is_pseudo_legal(const Position* pos, Move m);
 PURE bool gives_check_special(const Position* pos, Stack* st, Move m);
 
 // Doing and undoing moves
-void        do_move(Position* pos, Move m, int givesCheck);
-void        undo_move(Position* pos, Move m);
-void        do_null_move(Position* pos);
-static void undo_null_move(Position* pos);
+void do_move(Position* pos, Move m, int givesCheck);
+void undo_move(Position* pos, Move m);
+void do_null_move(Position* pos);
+void undo_null_move(Position* pos);
 
 // Static exchange evaluation
 PURE bool see_test(const Position* pos, Move m, int value);
@@ -247,17 +245,9 @@ static bool low_material(const Position* pos) {
 
 void pos_set_check_info(Position* pos);
 
-// undo_null_move is used to undo a null move.
 
-static void undo_null_move(Position* pos) {
-
-    pos->st--;
-    pos->sideToMove = !pos->sideToMove;
-}
-
-// attackers_to() computes a bitboard of all pieces which attack a given
+// Computes a bitboard of all pieces which attack a given
 // square. Slider attacks use the occupied bitboard to indicate occupancy.
-
 static Bitboard attackers_to_occ(const Position* pos, Square s, Bitboard occupied) {
     return (attacks_bb_rook(s, occupied) & pieces_pp(ROOK, QUEEN))
          | (attacks_bb_bishop(s, occupied) & pieces_pp(BISHOP, QUEEN))

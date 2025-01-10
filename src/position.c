@@ -57,8 +57,7 @@ static void move_piece(Position* pos, Color c, Piece piece, Square from, Square 
 }
 
 
-// Calculate CheckInfo data.
-
+// Sets king attacks to detect if a move gives check.
 static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
@@ -78,8 +77,6 @@ static void set_check_info(Position* pos) {
     st->checkSquares[KING]   = 0;
 }
 
-// zob_init() initializes at startup the various arrays used to compute
-// hash keys.
 Key H1(Key h) { return h & 0x1fff; }
 
 Key H2(Key h) { return (h >> 16) & 0x1fff; }
@@ -87,8 +84,8 @@ Key H2(Key h) { return (h >> 16) & 0x1fff; }
 static Key      cuckoo[8192];
 static uint16_t cuckooMove[8192];
 
+// Initializes at startup the various arrays used to compute hash keys.
 SMALL void zob_init(void) {
-
     PRNG rng;
     prng_init(&rng, 1070372);
 
@@ -146,10 +143,7 @@ SMALL void zob_init(void) {
 }
 
 
-// pos_set() initializes the position object with the given FEN string.
-// This function is not very robust - make sure that input FENs are correct,
-// this is assumed to be the responsibility of the GUI.
-
+// Initializes the position object with the given FEN string.
 SMALL void pos_set(Position* pos, char* fen) {
     unsigned char col, row, token;
     Square        sq = SQ_A8;
@@ -222,11 +216,9 @@ SMALL void pos_set(Position* pos, char* fen) {
 }
 
 
-// set_state() computes the hash keys of the position, and other data
-// that once computed is updated incrementally as moves are made. The
-// function is only used when a new position is set up, and to verify
-// the correctness of the Stack data when running in debug mode.
-
+// Computes the hash keys of the position, and other data that once
+// computed is updated incrementally as moves are made.
+// The function is only used when a new position is set up.
 SMALL static void set_state(Position* pos, Stack* st) {
     st->key = st->materialKey = 0;
     st->pawnKey               = zob.noPawns;
@@ -264,13 +256,12 @@ SMALL static void set_state(Position* pos, Stack* st) {
 // Turning slider_blockers() into an static function was slower, even
 // though it should only add a single slightly optimised copy to evaluate().
 #if 1
-// slider_blockers() returns a bitboard of all pieces that are blocking
-// attacks on the square 's' from 'sliders'. A piece blocks a slider if
+// Returns a bitboard of all pieces that are blocking attacks on
+// the square 's' from 'sliders'. A piece blocks a slider if
 // removing that piece from the board would result in a position where
 // square 's' is attacked. Both pinned pieces and discovered check
 // candidates are slider blockers and are calculated by calling this
 // function.
-
 Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners) {
     Bitboard blockers = 0, snipers;
     *pinners          = 0;
@@ -298,24 +289,7 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
 #endif
 
 
-#if 0
-// attackers_to() computes a bitboard of all pieces which attack a given
-// square. Slider attacks use the occupied bitboard to indicate occupancy.
-
-Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied)
-{
-  return  (attacks_from_pawn(s, BLACK)    & pieces_cp(WHITE, PAWN))
-        | (attacks_from_pawn(s, WHITE)    & pieces_cp(BLACK, PAWN))
-        | (attacks_from_knight(s)         & pieces_p(KNIGHT))
-        | (attacks_bb_rook(s, occupied)   & pieces_pp(ROOK,   QUEEN))
-        | (attacks_bb_bishop(s, occupied) & pieces_pp(BISHOP, QUEEN))
-        | (attacks_from_king(s)           & pieces_p(KING));
-}
-#endif
-
-
-// is_legal() tests whether a pseudo-legal move is legal
-
+// Tests whether a pseudo-legal move is legal
 bool is_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
@@ -360,10 +334,9 @@ bool is_legal(const Position* pos, Move m) {
 }
 
 
-// is_pseudo_legal() takes a random move and tests whether the move is
-// pseudo legal. It is used to validate moves from TT that can be corrupted
-// due to SMP concurrent access or hash position key aliasing.
-
+// Takes a random move and tests whether the move is pseudo legal.
+// It is used to validate moves from TT that can be corrupted
+// due to hash position key aliasing.
 bool is_pseudo_legal(const Position* pos, Move m) {
     Color  us   = stm();
     Square from = from_sq(m);
@@ -458,9 +431,8 @@ bool is_pseudo_legal(const Position* pos, Move m) {
 }
 
 
-// gives_check_special() is invoked by gives_check() if there are
-// discovered check candidates or the move is of a special type
-
+// Invoked by gives_check() if there are discovered
+// check candidates or the move is of a special type
 bool gives_check_special(const Position* pos, Stack* st, Move m) {
 
     Square from = from_sq(m);
@@ -497,8 +469,9 @@ bool gives_check_special(const Position* pos, Stack* st, Move m) {
 }
 
 
-// do_move() makes a move. The move is assumed to be legal.
-
+// Makes a move, and saves all information necessary
+// to a StateInfo object. The move is assumed to be legal. Pseudo-legal
+// moves should be filtered out before this function is called.
 void do_move(Position* pos, Move m, int givesCheck) {
     Key key = key() ^ zob.side;
 
@@ -594,9 +567,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
     // Update castling rights if needed
     if (st->castlingRights && (pos->castlingRightsMask[from] | pos->castlingRightsMask[to]))
     {
-        //    uint32_t cr = pos->castlingRightsMask[from] | pos->castlingRightsMask[to];
-        //    key ^= zob.castling[st->castlingRights & cr];
-        //    st->castlingRights &= ~cr;
         key ^= zob.castling[st->castlingRights];
         st->castlingRights &= ~(pos->castlingRightsMask[from] | pos->castlingRightsMask[to]);
         key ^= zob.castling[st->castlingRights];
@@ -658,11 +628,9 @@ void do_move(Position* pos, Move m, int givesCheck) {
 }
 
 
-// undo_move() unmakes a move. When it returns, the position should
+// Unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
-
 void undo_move(Position* pos, Move m) {
-
     pos->sideToMove = !pos->sideToMove;
 
     Color  us   = stm();
@@ -716,8 +684,8 @@ void undo_move(Position* pos, Move m) {
 }
 
 
-// do_null_move() is used to do a null move
-
+// Used to do a "null move": it flips
+// the side to move without executing any move on the board.
 void do_null_move(Position* pos) {
 
     Stack* st = ++pos->st;
@@ -742,10 +710,17 @@ void do_null_move(Position* pos) {
     set_check_info(pos);
 }
 
-// See position.h for undo_null_move()
+
+// Must be used to undo a "null move"
+void undo_null_move(Position* pos) {
+    pos->st--;
+    pos->sideToMove = !pos->sideToMove;
+}
 
 
-// Test whether SEE >= value.
+// Tests if the SEE (Static Exchange Evaluation) value of move
+// is greater or equal to the given threshold. We'll use an
+// algorithm similar to alpha-beta pruning with a null window.
 bool see_test(const Position* pos, Move m, int value) {
     if (unlikely(type_of_m(m) != NORMAL))
         return 0 >= value;
@@ -821,9 +796,8 @@ bool see_test(const Position* pos, Move m, int value) {
 }
 
 
-// is_draw() tests whether the position is drawn by 50-move rule or by
-// repetition. It does not detect stalemates.
-
+// Tests whether the position is drawn by 50-move rule or by repetition.
+// It does not detect stalemates.
 SMALL bool is_draw(const Position* pos) {
     Stack* st = pos->st;
 
@@ -843,6 +817,9 @@ SMALL bool is_draw(const Position* pos) {
     return false;
 }
 
+
+// Tests whether there has been at least one repetition
+// of positions since the last capture or pawn move.
 bool has_game_cycle(const Position* pos, int ply) {
     unsigned int j;
 

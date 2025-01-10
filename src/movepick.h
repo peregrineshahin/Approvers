@@ -74,7 +74,6 @@ Move next_move(const Position* pos, bool skipQuiets);
 // Initialisation of move picker data.
 
 static void mp_init(const Position* pos, Move ttm, Depth d) {
-
     Stack* st = pos->st;
 
     st->depth = d;
@@ -89,7 +88,6 @@ static void mp_init(const Position* pos, Move ttm, Depth d) {
 }
 
 static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
-
     Stack* st = pos->st;
 
     st->ttMove = ttm;
@@ -103,7 +101,6 @@ static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
 }
 
 static void mp_init_pc(const Position* pos, Move ttm, Value th) {
-
     Stack* st = pos->st;
 
     st->threshold = th;

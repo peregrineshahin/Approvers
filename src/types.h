@@ -221,7 +221,6 @@ typedef uint32_t Rank;
 // Score type stores a middlegame and an endgame value in a single integer.
 // The endgame value goes in the upper 16 bits, the middlegame value in
 // the lower 16 bits.
-
 typedef uint32_t Score;
 
 extern Value PieceValue[16];
