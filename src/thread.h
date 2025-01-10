@@ -30,6 +30,7 @@ typedef struct ThreadStruct ThreadStruct;
 
 struct ThreadStruct {
     Position* pos;
+    double    previousTimeReduction;
     Value     previousScore;
     Value     iterValue[4];
     bool      ponder, stop;

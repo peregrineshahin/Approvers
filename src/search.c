@@ -253,7 +253,8 @@ SMALL void search_clear(void) {
         for (int sq = 0; sq < 64; sq++)
             (*pos->contHist)[0][0][pc][sq] = -1;
 
-    Thread.previousScore = VALUE_INFINITE;
+    Thread.previousScore         = VALUE_INFINITE;
+    Thread.previousTimeReduction = 1;
 }
 
 // Called by the main thread when the program receives the UCI 'go' command.
@@ -301,10 +302,10 @@ void mainthread_search(void) {
 // the search, or the maximum search depth is reached.
 void thread_search(Position* pos) {
     Value  bestValue, alpha, beta, delta;
-    Move   lastMove           = MOVE_NONE;
-    Depth  pvStability        = 0;
-    double totBestMoveChanges = 0;
-    int    iterIdx            = 0;
+    Move   lastBestMove      = 0;
+    Depth  lastBestMoveDepth = 0;
+    double timeReduction = 1.0, totBestMoveChanges = 0;
+    int    iterIdx = 0;
 
     Stack* ss = pos->st;  // At least the seventh element of the allocated array.
 #pragma clang loop unroll(disable)
@@ -380,8 +381,11 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
-        pvStability = pv->line[0] == lastMove ? min(pvStability + 1, 8) : 0;
-        lastMove    = pv->line[0];
+        if (pv->line[0] != lastBestMove)
+        {
+            lastBestMove      = pv->line[0];
+            lastBestMoveDepth = pos->rootDepth;
+        }
 
 // Do we have time for the next iteration? Can we stop searching now?
 #ifndef KAGGLE
@@ -395,7 +399,12 @@ void thread_search(Position* pos) {
                                / (double) tm_v4;
             fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
 
-            double pvFactor = 1.2 - 0.05 * pvStability;
+            // If the best move is stable over several iterations, reduce time
+            // accordingly
+            timeReduction =
+              lastBestMoveDepth + tm_v7 / 100 < pos->completedDepth ? tm_v8 / 100.0 : tm_v9 / 100.0;
+            double reduction =
+              (tm_v10 / 100.0 + Thread.previousTimeReduction) / (tm_v11 / 100.0 * timeReduction);
 
             // Use part of the gained time from a previous stable move for this move
             totBestMoveChanges += Thread.pos->bestMoveChanges;
@@ -403,7 +412,7 @@ void thread_search(Position* pos) {
 
             double bestMoveInstability = (tm_v21 / 100.0) + (tm_v22 / 100.0) * totBestMoveChanges;
 
-            double totalTime = time_optimum() * fallingEval * pvFactor * bestMoveInstability;
+            double totalTime = time_optimum() * fallingEval * reduction * bestMoveInstability;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -418,6 +427,8 @@ void thread_search(Position* pos) {
         Thread.iterValue[iterIdx] = bestValue;
         iterIdx                   = (iterIdx + 1) & 3;
     }
+
+    Thread.previousTimeReduction = timeReduction;
 }
 
 // Main search function for both PV and non-PV nodes
