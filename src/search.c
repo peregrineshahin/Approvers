@@ -1169,8 +1169,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 }
             }
 
-            // Do not search moves with negative SEE values
-            if (!see_test(pos, move, 0))
+            // Do not search moves with bad enough SEE values
+            if (!see_test(pos, move, -85))
                 continue;
         }
 
