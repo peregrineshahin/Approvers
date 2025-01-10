@@ -1047,11 +1047,12 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     Key      posKey;
     Move     ttMove, move, bestMove;
     Value    bestValue, value, unadjustedStaticEval, ttValue, futilityValue, futilityBase;
-    bool     ttHit, pvHit, givesCheck;
+    bool     pvNode, ttHit, pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
     Piece    movedPiece;
 
+    pvNode    = alpha != beta - 1;
     bestMove  = 0;
     moveCount = 0;
 
@@ -1071,7 +1072,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     ttMove  = ttHit ? tte_move(tte) : 0;
     pvHit   = ttHit && tte_is_pv(tte);
 
-    if (ttHit && tte_depth(tte) >= ttDepth
+    if (!pvNode && ttHit && tte_depth(tte) >= ttDepth
         && ttValue != VALUE_NONE  // Only in case of TT access race
         && (ttValue >= beta ? (tte_bound(tte) & BOUND_LOWER) : (tte_bound(tte) & BOUND_UPPER)))
         return ttValue;
