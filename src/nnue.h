@@ -15,6 +15,8 @@
 typedef struct Accumulator Accumulator;
 
 struct Accumulator {
+    // TODO: Replace flags with a state variable
+    bool forced;
     bool accurate;
     alignas(64) int16_t values[2][L1SIZE];
 };

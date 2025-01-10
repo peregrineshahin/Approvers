@@ -639,6 +639,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     set_check_info(pos);
 
+    acc->forced    = type_of_p(piece) == KING && (from & 4) != (to & 4);
     acc->accurate = false;
 }
 
