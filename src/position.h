@@ -139,9 +139,6 @@ struct Position {
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
 
-    // Thread-control data.
-    uint64_t bestMoveChanges;
-
     void* stackAllocation;
 };
 

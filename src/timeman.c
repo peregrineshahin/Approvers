@@ -62,8 +62,6 @@ void time_init(Color us, int ply) {
     TimePoint timeLeft =
       max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
 
-    timeLeft = 100 * timeLeft / 100;
-
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
     opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,

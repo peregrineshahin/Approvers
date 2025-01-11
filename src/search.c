@@ -267,7 +267,6 @@ void mainthread_search(void) {
     tt_new_search();
     char buf[16];
 
-    Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
     Thread.previousScore = pos->st->pv.score;
 
@@ -302,11 +301,10 @@ void mainthread_search(void) {
 // depth until the allocated thinking time has been consumed, the user stops
 // the search, or the maximum search depth is reached.
 void thread_search(Position* pos) {
-    Value  bestValue, alpha, beta, delta;
-    Move   lastMove           = MOVE_NONE;
-    Depth  pvStability        = 0;
-    double totBestMoveChanges = 0;
-    int    iterIdx            = 0;
+    Value bestValue, alpha, beta, delta;
+    Move  lastMove    = MOVE_NONE;
+    Depth pvStability = 0;
+    int   iterIdx     = 0;
 
     Stack* ss = pos->st;  // At least the seventh element of the allocated array.
 #pragma clang loop unroll(disable)
@@ -346,9 +344,6 @@ void thread_search(Position* pos) {
     while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
            && !(Limits.depth && pos->rootDepth > Limits.depth))
     {
-        // Age out PV variability metric
-        totBestMoveChanges /= 2;
-
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
@@ -399,13 +394,7 @@ void thread_search(Position* pos) {
 
             double pvFactor = 1.2 - 0.05 * pvStability;
 
-            // Use part of the gained time from a previous stable move for this move
-            totBestMoveChanges += Thread.pos->bestMoveChanges;
-            Thread.pos->bestMoveChanges = 0;
-
-            double bestMoveInstability = (tm_v21 / 100.0) + (tm_v22 / 100.0) * totBestMoveChanges;
-
-            double totalTime = time_optimum() * fallingEval * pvFactor * bestMoveInstability;
+            double totalTime = time_optimum() * fallingEval * pvFactor;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -881,18 +870,8 @@ moves_loop:  // When in check search starts from here.
         if (Thread.stop)
             return 0;
 
-        if (rootNode)
-        {
-            if (moveCount == 1 || value > alpha)
-            {
-                ss->pv.score = value;
-
-                // We record how often the best move has been changed in each
-                // iteration. This information is used for time management.
-                if (moveCount > 1)
-                    pos->bestMoveChanges++;
-            }
-        }
+        if (rootNode && (moveCount == 1 || value > alpha))
+            ss->pv.score = value;
 
         if (value > bestValue)
         {
