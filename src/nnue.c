@@ -102,38 +102,72 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
     values[3]       = registers[3];
 }
 
-void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
-
-    for (int i = 0; i < L1SIZE; i += 16)
-    {
-        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
-        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
-
-        w_acc = _mm256_adds_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
-        b_acc = _mm256_adds_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
-
-        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
-        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
-    }
+void nnue_add_piece(Position* pos, Piece pc, Square sq, Square wksq, Square bksq) {
+    int index                   = pos->nnueAddSize++;
+    pos->nnueAdds[index][WHITE] = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
+    pos->nnueAdds[index][BLACK] = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
 }
 
-void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
+void nnue_remove_piece(Position* pos, Piece pc, Square sq, Square wksq, Square bksq) {
+    int index                   = pos->nnueSubSize++;
+    pos->nnueSubs[index][WHITE] = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE);
+    pos->nnueSubs[index][BLACK] = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
+}
 
-    for (int i = 0; i < L1SIZE; i += 16)
+static void add_sub(Accumulator* acc, Position* pos, Color color) {
+    int16_t* add_input = &in_weights[pos->nnueAdds[0][color] * L1SIZE];
+    int16_t* sub_input = &in_weights[pos->nnueSubs[0][color] * L1SIZE];
+
+    for (int i = 0; i < L1SIZE; i++)
+        acc->values[color][i] += add_input[i] - sub_input[i];
+}
+
+static void add_sub_sub(Accumulator* acc, Position* pos, Color color) {
+    int add1 = pos->nnueAdds[0][color] * L1SIZE;
+    int sub1 = pos->nnueSubs[0][color] * L1SIZE;
+    int sub2 = pos->nnueSubs[1][color] * L1SIZE;
+
+    for (int i = 0; i < L1SIZE; i++)
+        acc->values[color][i] += in_weights[add1 + i] - in_weights[sub1 + i] - in_weights[sub2 + i];
+}
+
+static void add_add_sub_sub(Accumulator* acc, Position* pos, Color color) {
+    int add1 = pos->nnueAdds[0][color] * L1SIZE;
+    int add2 = pos->nnueAdds[1][color] * L1SIZE;
+    int sub1 = pos->nnueSubs[0][color] * L1SIZE;
+    int sub2 = pos->nnueSubs[1][color] * L1SIZE;
+
+    for (int i = 0; i < L1SIZE; i++)
+        acc->values[color][i] +=
+          in_weights[add1 + i] + in_weights[add2 + i] - in_weights[sub1 + i] - in_weights[sub2 + i];
+}
+
+void nnue_commit(Position* pos) {
+    Accumulator* acc = &pos->st->accumulator;
+
+    if (acc->needs_refresh)
+        return;
+
+    const int adds = pos->nnueAddSize;
+    const int subs = pos->nnueSubSize;
+
+    if (adds == 1 && subs == 1)
     {
-        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
-        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
-
-        w_acc = _mm256_subs_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
-        b_acc = _mm256_subs_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
-
-        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
-        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
+        add_sub(acc, pos, WHITE);
+        add_sub(acc, pos, BLACK);
     }
+    else if (adds == 1 && subs == 2)
+    {
+        add_sub_sub(acc, pos, WHITE);
+        add_sub_sub(acc, pos, BLACK);
+    }
+    else
+    {
+        add_add_sub_sub(acc, pos, WHITE);
+        add_add_sub_sub(acc, pos, BLACK);
+    }
+
+    pos->nnueAddSize = pos->nnueSubSize = 0;
 }
 
 Value nnue_evaluate(Position* pos) {

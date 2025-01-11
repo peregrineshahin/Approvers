@@ -488,6 +488,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square wksq     = square_of(WHITE, KING);
     Square bksq     = square_of(BLACK, KING);
 
+    pos->nnueAddSize = pos->nnueSubSize = 0;
+
     if (type_of_p(piece) == KING && (from & 4) != (to & 4))
         acc->needs_refresh = true;
 
@@ -504,11 +506,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
         put_piece(pos, us, piece, to);
         put_piece(pos, us, captured, rto);
 
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_remove_piece(acc, captured, rfrom, wksq, bksq);
+        nnue_remove_piece(pos, piece, from, wksq, bksq);
+        nnue_remove_piece(pos, captured, rfrom, wksq, bksq);
 
-        nnue_add_piece(acc, piece, to, wksq, bksq);
-        nnue_add_piece(acc, captured, rto, wksq, bksq);
+        nnue_add_piece(pos, piece, to, wksq, bksq);
+        nnue_add_piece(pos, captured, rto, wksq, bksq);
 
         key ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
         st->nonPawnKey[us] ^= zob.psq[captured][rfrom] ^ zob.psq[captured][rto];
@@ -538,7 +540,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
                 st->minorKey ^= zob.psq[captured][capsq];
         }
 
-        nnue_remove_piece(acc, captured, capsq, wksq, bksq);
+        nnue_remove_piece(pos, captured, capsq, wksq, bksq);
 
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
@@ -573,10 +575,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
     if (likely(type_of_m(m) != CASTLING))
     {
         move_piece(pos, us, piece, from, to);
-        nnue_remove_piece(acc, piece, from, wksq, bksq);
+        nnue_remove_piece(pos, piece, from, wksq, bksq);
 
         if (type_of_m(m) != PROMOTION)
-            nnue_add_piece(acc, piece, to, wksq, bksq);
+            nnue_add_piece(pos, piece, to, wksq, bksq);
     }
 
     // If the moving piece is a pawn do some special extra work
@@ -595,7 +597,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
 
-            nnue_add_piece(acc, promotion, to, wksq, bksq);
+            nnue_add_piece(pos, promotion, to, wksq, bksq);
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
@@ -638,6 +640,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     pos->nodes++;
 
     set_check_info(pos);
+
+    nnue_commit(pos);
 }
 
 
@@ -700,6 +704,7 @@ void undo_move(Position* pos, Move m) {
 // Used to do a "null move": it flips
 // the side to move without executing any move on the board.
 void do_null_move(Position* pos) {
+    pos->nnueAddSize = pos->nnueSubSize = 0;
 
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
