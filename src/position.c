@@ -573,9 +573,10 @@ void do_move(Position* pos, Move m, int givesCheck) {
     if (likely(type_of_m(m) != CASTLING))
     {
         move_piece(pos, us, piece, from, to);
-
         nnue_remove_piece(acc, piece, from, wksq, bksq);
-        nnue_add_piece(acc, piece, to, wksq, bksq);
+
+        if (type_of_m(m) != PROMOTION)
+            nnue_add_piece(acc, piece, to, wksq, bksq);
     }
 
     // If the moving piece is a pawn do some special extra work
@@ -594,7 +595,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             remove_piece(pos, us, piece, to);
             put_piece(pos, us, promotion, to);
 
-            nnue_remove_piece(acc, piece, to, wksq, bksq);
             nnue_add_piece(acc, promotion, to, wksq, bksq);
 
             // Update hash keys
