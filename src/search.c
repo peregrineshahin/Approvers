@@ -427,8 +427,7 @@ Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
-
-    ss->pv.length = 0;
+    ss->pv.length       = 0;
 
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
@@ -481,10 +480,7 @@ Value search(
     // start with the last calculated statScore of the previous grandchild.
     // This influences the reduction rules in LMR which are based on the
     // statScore of the parent position.
-    if (rootNode)
-        (ss + 4)->statScore = 0;
-    else
-        (ss + 2)->statScore = 0;
+    ss->statScore = 0;
 
     // Step 3. Transposition table lookup
     excludedMove = ss->excludedMove;
@@ -796,12 +792,9 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v2;
 
+
             if (!captureOrPromotion)
             {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
@@ -809,29 +802,27 @@ moves_loop:  // When in check search starts from here.
                 if (cutNode)
                     r += r_v8;
 
-                // Decrease reduction for moves that escape a capture. Filter out
-                // castling moves, because they are coded as "king captures rook" and
-                // hence break make_move().
-                else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
-
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+            }
+            else
+            {
+                // Increase reduction if ttMove is a capture
+                if (ttCapture)
+                    r += r_v6;
 
-                // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
-
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
-
-                // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                ss->statScore =
+                  7 * PieceValue[captured_piece()]
+                  + (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(captured_piece())]
+                  - 5000;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            // Decrease/increase reduction for moves with a good/bad history.
+            r -= ss->statScore / lmr_v8 * r_v13;
+
+            Depth d = clamp(newDepth - r / 1000, 1, newDepth + (PvNode && !bestMove));
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
@@ -912,7 +903,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
