@@ -481,10 +481,7 @@ Value search(
     // start with the last calculated statScore of the previous grandchild.
     // This influences the reduction rules in LMR which are based on the
     // statScore of the parent position.
-    if (rootNode)
-        (ss + 4)->statScore = 0;
-    else
-        (ss + 2)->statScore = 0;
+    ss->statScore = 0;
 
     // Step 3. Transposition table lookup
     excludedMove = ss->excludedMove;
@@ -819,17 +816,17 @@ moves_loop:  // When in check search starts from here.
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-
-                // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
-
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
-
-                // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
             }
+            else
+            {
+                ss->statScore = PieceValue[piece_on(to_sq(move))] * 7
+                              + (*pos->captureHistory)[moved_piece(move)][to_sq(move)]
+                                                      [type_of_p(piece_on(to_sq(move)))]
+                              - 5000;
+            }
+
+            // Decrease/increase reduction for moves with a good/bad history.
+            r -= ss->statScore / lmr_v8 * r_v13;
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
@@ -912,7 +909,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
