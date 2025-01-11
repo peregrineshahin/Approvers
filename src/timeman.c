@@ -55,8 +55,6 @@ void time_init(Color us, int ply) {
     Time.startTime = Limits.startTime;
 
     int mtg = 50;
-    if (Limits.time[us] < 1000 && (double) mtg / Limits.time[us] > 0.05)
-        mtg = (int) (Limits.time[us] * 0.05);
 
     // Make sure that timeLeft > 0 since we may use it as a divisor
     TimePoint timeLeft =
