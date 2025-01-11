@@ -68,6 +68,7 @@ PARAM(qmo_v1, 373, 30.0)
 PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
 PARAM(ft_v1, 90, 12.0)
+PARAM(ft_v2, 16, 0.5)
 PARAM(rd_v1, 583, 60.0)
 PARAM(rd_v2, 1228, 48.0)
 PARAM(rd_v3, 872, 72.0)
@@ -180,7 +181,9 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving) + 16 * d * d; }
+static int futility_margin(Depth d, bool improving) {
+    return ft_v1 * (d - improving) + ft_v2 * d * d;
+}
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
