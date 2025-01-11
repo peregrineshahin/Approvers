@@ -30,8 +30,6 @@ typedef struct ThreadStruct ThreadStruct;
 
 struct ThreadStruct {
     Position* pos;
-    Value     previousScore;
-    Value     iterValue[4];
     bool      ponder, stop;
     // Flag for testing pondering outside the Kaggle environment
     bool testPonder;

@@ -154,15 +154,6 @@ PARAM(cpth_v1, 11729, 300.0)
 // Time management parameters
 PARAM(tm_v1, 329, 28)
 PARAM(tm_v2, 555, 63)
-PARAM(tm_v3, 657, 63)
-PARAM(tm_v4, 809, 40)
-PARAM(tm_v5, 52, 7)
-PARAM(tm_v6, 155, 7)
-PARAM(tm_v7, 869, 75)
-PARAM(tm_v8, 187, 17)
-PARAM(tm_v9, 101, 11)
-PARAM(tm_v10, 147, 7)
-PARAM(tm_v11, 216, 16)
 PARAM(tm_v13, 89, 4)
 PARAM(tm_v14, 296, 14)
 PARAM(tm_v15, 248, 14)
@@ -254,8 +245,6 @@ SMALL void search_clear(void) {
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
             (*pos->contHist)[0][0][pc][sq] = -1;
-
-    Thread.previousScore = VALUE_INFINITE;
 }
 
 // Called by the main thread when the program receives the UCI 'go' command.
@@ -269,7 +258,6 @@ void mainthread_search(void) {
 
     Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
-    Thread.previousScore = pos->st->pv.score;
 
     printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
@@ -304,9 +292,10 @@ void mainthread_search(void) {
 void thread_search(Position* pos) {
     Value  bestValue, alpha, beta, delta;
     Move   lastMove           = MOVE_NONE;
-    Depth  pvStability        = 0;
+    Value  averageScore       = VALUE_NONE;
+    int    pvStability        = 0;
+    int    scoreStability     = 0;
     double totBestMoveChanges = 0;
-    int    iterIdx            = 0;
 
     Stack* ss = pos->st;  // At least the seventh element of the allocated array.
 #pragma clang loop unroll(disable)
@@ -334,11 +323,6 @@ void thread_search(Position* pos) {
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
 
-    int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
-#pragma clang loop unroll(disable)
-    for (int i = 0; i < 4; i++)
-        Thread.iterValue[i] = value;
-
     PVariation* pv = &pos->st->pv;
 
     // Iterative deepening loop until requested to stop or the target depth
@@ -360,7 +344,8 @@ void thread_search(Position* pos) {
 
         while (true)
         {
-            bestValue = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
+            bestValue    = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
+            averageScore = averageScore == VALUE_NONE ? bestValue : (averageScore + bestValue) / 2;
 
             // If search has been stopped, we break immediately
             if (Thread.stop)
@@ -382,6 +367,8 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
+        scoreStability = abs(bestValue - averageScore) < 10 ? min(scoreStability + 1, 5) : 0;
+
         pvStability = pv->line[0] == lastMove ? min(pvStability + 1, 8) : 0;
         lastMove    = pv->line[0];
 
@@ -392,12 +379,8 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
 #endif
         {
-            double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
-                                  + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
-                               / (double) tm_v4;
-            fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
-
-            double pvFactor = 1.2 - 0.05 * pvStability;
+            double scoreFactor = 1.33 - 0.095 * scoreStability;
+            double pvFactor    = 1.2 - 0.05 * pvStability;
 
             // Use part of the gained time from a previous stable move for this move
             totBestMoveChanges += Thread.pos->bestMoveChanges;
@@ -405,7 +388,7 @@ void thread_search(Position* pos) {
 
             double bestMoveInstability = (tm_v21 / 100.0) + (tm_v22 / 100.0) * totBestMoveChanges;
 
-            double totalTime = time_optimum() * fallingEval * pvFactor * bestMoveInstability;
+            double totalTime = time_optimum() * scoreFactor * pvFactor * bestMoveInstability;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -416,9 +399,6 @@ void thread_search(Position* pos) {
                     Thread.stop = true;
             }
         }
-
-        Thread.iterValue[iterIdx] = bestValue;
-        iterIdx                   = (iterIdx + 1) & 3;
     }
 }
 
