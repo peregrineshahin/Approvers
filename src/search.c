@@ -568,12 +568,16 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
-    // Step 5. Futility pruning: child node
+    // Step 5. Internal iterative reductions
+    if (depth >= 4 && !ttMove)
+        depth--;
+
+    // Step 6. Futility pruning: child node
     if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
         && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
-    // Step 6. Null move search
+    // Step 7. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
         && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
@@ -595,10 +599,6 @@ Value search(
     }
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
-
-    // Step 7. Internal iterative reductions
-    if (depth >= 4 && !ttMove)
-        depth--;
 
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
