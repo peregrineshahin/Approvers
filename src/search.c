@@ -392,7 +392,7 @@ void thread_search(Position* pos) {
                                / (double) tm_v4;
             fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
 
-            double pvFactor = 1.2 - 0.05 * pvStability;
+            double pvFactor = 1.4 - 0.05 * pvStability;
 
             double totalTime = time_optimum() * fallingEval * pvFactor;
 
