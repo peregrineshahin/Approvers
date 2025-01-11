@@ -451,13 +451,12 @@ Value search(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
-    bool     captureOrPromotion, inCheck, moveCountPruning;
+    bool     captureOrPromotion, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
-    inCheck   = checkers();
     moveCount = captureCount = quietCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
 
@@ -467,7 +466,7 @@ Value search(
 
     // Step 2. Check for aborted search and immediate draw
     if (!rootNode && (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
-        return ss->ply >= MAX_PLY && !inCheck ? evaluate(pos) : VALUE_DRAW;
+        return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
@@ -518,7 +517,7 @@ Value search(
     }
 
     // Step 4. Static evaluation of the position
-    if (inCheck)
+    if (ss->checkersBB)
     {
         // Skip early pruning when in check
         unadjustedStaticEval = eval = ss->staticEval = VALUE_NONE;
@@ -698,7 +697,7 @@ moves_loop:  // When in check search starts from here.
                     continue;
 
                 // Futility pruning: parent node
-                if (lmrDepth < fpp_v1 && !inCheck
+                if (lmrDepth < fpp_v1 && !ss->checkersBB
                     && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
                            + fpp_v3 * lmrDepth
                          <= alpha)
@@ -934,7 +933,7 @@ moves_loop:  // When in check search starts from here.
     // it must be a mate or a stalemate. If we are in a singular extension
     // search then return a fail low score.
     if (!moveCount)
-        bestValue = excludedMove ? alpha : inCheck ? mated_in(ss->ply) : VALUE_DRAW;
+        bestValue = excludedMove ? alpha : ss->checkersBB ? mated_in(ss->ply) : VALUE_DRAW;
     else if (bestMove)
     {
         // Quiet best move: update move sorting heuristics
@@ -968,7 +967,8 @@ moves_loop:  // When in check search starts from here.
     {
         int bonus = pcmb_v1 * (depth > 4) + pcmb_v3 * !(PvNode || cutNode)
                   + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
-                  + pcmb_v6 * (!inCheck && bestValue <= ss->staticEval - pcmb_v7);
+                  + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
+                  + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83);
 
         // Proportional to "how much damage we have to undo"
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
@@ -997,7 +997,7 @@ moves_loop:  // When in check search starts from here.
                  depth, bestMove, unadjustedStaticEval);
 
     // Adjust correction history
-    if (!inCheck && (!bestMove || !is_capture_or_promotion(pos, bestMove))
+    if (!ss->checkersBB && (!bestMove || !is_capture_or_promotion(pos, bestMove))
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
