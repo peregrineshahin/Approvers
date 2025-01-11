@@ -67,7 +67,8 @@ PARAM(ttct_v2, 104, 9.6)
 PARAM(qmo_v1, 373, 30.0)
 PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
-PARAM(ft_v1, 169, 18.0)
+PARAM(ft_v1, 90, 12.0)
+PARAM(ft_v2, 16, 0.5)
 PARAM(rd_v1, 583, 60.0)
 PARAM(rd_v2, 1228, 48.0)
 PARAM(rd_v3, 872, 72.0)
@@ -87,7 +88,6 @@ PARAM(se_v2, 116, 12.0)
 PARAM(se_v5, 26, 3.6)
 PARAM(prb_v1, 118, 14.4)
 PARAM(prb_v2, 46, 4.8)
-PARAM(rfp_v1, 9, 0.6)
 PARAM(lmr_v3, 3690, 300.0)
 PARAM(lmr_v4, 100, 12.0)
 PARAM(lmr_v5, 95, 12.0)
@@ -181,7 +181,9 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) { return ft_v1 * (d - improving); }
+static int futility_margin(Depth d, bool improving) {
+    return ft_v1 * (d - improving) + ft_v2 * d * d;
+}
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -567,8 +569,8 @@ Value search(
     }
 
     // Step 5. Futility pruning: child node
-    if (!PvNode && depth < rfp_v1 && eval - futility_margin(depth, improving) >= beta
-        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+    if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
+        && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
     // Step 6. Null move search
