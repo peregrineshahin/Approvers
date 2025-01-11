@@ -569,8 +569,8 @@ Value search(
     }
 
     // Step 5. Internal iterative reductions
-    if (depth >= 4 && !ttMove)
-        depth--;
+    if ((PvNode || cutNode) && depth >= 4 && !ttMove)
+        depth -= 2;
 
     // Step 6. Futility pruning: child node
     if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
