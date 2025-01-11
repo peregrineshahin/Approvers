@@ -571,7 +571,7 @@ Value search(
     // Step 5. Futility pruning: child node
     if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
         && beta > -VALUE_MATE_IN_MAX_PLY)
-        return eval;
+        return beta + (eval - beta) / (3 + 3 * (ttValue == VALUE_NONE));
 
     // Step 6. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
