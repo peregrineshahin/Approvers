@@ -239,7 +239,7 @@ SMALL static void set_state(Position* pos, Stack* st) {
 
         if (pt == PAWN)
             st->pawnKey ^= zob.psq[piece_on(s)][s];
-        else
+        else if (pt != KING)
             st->nonPawnKey[color_of(pc)] ^= zob.psq[pc][s];
     }
 
@@ -612,7 +612,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Reset ply counters.
         st->plyCounters = 0;
     }
-    else
+    else if (type_of_p(piece) != KING)
         st->nonPawnKey[us] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
 
     // Update the key with the final value
