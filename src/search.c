@@ -572,6 +572,9 @@ Value search(
         && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
+    if (!PvNode && depth <= 4 && eval + 3000 <= alpha)
+        return eval;
+
     // Step 6. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
