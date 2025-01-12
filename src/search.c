@@ -89,10 +89,6 @@ PARAM(se_v5, 26, 3.6)
 PARAM(prb_v1, 118, 14.4)
 PARAM(prb_v2, 46, 4.8)
 PARAM(lmr_v3, 3690, 300.0)
-PARAM(lmr_v4, 100, 12.0)
-PARAM(lmr_v5, 95, 12.0)
-PARAM(lmr_v6, 88, 12.0)
-PARAM(lmr_v7, 117, 12.0)
 PARAM(hb_v1, 900, 75.0)
 PARAM(hb_v2, 203, 18.0)
 PARAM(hb_v3, 142, 24.0)
@@ -101,6 +97,10 @@ PARAM(hm_v1, 752, 75.0)
 PARAM(hm_v2, 183, 18.0)
 PARAM(hm_v3, 151, 24.0)
 PARAM(hm_v4, 1813, 180.0)
+PARAM(cnht_v1, 1024, 80.0)
+PARAM(cnht_v2, 1024, 80.0)
+PARAM(cnht_v3, 1024, 80.0)
+PARAM(cnht_v4, 1024, 80.0)
 PARAM(asd_v1, 4, 0.6)
 PARAM(qsf_v1, 185, 18.0)
 PARAM(ch_v1, 23, 3.6)
@@ -137,14 +137,10 @@ PARAM(pcmb_v11, 143, 8.4)
 PARAM(r_v2, 2401, 250.0)
 PARAM(r_v6, 1157, 150.0)
 PARAM(r_v7, 1087, 150.0)
-PARAM(r_v8, 1296, 250.0)
-PARAM(r_v9, 1551, 250.0)
-PARAM(r_v10, 936, 100.0)
-PARAM(r_v11, 1019, 100.0)
-PARAM(r_v12, 905, 100.0)
+PARAM(r_v8, 1296, 150.0)
+PARAM(r_v9, 1000, 250.0)
 PARAM(r_v13, 985, 50.0)
 PARAM(ded_v1, 64, 7.2)
-PARAM(lce_v1, 2272, 18.0)
 PARAM(qb_v1, 187, 18.0)
 PARAM(qb_v2, 193, 18.0)
 PARAM(cms_v1, 29079, 300.0)
@@ -804,7 +800,7 @@ moves_loop:  // When in check search starts from here.
                 r -= r_v2;
 
             if (cutNode)
-                r += r_v8 + 1000 * !captureOrPromotion;
+                r += r_v8 + r_v9 * !captureOrPromotion;
 
             if (!captureOrPromotion)
             {
@@ -1237,19 +1233,19 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 // at ply -1, -2, -4, and -6 with current move.
 static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
     if (move_is_ok((ss - 1)->currentMove))
-        update_contHist(*(ss - 1)->continuationHistory, pc, s, bonus);
+        update_contHist(*(ss - 1)->continuationHistory, pc, s, cnht_v1 * bonus / 1024);
 
     if (move_is_ok((ss - 2)->currentMove))
-        update_contHist(*(ss - 2)->continuationHistory, pc, s, bonus);
+        update_contHist(*(ss - 2)->continuationHistory, pc, s, cnht_v2 * bonus / 1024);
 
     if (ss->checkersBB)
         return;
 
     if (move_is_ok((ss - 4)->currentMove))
-        update_contHist(*(ss - 4)->continuationHistory, pc, s, bonus);
+        update_contHist(*(ss - 4)->continuationHistory, pc, s, cnht_v3 * bonus / 1024);
 
     if (move_is_ok((ss - 6)->currentMove))
-        update_contHist(*(ss - 6)->continuationHistory, pc, s, bonus);
+        update_contHist(*(ss - 6)->continuationHistory, pc, s, cnht_v4 * bonus / 1024);
 }
 
 // Updates move sorting heuristics when a new capture best move is found
