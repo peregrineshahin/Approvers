@@ -206,7 +206,7 @@ Value        to_corrected(Position* pos, Value unadjustedStaticEval);
 static void  update_correction_histories(const Position* pos, Depth depth, int32_t diff);
 static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
-update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus);
+update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth);
 static void check_time(void);
 static void uci_print_pv(Position* pos, Depth depth);
 
@@ -945,7 +945,7 @@ moves_loop:  // When in check search starts from here.
             }
         }
 
-        update_capture_stats(pos, bestMove, capturesSearched, captureCount, stat_bonus(depth + 1));
+        update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
 
         // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
@@ -1250,19 +1250,21 @@ static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bon
 
 // Updates move sorting heuristics when a new capture best move is found
 static void
-update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, int bonus) {
+update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth) {
     Piece moved_piece = moved_piece(move);
     int   captured    = type_of_p(piece_on(to_sq(move)));
 
     if (is_capture_or_promotion(pos, move))
-        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, bonus);
+        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, stat_bonus(depth));
+
+    Value malus = -stat_malus(depth);
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
     {
         moved_piece = moved_piece(captures[i]);
         captured    = type_of_p(piece_on(to_sq(captures[i])));
-        cpth_update(*pos->captureHistory, moved_piece, to_sq(captures[i]), captured, -bonus);
+        cpth_update(*pos->captureHistory, moved_piece, to_sq(captures[i]), captured, malus);
     }
 }
 
