@@ -491,6 +491,8 @@ Value search(
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = ttHit ? tte_move(tte) : 0;
+    ttCapture    = ttMove && is_capture_or_promotion(pos, ttMove);
+
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -567,7 +569,8 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
-    if (!PvNode && !improving && depth < 6 && eval < alpha - 350 - 250 * depth * depth)
+    if (!PvNode && !improving && depth < 6
+        && eval < alpha - 350 - (250 - 150 * ttCapture) * depth * depth)
     {
         value = qsearch(pos, ss, alpha - 1, alpha, 0);
         if (value < alpha)
@@ -661,7 +664,6 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
-    ttCapture        = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 9. Loop through all pseudo-legal moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, moveCountPruning)))
