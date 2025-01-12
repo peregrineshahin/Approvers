@@ -454,7 +454,7 @@ Value search(
     bool     captureOrPromotion, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, futilityMargin;
 
     // Step 1. Initialize node
     moveCount = captureCount = quietCount = ss->moveCount = 0;
@@ -560,6 +560,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    futilityMargin = futility_margin(depth, improving);
+
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -567,8 +569,16 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
+    // Step N. Razoring
+    if (!PvNode && depth < 6 && eval < alpha - 500 - futilityMargin * depth)
+    {
+        value = qsearch(pos, ss, alpha - 1, alpha, 0);
+        if (value < alpha)
+            return value;
+    }
+
     // Step 5. Futility pruning: child node
-    if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
+    if (!PvNode && eval - futilityMargin >= beta && eval < VALUE_MATE_IN_MAX_PLY
         && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
