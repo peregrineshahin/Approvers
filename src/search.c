@@ -62,9 +62,9 @@ PARAM(mp_v2, 1064, 0)
 PARAM(r_v1, 1056, 0)
 
 // Search parameters
-PARAM(ttct_v1, 110, 9.6)
-PARAM(ttct_v2, 104, 9.6)
-PARAM(qmo_v1, 373, 30.0)
+PARAM(ttct_v1, 140, 12.0)
+PARAM(ttct_v2, 133, 12.0)
+PARAM(qmo_v1, 477, 38.0)
 PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
 PARAM(ft_v1, 90, 12.0)
@@ -72,7 +72,7 @@ PARAM(ft_v2, 16, 0.5)
 PARAM(rd_v1, 583, 60.0)
 PARAM(rd_v2, 1228, 48.0)
 PARAM(rd_v3, 872, 72.0)
-PARAM(rd_init_v1, 2885, 120.0)
+PARAM(rd_init_v1, 3692, 150.0)
 PARAM(d_v1, 18, 1.2)
 PARAM(cbp_v2, 5, 9.6)
 PARAM(cbp_v3, -6, 9.6)
@@ -84,7 +84,7 @@ PARAM(fpp_v4, 67, 7.2)
 PARAM(fpp_v5, 69, 7.2)
 PARAM(sqsee_v1, 27, 2.4)
 PARAM(scsee_v1, 198, 12.0)
-PARAM(se_v2, 116, 12.0)
+PARAM(se_v2, 148, 15.0)
 PARAM(se_v5, 26, 3.6)
 PARAM(prb_v1, 118, 14.4)
 PARAM(prb_v2, 46, 4.8)
@@ -93,11 +93,11 @@ PARAM(lmr_v4, 100, 12.0)
 PARAM(lmr_v5, 95, 12.0)
 PARAM(lmr_v6, 88, 12.0)
 PARAM(lmr_v7, 117, 12.0)
-PARAM(hb_v1, 703, 60.0)
+PARAM(hb_v1, 900, 75.0)
 PARAM(hb_v2, 203, 18.0)
 PARAM(hb_v3, 142, 24.0)
 PARAM(hb_v4, 2502, 180.0)
-PARAM(hm_v1, 588, 60.0)
+PARAM(hm_v1, 752, 75.0)
 PARAM(hm_v2, 183, 18.0)
 PARAM(hm_v3, 151, 24.0)
 PARAM(hm_v4, 1813, 180.0)
@@ -106,18 +106,18 @@ PARAM(qsf_v1, 185, 18.0)
 PARAM(ch_v1, 23, 3.6)
 PARAM(ch_v2, 186, 18.0)
 PARAM(ch_v3, 270, 24.0)
-PARAM(ch_v4, 80, 9.6)
-PARAM(ch_v5, 110, 9.6)
-PARAM(ch_v6, 101, 9.6)
-PARAM(ch_v7, 97, 9.6)
-PARAM(ch_v8, 100, 9.6)
+PARAM(ch_v4, 102, 12.0)
+PARAM(ch_v5, 140, 12.0)
+PARAM(ch_v6, 129, 12.0)
+PARAM(ch_v7, 124, 12.0)
+PARAM(ch_v8, 128, 12.0)
 PARAM(tempo, 43, 4.8)
 PARAM(mp_v3, 2632, 180.0)
-PARAM(mp_v4, 136, 9.6)
-PARAM(mp_v5, 256, 9.6)
-PARAM(mp_v6, 227, 9.6)
-PARAM(mp_v7, 188, 9.6)
-PARAM(mp_v8, 94, 9.6)
+PARAM(mp_v4, 174, 12.0)
+PARAM(mp_v5, 327, 12.0)
+PARAM(mp_v6, 290, 12.0)
+PARAM(mp_v7, 240, 12.0)
+PARAM(mp_v8, 120, 12.0)
 PARAM(eval_scale, 91, 3.0)
 PARAM(mat_scale, 26148, 420.0)
 PARAM(mat_n, 662, 60.0)
@@ -198,10 +198,10 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth d) { return min((hb_v1 * d / 100 + hb_v2) * d - hb_v3, hb_v4); }
+static Value stat_bonus(Depth d) { return min((hb_v1 * d / 128 + hb_v2) * d - hb_v3, hb_v4); }
 
 // History and stats update malus, based on depth
-static Value stat_malus(Depth d) { return min((hm_v1 * d / 100 + hm_v2) * d - hm_v3, hm_v4); }
+static Value stat_malus(Depth d) { return min((hm_v1 * d / 128 + hm_v2) * d - hm_v3, hm_v4); }
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
@@ -234,7 +234,7 @@ SMALL double my_log(double x) {
 // Called during startup to initialize various lookup tables
 SMALL void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
-        Reductions[i] = rd_init_v1 / 100.0 * my_log(i);
+        Reductions[i] = (int) (rd_init_v1 / 128.0 * my_log(i));
 }
 
 
@@ -502,12 +502,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!is_capture_or_promotion(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 100);
+                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              ttct_v2 * -stat_malus(depth + 1) / 100);
+                                              ttct_v2 * -stat_malus(depth + 1) / 128);
         }
 
         // Partial workaround for the graph history interaction problem
@@ -562,7 +562,7 @@ Value search(
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
+        int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
@@ -733,7 +733,7 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 100;
+            Value singularBeta  = ttValue - se_v2 * depth / 128;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
@@ -1241,7 +1241,7 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
 
-    Value v = unadjustedStaticEval + correction / 100 / ch_v2;
+    Value v = unadjustedStaticEval + correction / 128 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
