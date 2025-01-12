@@ -56,10 +56,8 @@ PARAM(nmp_v5, 25312, 0)
 PARAM(nmp_v6, 27, 0)
 PARAM(nmp_v8, 92, 0)
 PARAM(nmp_v9, 194, 0)
-PARAM(lmr_v8, 14416, 0)
 PARAM(mp_v1, 70, 0)
 PARAM(mp_v2, 1064, 0)
-PARAM(r_v1, 1056, 0)
 
 // Search parameters
 PARAM(ttct_v1, 110, 9.6)
@@ -69,10 +67,10 @@ PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
 PARAM(ft_v1, 90, 12.0)
 PARAM(ft_v2, 16, 0.5)
-PARAM(rd_v1, 583, 60.0)
-PARAM(rd_v2, 1228, 48.0)
-PARAM(rd_v3, 872, 72.0)
-PARAM(rd_init_v1, 2885, 120.0)
+PARAM(rd_v1, 396, 60.0)
+PARAM(rd_v2, 749, 48.0)
+PARAM(rd_v3, 859, 72.0)
+PARAM(rd_init_v1, 2893, 120.0)
 PARAM(d_v1, 18, 1.2)
 PARAM(cbp_v2, 5, 9.6)
 PARAM(cbp_v3, -6, 9.6)
@@ -88,11 +86,6 @@ PARAM(se_v2, 116, 12.0)
 PARAM(se_v5, 26, 3.6)
 PARAM(prb_v1, 118, 14.4)
 PARAM(prb_v2, 46, 4.8)
-PARAM(lmr_v3, 3690, 300.0)
-PARAM(lmr_v4, 100, 12.0)
-PARAM(lmr_v5, 95, 12.0)
-PARAM(lmr_v6, 88, 12.0)
-PARAM(lmr_v7, 117, 12.0)
 PARAM(hb_v1, 703, 60.0)
 PARAM(hb_v2, 203, 18.0)
 PARAM(hb_v3, 142, 24.0)
@@ -134,15 +127,12 @@ PARAM(pcmb_v8, 126, 8.4)
 PARAM(pcmb_v9, 257, 30.0)
 PARAM(pcmb_v10, 120, 8.4)
 PARAM(pcmb_v11, 143, 8.4)
-PARAM(r_v2, 2401, 250.0)
-PARAM(r_v6, 1157, 150.0)
-PARAM(r_v7, 1087, 150.0)
-PARAM(r_v8, 2296, 250.0)
-PARAM(r_v9, 1551, 250.0)
-PARAM(r_v10, 936, 100.0)
-PARAM(r_v11, 1019, 100.0)
-PARAM(r_v12, 905, 100.0)
-PARAM(r_v13, 985, 50.0)
+PARAM(r_v1, 2598, 400.0)
+PARAM(r_v2, 1136, 200.0)
+PARAM(r_v3, 929, 200.0)
+PARAM(r_v4, 2350, 400.0)
+PARAM(r_v5, 3676, 300.0)
+PARAM(r_v6, 987, 50.0)
 PARAM(ded_v1, 64, 7.2)
 PARAM(lce_v1, 2272, 18.0)
 PARAM(qb_v1, 187, 18.0)
@@ -190,7 +180,7 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+    return r + rd_v1 + (!i && r > rd_v3) * rd_v2;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -686,7 +676,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / 1024, 0);
 
             if (!captureOrPromotion && !givesCheck)
             {
@@ -785,52 +775,37 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[movedPiece][to_sq(move)];
 
-        r = r * r_v1;
-
         // Step 12. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2;
+                r -= r_v1;
+
+            // Increase reduction for cut nodes
+            if (cutNode && move != ss->killers[0])
+                r += r_v4;
 
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r += r_v6;
+                    r += r_v2;
 
                 if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
-                // Increase reduction for cut nodes
-                if (cutNode)
-                    r += r_v8;
-
-                // Decrease reduction for moves that escape a capture. Filter out
-                // castling moves, because they are coded as "king captures rook" and
-                // hence break make_move().
-                else if (type_of_m(move) == NORMAL && !see_test(pos, reverse_move(move), 0))
-                    r -= r_v9 + r_v10 * (ss->ttPv - (type_of_p(movedPiece) == PAWN));
+                    r += r_v3;
 
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-
-                // Decrease/increase reduction by comparing with opponent's stat score.
-                if (ss->statScore >= -lmr_v4 && (ss - 1)->statScore < -lmr_v5)
-                    r -= r_v11;
-
-                else if ((ss - 1)->statScore >= -lmr_v6 && ss->statScore < -lmr_v7)
-                    r += r_v12;
+                              + (*pos->mainHistory)[!stm()][from_to(move)] - r_v5;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
+                r -= ss->statScore * r_v6 / 16384;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
