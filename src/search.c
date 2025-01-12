@@ -567,6 +567,13 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
+    if (!PvNode && !improving && depth < 6 && eval < alpha - 350 - 250 * depth * depth)
+    {
+        value = qsearch(pos, ss, alpha - 1, alpha, 0);
+        if (value < alpha)
+            return value;
+    }
+
     // Step 5. Futility pruning: child node
     if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
         && beta > -VALUE_MATE_IN_MAX_PLY)
