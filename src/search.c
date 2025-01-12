@@ -181,8 +181,14 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) {
-    return ft_v1 * (d - improving) + ft_v2 * d * d;
+static int futility_margin(Depth d, bool noTtCutNode, bool improving, bool worsening) {
+    Value base = 0 + 90 * d + 16 * d * d;
+
+    Value penalty1 = 0 * noTtCutNode + 0 * noTtCutNode * d;
+    Value penalty2 = 90 * improving + 0 * improving * d;
+    Value penalty3 = 0 * worsening + 0 * worsening * d;
+
+    return base - penalty1 - penalty2 - penalty3;
 }
 
 // Reductions lookup tables, initialized at startup
@@ -450,7 +456,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, opponentWorsening;
     bool     captureOrPromotion, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
@@ -560,6 +566,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    opponentWorsening = ss->staticEval + (ss - 1)->staticEval > 2;
+
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -575,8 +583,9 @@ Value search(
     }
 
     // Step 5. Futility pruning: child node
-    if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
-        && beta > -VALUE_MATE_IN_MAX_PLY)
+    if (!PvNode
+        && eval - futility_margin(depth, cutNode && !ttHit, improving, opponentWorsening) >= beta
+        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
     // Step 6. Null move search
