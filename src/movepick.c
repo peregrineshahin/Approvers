@@ -66,8 +66,10 @@ static void score_captures(const Position* pos) {
 }
 
 SMALL static void score_quiets(const Position* pos) {
-    Stack*            st      = pos->st;
-    ButterflyHistory* history = pos->mainHistory;
+    Stack*            st          = pos->st;
+    ButterflyHistory* history     = pos->mainHistory;
+    PawnHistory*      pawnHistory = pos->pawnHistory;
+
 
     PieceToHistory* contHist0 = (st - 1)->continuationHistory;
     PieceToHistory* contHist1 = (st - 2)->continuationHistory;
@@ -84,6 +86,7 @@ SMALL static void score_quiets(const Position* pos) {
 
         m->value =
           (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
+           + mp_v4 * (*pawnHistory)[pawn_key() & PAWN_HISTORY_MASK][piece_on(from)][to]
            + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
            + mp_v8 * (*contHist3)[piece_on(from)][to])
           / 100;

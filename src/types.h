@@ -274,11 +274,18 @@ enum {
     CORRECTION_HISTORY_MASK     = CORRECTION_HISTORY_ENTRY_NB - 1,
 };
 
+enum {
+    PAWN_HISTORY_SIZE = 512,
+    PAWN_HISTORY_MASK = PAWN_HISTORY_SIZE - 1,
+    PAWN_HISTORY_MAX  = 8192,
+};
+
 typedef int16_t        PieceToHistory[15][64];
 typedef PieceToHistory ContinuationHistoryStat[15][64];
 typedef int16_t        ButterflyHistory[2][4096];
 typedef int16_t        CapturePieceToHistory[15][64][8];
 typedef int16_t        CorrectionHistory[2][CORRECTION_HISTORY_NB][CORRECTION_HISTORY_ENTRY_NB];
+typedef int16_t        PawnHistory[PAWN_HISTORY_SIZE][16][64];
 
 struct ExtMove {
     Move move;

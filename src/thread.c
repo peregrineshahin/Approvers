@@ -28,6 +28,7 @@ void thread_init() {
 
     Position* pos        = calloc(sizeof(Position), 1);
     pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
+    pos->pawnHistory     = calloc(sizeof(PawnHistory), 1);
     pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
     pos->corrHists       = calloc(sizeof(CorrectionHistory), 1);
     pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
@@ -49,6 +50,7 @@ void thread_init() {
 void thread_exit() {
     Position* pos = Thread.pos;
 
+    free(pos->pawnHistory);
     free(pos->mainHistory);
     free(pos->captureHistory);
     free(pos->stackAllocation);

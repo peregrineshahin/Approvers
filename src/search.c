@@ -246,6 +246,7 @@ SMALL void search_clear(void) {
 
     Position* pos = Thread.pos;
     stats_clear(pos->mainHistory);
+    stats_clear(pos->pawnHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
 
@@ -565,6 +566,10 @@ Value search(
         int bonus = clamp(-depth * qmo_v1 / 100 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+
+        if (type_of_p(piece_on(prevSq)) != PAWN && (type_of_m((ss - 1)->currentMove)) != PROMOTION)
+            pawnHistory_update(*pos->pawnHistory, pawn_key(), piece_on(prevSq), prevSq,
+                               bonus * 1159 / 1024);
     }
 
     if (!PvNode && !improving && depth < 6 && eval < alpha - 350 - 250 * depth * depth)
@@ -986,6 +991,11 @@ moves_loop:  // When in check search starts from here.
 
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
                        stat_bonus(depth) * bonus / pcmb_v11);
+
+
+        if (type_of_p(piece_on(prevSq)) != PAWN && (type_of_m((ss - 1)->currentMove)) != PROMOTION)
+            pawnHistory_update(*pos->pawnHistory, pawn_key(), piece_on(prevSq), prevSq,
+                               bonus * 1073 / 1024);
     }
 
     // If no good move is found and the previous position was ttPv, then the

@@ -138,6 +138,7 @@ struct Position {
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
+    PawnHistory*             pawnHistory;
 
     // Thread-control data.
     uint64_t bestMoveChanges;

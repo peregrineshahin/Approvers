@@ -43,6 +43,15 @@ static void history_update(ButterflyHistory history, Color c, Move m, int v) {
     history[c][m] += v - history[c][m] * abs(v) / hu_v1;
 }
 
+static void
+pawnHistory_update(PawnHistory history, int key, Piece piece, Square square, int bonus) {
+    key &= PAWN_HISTORY_MASK;
+
+    int clampedBonus = clamp(bonus, -PAWN_HISTORY_MAX, PAWN_HISTORY_MAX);
+    history[key][piece][square] +=
+      clampedBonus - history[key][piece][square] * abs(clampedBonus) / PAWN_HISTORY_MAX;
+}
+
 static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
     history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / cpth_v1;
 }
