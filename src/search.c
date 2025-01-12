@@ -1293,9 +1293,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     Color c = stm();
     history_update(*pos->mainHistory, c, move, bonus);
     update_continuation_histories(ss, moved_piece(move), to_sq(move), bonus);
-
-    if (type_of_p(moved_piece(move)) != PAWN)
-        history_update(*pos->mainHistory, c, reverse_move(move), -bonus);
 }
 
 static int peak_stdin() {
