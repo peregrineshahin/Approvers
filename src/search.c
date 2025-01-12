@@ -815,6 +815,9 @@ moves_loop:  // When in check search starts from here.
                 if (cutNode)
                     r += r_v8;
 
+                if (checkers())
+                    r -= 900;
+
                 // Decrease reduction for moves that escape a capture. Filter out
                 // castling moves, because they are coded as "king captures rook" and
                 // hence break make_move().
