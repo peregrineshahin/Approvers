@@ -97,19 +97,28 @@ SMALL static void score_quiets(const Position* pos) {
 
 static void score_evasions(const Position* pos) {
     Stack* st = pos->st;
+
     // Try captures ordered by MVV/LVA, then non-captures ordered by
     // stats heuristics.
 
-    ButterflyHistory* history   = pos->mainHistory;
-    PieceToHistory*   contHist0 = (st - 1)->continuationHistory;
-    Color             c         = stm();
+    ButterflyHistory* history     = pos->mainHistory;
+    PieceToHistory*   contHist0   = (st - 1)->continuationHistory;
+    PawnHistory*      pawnHistory = pos->pawnHistory;
+    Color             c           = stm();
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
+    {
+        uint32_t move = m->move & 4095;
+        Square   to   = move & 63;
+        Square   from = move >> 6;
+
         if (is_capture(pos, m->move))
             m->value = PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
-                     + (*contHist0)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28);
+                     + (*contHist0)[moved_piece(m->move)][to_sq(m->move)] - (1 << 28)
+                     + (*pawnHistory)[pawn_key() & PAWN_HISTORY_MASK][piece_on(from)][to];
+    }
 }
 
 
