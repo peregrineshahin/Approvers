@@ -491,6 +491,8 @@ Value search(
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = ttHit ? tte_move(tte) : 0;
+    ttCapture    = ttMove && is_capture_or_promotion(pos, ttMove);
+
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -586,7 +588,7 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3);
+        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &(*pos->contHist)[0][0];
@@ -661,7 +663,6 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
-    ttCapture        = ttMove && is_capture_or_promotion(pos, ttMove);
 
     // Step 9. Loop through all pseudo-legal moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, moveCountPruning)))
