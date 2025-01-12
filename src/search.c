@@ -67,6 +67,9 @@ PARAM(ttct_v2, 133, 12.0)
 PARAM(qmo_v1, 477, 38.0)
 PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
+PARAM(rz_v1, 6, 0.5)
+PARAM(rz_v2, 350, 16.0)
+PARAM(rz_v3, 250, 10.0)
 PARAM(ft_v1, 90, 12.0)
 PARAM(ft_v2, 16, 0.5)
 PARAM(rd_v1, 583, 60.0)
@@ -565,7 +568,7 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
-    if (!PvNode && !improving && depth < 6 && eval < alpha - 350 - 250 * depth * depth)
+    if (!PvNode && !improving && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
     {
         value = qsearch(pos, ss, alpha - 1, alpha, 0);
         if (value < alpha)
