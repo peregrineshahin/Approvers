@@ -783,10 +783,6 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v1;
 
-            // Increase reduction for cut nodes
-            if (cutNode && move != ss->killers[0])
-                r += r_v4;
-
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
@@ -796,13 +792,17 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v3;
 
+                // Increase reduction for cut nodes
+                if (cutNode)
+                    r += r_v4;
+
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - r_v5;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore * r_v6 / 16384;
+                r -= ss->statScore / 16384 * r_v6;
             }
 
             Depth d = clamp(newDepth - r / 1024, 1, newDepth);
