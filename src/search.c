@@ -130,7 +130,7 @@ PARAM(pcmb_v11, 143, 8.4)
 PARAM(r_v1, 2598, 400.0)
 PARAM(r_v2, 1136, 200.0)
 PARAM(r_v3, 929, 200.0)
-PARAM(r_v4, 2350, 400.0)
+PARAM(r_v4, 1350, 400.0)
 PARAM(r_v5, 3676, 300.0)
 PARAM(r_v6, 987, 50.0)
 PARAM(ded_v1, 64, 7.2)
@@ -782,6 +782,10 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v1;
 
+            // Increase reduction for cut nodes
+            if (cutNode)
+                r += 1024 + r_v4 * !captureOrPromotion;
+
             if (!captureOrPromotion)
             {
                 // Increase reduction if ttMove is a capture
@@ -790,10 +794,6 @@ moves_loop:  // When in check search starts from here.
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v3;
-
-                // Increase reduction for cut nodes
-                if (cutNode)
-                    r += r_v4;
 
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
