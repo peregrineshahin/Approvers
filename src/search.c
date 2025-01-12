@@ -67,8 +67,15 @@ PARAM(ttct_v2, 104, 9.6)
 PARAM(qmo_v1, 373, 30.0)
 PARAM(qmo_v2, 1296, 120.0)
 PARAM(qmo_v3, 936, 120.0)
-PARAM(ft_v1, 90, 12.0)
-PARAM(ft_v2, 16, 0.5)
+PARAM(ft_v1, 0, 10.0)
+PARAM(ft_v2, 90, 12.0)
+PARAM(ft_v3, 16, 1.0)
+PARAM(ft_v4, 0, 12.0)
+PARAM(ft_v5, 0, 5.0)
+PARAM(ft_v6, 90, 12.0)
+PARAM(ft_v7, 0, 5.0)
+PARAM(ft_v8, 0, 12.0)
+PARAM(ft_v9, 0, 5.0)
 PARAM(rd_v1, 583, 60.0)
 PARAM(rd_v2, 1228, 48.0)
 PARAM(rd_v3, 872, 72.0)
@@ -182,11 +189,11 @@ enum {
 };
 
 static int futility_margin(Depth d, bool noTtCutNode, bool improving, bool worsening) {
-    Value base = 0 + 90 * d + 16 * d * d;
+    Value base = ft_v1 + ft_v2 * d + ft_v3 * d * d;
 
-    Value penalty1 = 0 * noTtCutNode + 0 * noTtCutNode * d;
-    Value penalty2 = 90 * improving + 0 * improving * d;
-    Value penalty3 = 0 * worsening + 0 * worsening * d;
+    Value penalty1 = ft_v4 * noTtCutNode + ft_v5 * noTtCutNode * d;
+    Value penalty2 = ft_v6 * improving + ft_v7 * improving * d;
+    Value penalty3 = ft_v8 * worsening + ft_v9 * worsening * d;
 
     return base - penalty1 - penalty2 - penalty3;
 }
