@@ -76,6 +76,7 @@ struct Stack {
     int             cutoffCnt;
     int             moveCount;
     bool            ttPv;
+    bool            ttHit;
     uint8_t         ply;
 
     // MovePicker data

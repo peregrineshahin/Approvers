@@ -449,7 +449,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     givesCheck, improving;
     bool     captureOrPromotion, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
@@ -487,16 +487,16 @@ Value search(
     // Step 3. Transposition table lookup
     excludedMove = ss->excludedMove;
     posKey       = key();
-    tte          = tt_probe(posKey, &ttHit);
-    ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove       = ttHit ? tte_move(tte) : 0;
+    tte          = tt_probe(posKey, &ss->ttHit);
+    ttValue      = ss->ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
+    ttMove       = ss->ttHit ? tte_move(tte) : 0;
     ttCapture    = ttMove && is_capture_or_promotion(pos, ttMove);
 
     if (!excludedMove)
-        ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
+        ss->ttPv = PvNode || (ss->ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff
-    if (!PvNode && ttHit && tte_depth(tte) >= depth && !excludedMove
+    if (!PvNode && ss->ttHit && tte_depth(tte) >= depth && !excludedMove
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
@@ -531,7 +531,7 @@ Value search(
         evaluate(pos);
         unadjustedStaticEval = eval = ss->staticEval;
     }
-    else if (ttHit)
+    else if (ss->ttHit)
     {
         // Never assume anything about values stored in TT
         if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
@@ -608,11 +608,11 @@ Value search(
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
     if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
-        && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
+        && !(ss->ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && is_capture_or_promotion(pos, ttMove))
+        if (ss->ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
+            && ttValue >= probCutBeta && ttMove && is_capture_or_promotion(pos, ttMove))
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
@@ -951,8 +951,9 @@ moves_loop:  // When in check search starts from here.
 
         update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
 
-        // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
-        if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
+        // Extra penalty for a quiet early move that was not a TT move
+        // or main killer move in previous ply when it gets refuted
+        if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1 + (ss - 1)->ttHit
              || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
             update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
@@ -1009,7 +1010,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     Key      posKey;
     Move     ttMove, move, bestMove;
     Value    bestValue, value, unadjustedStaticEval, ttValue, futilityValue, futilityBase;
-    bool     ttHit, pvHit, givesCheck;
+    bool     pvHit, givesCheck;
     Depth    ttDepth;
     int      moveCount;
     Piece    movedPiece;
@@ -1029,12 +1030,12 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
     // Step 3. Transposition table lookup
     posKey  = key();
-    tte     = tt_probe(posKey, &ttHit);
-    ttValue = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove  = ttHit ? tte_move(tte) : 0;
-    pvHit   = ttHit && tte_is_pv(tte);
+    tte     = tt_probe(posKey, &ss->ttHit);
+    ttValue = ss->ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
+    ttMove  = ss->ttHit ? tte_move(tte) : 0;
+    pvHit   = ss->ttHit && tte_is_pv(tte);
 
-    if (ttHit && tte_depth(tte) >= ttDepth
+    if (ss->ttHit && tte_depth(tte) >= ttDepth
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
         return ttValue;
 
@@ -1047,7 +1048,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     }
     else
     {
-        if (ttHit)
+        if (ss->ttHit)
         {
             // Never assume anything about values stored in TT
             if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
@@ -1071,7 +1072,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         // Stand pat. Return immediately if static value is at least beta
         if (bestValue >= beta)
         {
-            if (!ttHit)
+            if (!ss->ttHit)
                 tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false, BOUND_LOWER,
                          DEPTH_NONE, 0, unadjustedStaticEval);
 
