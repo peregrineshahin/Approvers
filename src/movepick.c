@@ -86,7 +86,7 @@ SMALL static void score_quiets(const Position* pos) {
           (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
            + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
            + mp_v8 * (*contHist3)[piece_on(from)][to])
-          / 100;
+          / 128;
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
     }
