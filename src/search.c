@@ -812,6 +812,9 @@ moves_loop:  // When in check search starts from here.
                 if (ttCapture)
                     r += r_v6;
 
+                if (tte_depth(tte) >= depth)
+                    r -= 1000;
+
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
