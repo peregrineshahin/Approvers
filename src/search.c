@@ -320,12 +320,17 @@ void thread_search(Position* pos) {
     {
         ss[i].continuationHistory = &(*pos->contHist)[0][0];  // Use as sentinel
         ss[i].staticEval          = VALUE_NONE;
+        ss[i].reduction           = 0;
         ss[i].checkersBB          = 0;
     }
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
-        ss[i].ply = i;
+    {
+        ss[i].ply       = i;
+        ss[i].reduction = 0;
+    }
+
 
     ss->accumulator.needs_refresh = 1;
 
@@ -456,8 +461,9 @@ Value search(
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
-    moveCount = captureCount = quietCount = ss->moveCount = 0;
-    bestValue                                             = -VALUE_INFINITE;
+    int priorReduction = ss->reduction;
+    moveCount = captureCount = quietCount = ss->moveCount = ss->reduction = 0;
+    bestValue                                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
     if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
@@ -555,6 +561,11 @@ Value search(
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0,
                  unadjustedStaticEval);
+    }
+
+    if (priorReduction >= 3 && ss->staticEval + (ss - 1)->staticEval < 0)
+    {
+        depth++;
     }
 
     improving = (ss - 2)->staticEval == VALUE_NONE
@@ -825,8 +836,12 @@ moves_loop:  // When in check search starts from here.
                     r -= ss->statScore / lmr_v8 * r_v13;
             }
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
-            value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+            Depth d             = clamp(newDepth - r / 1000, 1, newDepth);
+            (ss + 1)->reduction = newDepth - d;
+
+            value = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+
+            (ss + 1)->reduction = 0;
 
             if (value > alpha && d < newDepth)
             {
