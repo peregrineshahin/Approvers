@@ -85,7 +85,7 @@ PARAM(fpp_v3, 172, 21.6)
 PARAM(fpp_v4, 67, 7.2)
 PARAM(fpp_v5, 70, 7.2)
 PARAM(sqsee_v1, 27, 2.4)
-PARAM(scsee_v1, 207, 12.0)
+PARAM(scsee_v1, 200, 12.0)
 PARAM(se_v2, 154, 15.0)
 PARAM(se_v5, 27, 3.6)
 PARAM(prb_v1, 120, 14.4)
@@ -696,7 +696,16 @@ moves_loop:  // When in check search starts from here.
             // Reduced depth of the next LMR search
             int lmrDepth = max(newDepth - r, 0);
 
-            if (!captureOrPromotion && !givesCheck)
+            if (captureOrPromotion || givesCheck)
+            {
+                int captHist =
+                  (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(piece_on(to_sq(move)))];
+
+                int seeHist = clamp(captHist / 32, -200 * depth, 200 * depth);
+                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
+                    continue;
+            }
+            else
             {
                 // Countermoves based pruning
                 if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
@@ -716,9 +725,6 @@ moves_loop:  // When in check search starts from here.
                 if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
                     continue;
             }
-            // SEE based pruning
-            else if (!see_test(pos, move, -scsee_v1 * depth))
-                continue;
         }
 
         // Step 12. Extensions
