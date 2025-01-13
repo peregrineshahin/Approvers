@@ -479,10 +479,7 @@ Value search(
     // start with the last calculated statScore of the previous grandchild.
     // This influences the reduction rules in LMR which are based on the
     // statScore of the parent position.
-    if (rootNode)
-        (ss + 4)->statScore = 0;
-    else
-        (ss + 2)->statScore = 0;
+    ss->statScore = 0;
 
     // Step 3. Transposition table lookup
     excludedMove = ss->excludedMove;
@@ -795,35 +792,41 @@ moves_loop:  // When in check search starts from here.
 
         r = r * r_v1;
 
+        // Decrease reduction if position is or has been on the PV
+        if (ss->ttPv)
+            r -= r_v2;
+
+        if (cutNode)
+            r += r_v8 + r_v9 * !captureOrPromotion;
+
+        if (!captureOrPromotion)
+        {
+            // Increase reduction if ttMove is a capture
+            if (ttCapture)
+                r += r_v6;
+
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
+            ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
+                          + (*contHist1)[movedPiece][to_sq(move)]
+                          + (*contHist2)[movedPiece][to_sq(move)]
+                          + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+
+            // Decrease/increase reduction for moves with a good/bad history.
+            if (!ss->checkersBB)
+                r -= ss->statScore / lmr_v8 * r_v13;
+        }
+        else
+            ss->statScore = 0;
+
+        if (move == ttMove)
+            r = 0;
+
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
-
-            if (cutNode)
-                r += r_v8 + r_v9 * !captureOrPromotion;
-
-            if (!captureOrPromotion)
-            {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
-                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
-                              + (*contHist1)[movedPiece][to_sq(move)]
-                              + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-
-                // Decrease/increase reduction for moves with a good/bad history.
-                if (!ss->checkersBB)
-                    r -= ss->statScore / lmr_v8 * r_v13;
-            }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
@@ -850,6 +853,10 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
+            // Increase reduction if ttMove is not present (~6 Elo)
+            if (!ttMove)
+                r += 2111;
+
             value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
         }
 
@@ -862,7 +869,7 @@ moves_loop:  // When in check search starts from here.
             if (move == ttMove && ss->ply <= pos->rootDepth * 2)
                 newDepth = max(newDepth, 1);
 
-            value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
+            value = -search(pos, ss + 1, -beta, -alpha, newDepth - (r > 3444), false, true);
         }
 
         // Step 16. Undo move
@@ -906,7 +913,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
