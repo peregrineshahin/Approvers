@@ -839,12 +839,6 @@ moves_loop:  // When in check search starts from here.
 
                 if (newDepth > d)
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
-
-                if (!captureOrPromotion)
-                {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
-                    update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
-                }
             }
         }
         // Step 15. Full-depth search when LMR is skipped or fails high.
