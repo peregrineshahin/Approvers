@@ -86,7 +86,7 @@ PARAM(fpp_v4, 67, 7.2)
 PARAM(fpp_v5, 70, 7.2)
 PARAM(sqsee_v1, 27, 2.4)
 PARAM(scsee_v1, 207, 12.0)
-PARAM(se_v2, 154, 15.0)
+PARAM(se_v2, 128, 15.0)
 PARAM(se_v5, 27, 3.6)
 PARAM(prb_v1, 120, 14.4)
 PARAM(prb_v2, 47, 4.8)
@@ -734,7 +734,7 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 128;
+            Value singularBeta  = ttValue - depth;
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
