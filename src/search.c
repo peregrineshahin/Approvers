@@ -568,6 +568,7 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
+    // Step 5. Razoring
     if (!PvNode && !improving && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
     {
         value = qsearch(pos, ss, alpha - 1, alpha, 0);
@@ -575,12 +576,12 @@ Value search(
             return value;
     }
 
-    // Step 5. Futility pruning: child node
+    // Step 6. Futility pruning: child node
     if (!PvNode && eval - futility_margin(depth, improving) >= beta && eval < VALUE_MATE_IN_MAX_PLY
         && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
-    // Step 6. Null move search
+    // Step 7. Null move search
     if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
         && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
@@ -603,7 +604,7 @@ Value search(
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
-    // Step 7. ProbCut
+    // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
     if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
@@ -648,7 +649,7 @@ Value search(
         ss->ttPv = ttPv;
     }
 
-    // Step 8. Internal iterative reductions
+    // Step 9. Internal iterative reductions
     if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
         depth -= 2;
 
@@ -663,7 +664,7 @@ moves_loop:  // When in check search starts from here.
     value            = bestValue;
     moveCountPruning = false;
 
-    // Step 9. Loop through all pseudo-legal moves until no moves remain or a beta cutoff occurs
+    // Step 10. Loop through all pseudo-legal moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, moveCountPruning)))
     {
         if (move == excludedMove)
@@ -686,7 +687,7 @@ moves_loop:  // When in check search starts from here.
 
         Depth r = reduction(improving, depth, moveCount);
 
-        // Step 9. Pruning at shallow depth
+        // Step 11. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
@@ -720,7 +721,7 @@ moves_loop:  // When in check search starts from here.
                 continue;
         }
 
-        // Step 10. Extensions
+        // Step 12. Extensions
 
         // Singular extension search. If all moves but one fail low on a search
         // of (alpha-s, beta-s), and just one fails high on (alpha, beta), then
@@ -782,7 +783,7 @@ moves_loop:  // When in check search starts from here.
         // Add extension to new depth
         newDepth += extension;
 
-        // Step 11. Make the move.
+        // Step 13. Make the move.
         do_move(pos, move, givesCheck);
 
         // Speculative prefetch as early as possible
@@ -794,7 +795,7 @@ moves_loop:  // When in check search starts from here.
 
         r = r * r_v1;
 
-        // Step 12. Late move reductions (LMR)
+        // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 + 2 * rootNode
             && (!captureOrPromotion || cutNode || !ss->ttPv))
         {
@@ -846,7 +847,7 @@ moves_loop:  // When in check search starts from here.
                 }
             }
         }
-        // Step 13. Full-depth search when LMR is skipped or fails high.
+        // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
             value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
@@ -864,10 +865,10 @@ moves_loop:  // When in check search starts from here.
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
         }
 
-        // Step 14. Undo move
+        // Step 16. Undo move
         undo_move(pos, move);
 
-        // Step 15. Check for a new best move
+        // Step 17. Check for a new best move
         // Finished searching the move. If a stop occurred, the return value of
         // the search cannot be trusted, and we return immediately without
         // updating best move, PV and TT.
@@ -922,7 +923,7 @@ moves_loop:  // When in check search starts from here.
         }
     }
 
-    // Step 16. Check for mate and stalemate
+    // Step 18. Check for mate and stalemate
     // All legal moves have been searched and if there are no legal moves,
     // it must be a mate or a stalemate. If we are in a singular extension
     // search then return a fail low score.
