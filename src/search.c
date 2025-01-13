@@ -1121,9 +1121,9 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                     continue;
                 }
 
-                if (futilityBase <= alpha && !see_test(pos, move, 1))
+                if (!see_test(pos, move, alpha - futilityBase))
                 {
-                    bestValue = max(bestValue, futilityBase);
+                    bestValue = min(alpha, futilityBase);
                     continue;
                 }
             }
