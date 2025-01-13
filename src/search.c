@@ -500,16 +500,8 @@ Value search(
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
-        if (ttMove && ttValue >= beta)
-        {
-            if (!is_capture_or_promotion(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
-
-            // Extra penalty for early quiet moves of the previous ply
-            if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
-                update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              ttct_v2 * -stat_malus(depth + 1) / 128);
-        }
+        if (ttMove && ttValue >= beta && !is_capture_or_promotion(pos, ttMove))
+            update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
 
         // Partial workaround for the graph history interaction problem
         // For high rule50 counts don't produce transposition table cutoffs.
