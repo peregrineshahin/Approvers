@@ -814,10 +814,6 @@ moves_loop:  // When in check search starts from here.
                 if (!ss->checkersBB)
                     r -= ss->statScore / lmr_v8 * r_v13;
             }
-            else
-            {
-                ss->statScore = 0;
-            }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
