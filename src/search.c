@@ -472,17 +472,8 @@ Value search(
     (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
     (ss + 2)->cutoffCnt                         = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
+    ss->statScore = 0;
 
-    // Initialize statScore to zero for the grandchildren of the current
-    // position. So the statScore is shared between all grandchildren and only
-    // the first grandchild starts with startScore = 0. Later grandchildren
-    // start with the last calculated statScore of the previous grandchild.
-    // This influences the reduction rules in LMR which are based on the
-    // statScore of the parent position.
-    if (rootNode)
-        (ss + 4)->statScore = 0;
-    else
-        (ss + 2)->statScore = 0;
 
     // Step 3. Transposition table lookup
     excludedMove = ss->excludedMove;
@@ -611,6 +602,7 @@ Value search(
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
+
         if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
             && ttMove && is_capture_or_promotion(pos, ttMove))
             return probCutBeta;
@@ -775,11 +767,6 @@ moves_loop:  // When in check search starts from here.
         else if (PieceValue[captured_piece()] > PawnValue && low_material(pos))
             extension = 1;
 
-        // Late irreversible move extension
-        if (move == ttMove && rule50_count() > 80
-            && (captureOrPromotion || type_of_p(movedPiece) == PAWN))
-            extension = 2;
-
         // Add extension to new depth
         newDepth += extension;
 
@@ -823,6 +810,10 @@ moves_loop:  // When in check search starts from here.
                 // Decrease/increase reduction for moves with a good/bad history.
                 if (!ss->checkersBB)
                     r -= ss->statScore / lmr_v8 * r_v13;
+            }
+            else
+            {
+                ss->statScore = 0;
             }
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
@@ -906,7 +897,6 @@ moves_loop:  // When in check search starts from here.
                 if (value >= beta)
                 {
                     ss->cutoffCnt += !ttMove + (extension < 2);
-                    ss->statScore = 0;
                     break;
                 }
 
