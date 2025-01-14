@@ -503,12 +503,12 @@ Value search(
 
         // Partial workaround for the graph history interaction problem
         // For high rule50 counts don't produce transposition table cutoffs.
-        if (rule50_count() < 90)
+        if (likely(rule50_count() < 90))
             return ttValue;
     }
 
     // Step 4. Static evaluation of the position
-    if (ss->checkersBB)
+    if (unlikely(ss->checkersBB))
     {
         // Skip early pruning when in check
         unadjustedStaticEval = eval = ss->staticEval = VALUE_NONE;
@@ -524,7 +524,7 @@ Value search(
     else if (ttHit)
     {
         // Never assume anything about values stored in TT
-        if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
+        if (unlikely((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE))
             unadjustedStaticEval = evaluate(pos);
 
         eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
@@ -536,7 +536,7 @@ Value search(
     }
     else
     {
-        if ((ss - 1)->currentMove != MOVE_NULL)
+        if (likely((ss - 1)->currentMove != MOVE_NULL))
             unadjustedStaticEval = evaluate(pos);
         else
             unadjustedStaticEval = -(ss - 1)->staticEval + tempo;
@@ -547,7 +547,7 @@ Value search(
                  unadjustedStaticEval);
     }
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
+    improving = unlikely((ss - 2)->staticEval == VALUE_NONE)
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
@@ -662,7 +662,7 @@ moves_loop:  // When in check search starts from here.
             continue;
 
         // Check for legality
-        if (!is_legal(pos, move))
+        if (unlikely(!is_legal(pos, move)))
             continue;
 
         ss->moveCount = ++moveCount;
@@ -679,7 +679,7 @@ moves_loop:  // When in check search starts from here.
         Depth r = reduction(improving, depth, moveCount);
 
         // Step 11. Pruning at shallow depth
-        if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
+        if (likely(!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY))
         {
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
@@ -818,7 +818,7 @@ moves_loop:  // When in check search starts from here.
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
-            if (value > alpha && d < newDepth)
+            if (unlikely(value > alpha && d < newDepth))
             {
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
@@ -865,7 +865,7 @@ moves_loop:  // When in check search starts from here.
         if (Thread.stop)
             return 0;
 
-        if (rootNode)
+        if (unlikely(rootNode))
         {
             if (moveCount == 1 || value > alpha)
             {
@@ -916,7 +916,7 @@ moves_loop:  // When in check search starts from here.
     // All legal moves have been searched and if there are no legal moves,
     // it must be a mate or a stalemate. If we are in a singular extension
     // search then return a fail low score.
-    if (!moveCount)
+    if (unlikely(!moveCount))
         bestValue = excludedMove ? alpha : ss->checkersBB ? mated_in(ss->ply) : VALUE_DRAW;
     else if (bestMove)
     {
@@ -1027,7 +1027,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         return ttValue;
 
     // Step 4. Static evaluation of the position
-    if (ss->checkersBB)
+    if (unlikely(ss->checkersBB))
     {
         unadjustedStaticEval = VALUE_NONE;
         ss->staticEval       = VALUE_NONE;
@@ -1085,14 +1085,14 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     while ((move = next_move(pos, 0)))
     {
         // Check for legality just before making the move
-        if (!is_legal(pos, move))
+        if (unlikely(!is_legal(pos, move)))
             continue;
 
         givesCheck = gives_check(pos, ss, move);
         moveCount++;
 
         // Step 6. Pruning
-        if (bestValue > VALUE_MATED_IN_MAX_PLY)
+        if (likely(bestValue > VALUE_MATED_IN_MAX_PLY))
         {
             // Futility pruning
             if (!givesCheck && futilityBase > -VALUE_MATE_IN_MAX_PLY
