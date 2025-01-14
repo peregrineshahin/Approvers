@@ -736,7 +736,9 @@ moves_loop:  // When in check search starts from here.
             {
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5)
-                    extension = 2;
+                {
+                    extension = 2 + (value < singularBeta - 200 && !ttCapture);
+                }
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
