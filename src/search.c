@@ -939,12 +939,6 @@ moves_loop:  // When in check search starts from here.
         }
 
         update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
-
-        // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
-        if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
-             || (ss - 1)->currentMove == (ss - 1)->killers[0])
-            && !captured_piece())
-            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
