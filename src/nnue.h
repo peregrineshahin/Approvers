@@ -5,8 +5,8 @@
 
 #include "types.h"
 
-#define INSIZE 768
-#define L1SIZE 64
+#define FT_SIZE 768
+#define L1_SIZE 64
 
 #define SCALE 400
 
@@ -14,7 +14,7 @@ typedef struct Accumulator Accumulator;
 
 struct Accumulator {
     bool needs_refresh;
-    alignas(64) float values[2][L1SIZE];
+    alignas(64) float values[2][L1_SIZE];
 };
 
 void nnue_init();

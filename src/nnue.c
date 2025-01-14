@@ -10,22 +10,22 @@
 
 INCBIN(Network, "../raw.nnue");
 
-alignas(64) float in_weights[INSIZE * L1SIZE];
-alignas(64) float l1_weights[L1SIZE * 2];
+alignas(64) float ft_weights[FT_SIZE * L1_SIZE];
+alignas(64) float ft_biases[L1_SIZE];
 
-alignas(64) float in_biases[L1SIZE];
+alignas(64) float l1_weights[L1_SIZE * 2];
 alignas(64) float l1_bias;
 
 SMALL void nnue_init() {
     float* data = (float*) gNetworkData;
 
-    for (int i = 0; i < INSIZE * L1SIZE; i++)
-        in_weights[i] = *(data++);
+    for (int i = 0; i < FT_SIZE * L1_SIZE; i++)
+        ft_weights[i] = *(data++);
 
-    for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data++);
+    for (int i = 0; i < L1_SIZE; i++)
+        ft_biases[i] = *(data++);
 
-    for (int i = 0; i < L1SIZE * 2; i++)
+    for (int i = 0; i < L1_SIZE * 2; i++)
         l1_weights[i] = *(data++);
 
     l1_bias = *(data);
@@ -48,17 +48,17 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     const float* nstm = acc->values[!pos->sideToMove];
 
     float output = 0;
-    for (int i = 0; i < L1SIZE; i++)
+    for (int i = 0; i < L1_SIZE; i++)
     {
         output += screlu(stm[i]) * l1_weights[i];
-        output += screlu(nstm[i]) * l1_weights[i + L1SIZE];
+        output += screlu(nstm[i]) * l1_weights[i + L1_SIZE];
     }
 
     return (Value) ((output + l1_bias) * SCALE);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    memcpy(acc->values[side], in_biases, L1SIZE * sizeof(float));
+    memcpy(acc->values[side], ft_biases, L1_SIZE * sizeof(float));
 
     const Square ksq = square_of(side, KING);
     for (Bitboard pieces = pieces(); pieces;)
@@ -66,32 +66,32 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
         const Square sq = pop_lsb(&pieces);
         const Piece  pc = piece_on(sq);
 
-        const int index = make_index(type_of_p(pc), color_of(pc), sq, ksq, side) * L1SIZE;
+        const int index = make_index(type_of_p(pc), color_of(pc), sq, ksq, side) * L1_SIZE;
 
-        for (int i = 0; i < L1SIZE; i++)
-            acc->values[side][i] += in_weights[index + i];
+        for (int i = 0; i < L1_SIZE; i++)
+            acc->values[side][i] += ft_weights[index + i];
     }
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1_SIZE;
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1_SIZE;
 
-    for (int i = 0; i < L1SIZE; i++)
+    for (int i = 0; i < L1_SIZE; i++)
     {
-        acc->values[WHITE][i] += in_weights[white + i];
-        acc->values[BLACK][i] += in_weights[black + i];
+        acc->values[WHITE][i] += ft_weights[white + i];
+        acc->values[BLACK][i] += ft_weights[black + i];
     }
 }
 
 void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
-    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
-    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
+    const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1_SIZE;
+    const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1_SIZE;
 
-    for (int i = 0; i < L1SIZE; i++)
+    for (int i = 0; i < L1_SIZE; i++)
     {
-        acc->values[WHITE][i] -= in_weights[white + i];
-        acc->values[BLACK][i] -= in_weights[black + i];
+        acc->values[WHITE][i] -= ft_weights[white + i];
+        acc->values[BLACK][i] -= ft_weights[black + i];
     }
 }
 
