@@ -820,12 +820,9 @@ moves_loop:  // When in check search starts from here.
 
             if (value > alpha && d < newDepth)
             {
-                // Adjust full-depth search based on LMR results - if the result was
-                // good enough search deeper, if it was bad enough search shallower.
-                const bool doDeeperSearch    = value > bestValue + ded_v1;
-                const bool doShallowerSearch = value < bestValue + newDepth;
-
-                newDepth += doDeeperSearch - doShallowerSearch;
+                // Adjust full-depth search based on LMR results
+                // if the result was good enough search deeper
+                newDepth += value > bestValue + ded_v1;
 
                 if (newDepth > d)
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
