@@ -43,42 +43,27 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static int reduce_add(__m256i vector) {
-    __m256i v1 = _mm256_hadd_epi32(vector, vector);
-    __m256i v2 = _mm256_hadd_epi32(v1, v1);
-    return _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
+static Value screlu(const int x) {
+    const int v = max(0, min(QA, x));
+    return v * v;
 }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
-    const __m256i min    = _mm256_setzero_si256();
-    const __m256i max    = _mm256_set1_epi16(QA);
-    __m256i       vector = _mm256_setzero_si256();
+    const int16_t* stm  = acc->values[pos->sideToMove];
+    const int16_t* nstm = acc->values[!pos->sideToMove];
 
-    for (int flip = 0; flip <= 1; flip++)
+    int output = 0;
+    for (int i = 0; i < L1SIZE; i++)
     {
-        __m256i* input   = (__m256i*) acc->values[pos->sideToMove ^ flip];
-        __m256i* weights = (__m256i*) &l1_weights[flip * L1SIZE];
-
-        for (int i = 0; i < L1SIZE / 16; ++i)
-        {
-            __m256i v = _mm256_min_epi16(_mm256_max_epi16(input[i], min), max);
-            __m256i w = _mm256_mullo_epi16(v, weights[i]);
-            vector    = _mm256_add_epi32(vector, _mm256_madd_epi16(w, v));
-        }
+        output += screlu(stm[i]) * (int) l1_weights[i];
+        output += screlu(nstm[i]) * (int) l1_weights[i + L1SIZE];
     }
 
-    const Value output = reduce_add(vector);
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    const __m256i* biases                 = (__m256i*) in_biases;
-    __m256i        registers[L1SIZE / 16] = {
-      biases[0],
-      biases[1],
-      biases[2],
-      biases[3],
-    };
+    memcpy(acc->values[side], in_biases, L1SIZE * sizeof(int16_t));
 
     const Square ksq = square_of(side, KING);
     for (Bitboard pieces = pieces(); pieces;)
@@ -86,36 +71,21 @@ static void build_accumulator(Accumulator* acc, const Position* pos, Color side)
         const Square sq = pop_lsb(&pieces);
         const Piece  pc = piece_on(sq);
 
-        const int      index   = make_index(type_of_p(pc), color_of(pc), sq, ksq, side);
-        const __m256i* weights = (__m256i*) &in_weights[index * L1SIZE];
+        const int index = make_index(type_of_p(pc), color_of(pc), sq, ksq, side) * L1SIZE;
 
-        registers[0] = _mm256_add_epi16(registers[0], weights[0]);
-        registers[1] = _mm256_add_epi16(registers[1], weights[1]);
-        registers[2] = _mm256_add_epi16(registers[2], weights[2]);
-        registers[3] = _mm256_add_epi16(registers[3], weights[3]);
+        for (int i = 0; i < L1SIZE; i++)
+            acc->values[side][i] += in_weights[index + i];
     }
-
-    __m256i* values = (__m256i*) &acc->values[side];
-    values[0]       = registers[0];
-    values[1]       = registers[1];
-    values[2]       = registers[2];
-    values[3]       = registers[3];
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
-    for (int i = 0; i < L1SIZE; i += 16)
+    for (int i = 0; i < L1SIZE; i++)
     {
-        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
-        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
-
-        w_acc = _mm256_adds_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
-        b_acc = _mm256_adds_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
-
-        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
-        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
+        acc->values[WHITE][i] += in_weights[white + i];
+        acc->values[BLACK][i] += in_weights[black + i];
     }
 }
 
@@ -123,16 +93,10 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
     const int white = make_index(type_of_p(pc), color_of(pc), sq, wksq, WHITE) * L1SIZE;
     const int black = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK) * L1SIZE;
 
-    for (int i = 0; i < L1SIZE; i += 16)
+    for (int i = 0; i < L1SIZE; i++)
     {
-        __m256i w_acc = _mm256_load_si256((__m256i*) &acc->values[WHITE][i]);
-        __m256i b_acc = _mm256_load_si256((__m256i*) &acc->values[BLACK][i]);
-
-        w_acc = _mm256_subs_epi16(w_acc, _mm256_load_si256((__m256i*) &in_weights[white + i]));
-        b_acc = _mm256_subs_epi16(b_acc, _mm256_load_si256((__m256i*) &in_weights[black + i]));
-
-        _mm256_store_si256((__m256i*) &acc->values[WHITE][i], w_acc);
-        _mm256_store_si256((__m256i*) &acc->values[BLACK][i], b_acc);
+        acc->values[WHITE][i] -= in_weights[white + i];
+        acc->values[BLACK][i] -= in_weights[black + i];
     }
 }
 
