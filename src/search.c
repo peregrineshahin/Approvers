@@ -832,7 +832,7 @@ moves_loop:  // When in check search starts from here.
 
                 if (!captureOrPromotion)
                 {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
+                    int bonus = (value >= beta) * 2048;
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
                 }
             }
