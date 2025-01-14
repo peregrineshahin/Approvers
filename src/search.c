@@ -687,7 +687,13 @@ moves_loop:  // When in check search starts from here.
             // Reduced depth of the next LMR search
             int lmrDepth = max(newDepth - r, 0);
 
-            if (!captureOrPromotion && !givesCheck)
+            if (captureOrPromotion || givesCheck)
+            {
+                // SEE based pruning
+                if (!see_test(pos, move, -scsee_v1 * depth))
+                    continue;
+            }
+            else
             {
                 // Countermoves based pruning
                 if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
@@ -707,9 +713,6 @@ moves_loop:  // When in check search starts from here.
                 if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
                     continue;
             }
-            // SEE based pruning
-            else if (!see_test(pos, move, -scsee_v1 * depth))
-                continue;
         }
 
         // Step 12. Extensions
@@ -792,7 +795,9 @@ moves_loop:  // When in check search starts from here.
             if (cutNode)
                 r += r_v8 + r_v9 * !captureOrPromotion;
 
-            if (!captureOrPromotion)
+            if (captureOrPromotion)
+                ss->statScore = 0;
+            else
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
@@ -805,14 +810,10 @@ moves_loop:  // When in check search starts from here.
                               + (*contHist1)[movedPiece][to_sq(move)]
                               + (*contHist2)[movedPiece][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+            }
 
-                // Decrease/increase reduction for moves with a good/bad history.
-                r -= ss->statScore / lmr_v8 * r_v13;
-            }
-            else
-            {
-                ss->statScore = 0;
-            }
+            // Decrease/increase reduction for moves with a good/bad history.
+            r -= ss->statScore / lmr_v8 * r_v13;
 
             Depth d = clamp(newDepth - r / 1000, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
