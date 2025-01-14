@@ -156,11 +156,6 @@ PARAM(tm_v3, 657, 63)
 PARAM(tm_v4, 809, 40)
 PARAM(tm_v5, 52, 7)
 PARAM(tm_v6, 155, 7)
-PARAM(tm_v7, 869, 75)
-PARAM(tm_v8, 187, 17)
-PARAM(tm_v9, 101, 11)
-PARAM(tm_v10, 147, 7)
-PARAM(tm_v11, 216, 16)
 PARAM(tm_v13, 89, 4)
 PARAM(tm_v14, 296, 14)
 PARAM(tm_v15, 248, 14)
@@ -171,6 +166,9 @@ PARAM(tm_v19, 1186, 14)
 PARAM(tm_v20, 801, 14)
 PARAM(tm_v21, 100, 4)
 PARAM(tm_v22, 170, 7)
+PARAM(tm_v23, 8, 0.5)
+PARAM(tm_v24, 120, 2)
+PARAM(tm_v25, 50, 1)
 
 LimitsType Limits;
 
@@ -380,7 +378,7 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
-        pvStability = pv->line[0] == lastMove ? min(pvStability + 1, 8) : 0;
+        pvStability = pv->line[0] == lastMove ? min(pvStability + 1, tm_v23) : 0;
         lastMove    = pv->line[0];
 
 // Do we have time for the next iteration? Can we stop searching now?
@@ -395,7 +393,7 @@ void thread_search(Position* pos) {
                                / (double) tm_v4;
             fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
 
-            double pvFactor = 1.2 - 0.05 * pvStability;
+            double pvFactor = (tm_v24 / 100.0) - (tm_v25 / 1000.0) * pvStability;
 
             // Use part of the gained time from a previous stable move for this move
             totBestMoveChanges += Thread.pos->bestMoveChanges;
