@@ -218,13 +218,11 @@ static Bitboard blockers_for_king(const Position* pos, Color c) {
     return pos->st->blockersForKing[c];
 }
 
-static bool is_capture_or_promotion(const Position* pos, Move m) {
-    return type_of_m(m) != NORMAL ? type_of_m(m) != CASTLING : !is_empty(to_sq(m));
-}
-
-static bool is_capture(const Position* pos, Move m) {
-    // Castling is encoded as "king captures the rook"
-    return (!is_empty(to_sq(m)) && type_of_m(m) != CASTLING) || type_of_m(m) == ENPASSANT;
+static bool capture_stage(const Position* pos, Move m) {
+    // Castling is encoded as "king captures the rook" but excluded
+    // All queen promos are included as captures
+    return (!is_empty(to_sq(m)) && type_of_m(m) != CASTLING) || type_of_m(m) == ENPASSANT
+        || promotion_type(m) == QUEEN;
 }
 
 static bool gives_check(const Position* pos, Stack* st, Move m) {
