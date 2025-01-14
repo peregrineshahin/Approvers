@@ -11,10 +11,20 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * 2];
+alignas(64) int16_t l1_weights[L1SIZE * 2] = {
+  -43, -42, 38,  -43, -44, -42, -40, 35,  42,  -44, 20,  41,  40,  42,  -41, -43, 43,  -43, -40,
+  -40, 41,  -41, -35, 40,  42,  -38, -41, -40, 43,  -40, 42,  -43, -42, 40,  39,  41,  37,  -41,
+  -43, -41, 40,  42,  -36, -29, 42,  41,  -43, 42,  -44, 40,  39,  -41, -40, 40,  -43, 39,  41,
+  -42, 35,  42,  42,  39,  -39, -42, 40,  41,  -42, 43,  42,  41,  43,  -34, -28, 43,  -21, -41,
+  -43, -41, 43,  36,  -42, 43,  41,  44,  -41, 40,  43,  -40, -43, 42,  42,  42,  -40, 43,  -42,
+  39,  41,  -35, -40, -42, -40, 42,  44,  41,  -39, -42, 42,  31,  -42, -41, 43,  -41, 41,  -42,
+  -42, 41,  39,  -42, 40,  -44, -43, 41,  -32, -41, -41, -41, 43,  40};
 
-alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_bias;
+alignas(64) int16_t in_biases[L1SIZE] = {
+  118, 48, 93, -87, -54, 40,  15,  49, -62, 1,  27,  95,  74,  69, 6,  -22, 62, 37,  14, 76, 35, -2,
+  7,   44, -8, 62,  82,  32,  25,  16, 88,  58, 92,  0,   18,  21, 82, 10,  15, 14,  -7, 45, -6, 4,
+  -38, 64, 79, 35,  0,   -45, -28, 27, 93,  14, -47, -62, -56, 41, 17, 81,  38, 125, 34, 58};
+alignas(64) int16_t l1_bias = 532;
 
 SMALL void nnue_init() {
     int8_t* data = (int8_t*) gNetworkData;
@@ -27,13 +37,13 @@ SMALL void nnue_init() {
             in_weights[i] = *(data++);
     }
 
-    for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data++);
-
-    for (int i = 0; i < L1SIZE * 2; i++)
-        l1_weights[i] = *(data++);
-
-    l1_bias = *((int16_t*) data);
+    // for (int i = 0; i < L1SIZE; i++)
+    //     in_biases[i] = *(data++);
+    //
+    // for (int i = 0; i < L1SIZE * 2; i++)
+    //     l1_weights[i] = *(data++);
+    //
+    // l1_bias = *((int16_t*) data);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
