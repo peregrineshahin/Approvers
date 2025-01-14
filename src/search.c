@@ -807,8 +807,7 @@ moves_loop:  // When in check search starts from here.
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
 
                 // Decrease/increase reduction for moves with a good/bad history.
-                if (!ss->checkersBB)
-                    r -= ss->statScore / lmr_v8 * r_v13;
+                r -= ss->statScore / lmr_v8 * r_v13;
             }
             else
             {
