@@ -8,13 +8,19 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../raw.nnue");
+INCBIN(Network, "../morelayers.nnue");
 
 alignas(64) float ft_weights[FT_SIZE * L1_SIZE];
 alignas(64) float ft_biases[L1_SIZE];
 
-alignas(64) float l1_weights[L1_SIZE * 2];
-alignas(64) float l1_bias;
+alignas(64) float l1_weights[L1_SIZE][L2_SIZE];
+alignas(64) float l1_biases[L2_SIZE];
+
+alignas(64) float l2_weights[L2_SIZE][L3_SIZE];
+alignas(64) float l2_biases[L3_SIZE];
+
+alignas(64) float l3_weights[L3_SIZE];
+alignas(64) float l3_biases[1];
 
 SMALL void nnue_init() {
     float* data = (float*) gNetworkData;
@@ -25,10 +31,24 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1_SIZE; i++)
         ft_biases[i] = *(data++);
 
-    for (int i = 0; i < L1_SIZE * 2; i++)
-        l1_weights[i] = *(data++);
+    for (int i = 0; i < L1_SIZE; i++)
+        for (int j = 0; j < L2_SIZE; j++)
+            l1_weights[i][j] = *(data++);
 
-    l1_bias = *(data);
+    for (int i = 0; i < L2_SIZE; i++)
+        l1_biases[i] = *(data++);
+
+    for (int i = 0; i < L2_SIZE; i++)
+        for (int j = 0; j < L3_SIZE; j++)
+            l2_weights[i][j] = *(data++);
+
+    for (int i = 0; i < L3_SIZE; i++)
+        l2_biases[i] = *(data++);
+
+    for (int i = 0; i < L3_SIZE; i++)
+        l3_weights[i] = *(data++);
+
+    l3_biases[0] = *data;
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -38,23 +58,53 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static float screlu(const float x) {
-    const float v = max(0.0, min(1.0, x));
-    return v * v;
-}
+static float crelu(const float x) { return clamp(x, 0.0, 1.0); }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
-    const float* stm  = acc->values[pos->sideToMove];
-    const float* nstm = acc->values[!pos->sideToMove];
+    float ftOutput[L1_SIZE] = {0};
+    float l1Output[L2_SIZE] = {0};
+    float l2Output[L3_SIZE] = {0};
 
-    float output = 0;
-    for (int i = 0; i < L1_SIZE; i++)
+    // accumulators -> l1 (pairwise CReLU)
+    for (int flip = 0; flip <= 1; flip++)
     {
-        output += screlu(stm[i]) * l1_weights[i];
-        output += screlu(nstm[i]) * l1_weights[i + L1_SIZE];
+        const float* input = acc->values[pos->sideToMove ^ flip];
+        for (int i = 0; i < L1_SIZE / 2; ++i)
+        {
+            const float left  = crelu(input[i]);
+            const float right = crelu(input[i + L1_SIZE / 2]);
+
+            ftOutput[flip * L1_SIZE / 2 + i] = left * right;
+        }
     }
 
-    return (Value) ((output + l1_bias) * SCALE);
+    // l1 -> l2 (CReLU)
+    for (int i = 0; i < L2_SIZE; i++)
+    {
+        float sum = l1_biases[i];
+        for (int j = 0; j < L1_SIZE; j++)
+            sum += ftOutput[j] * l1_weights[j][i];
+
+        l1Output[i] = crelu(sum);
+    }
+
+    // l2 -> l3 (CReLU)
+    for (int i = 0; i < L3_SIZE; i++)
+    {
+        float sum = l2_biases[i];
+        for (int j = 0; j < L2_SIZE; j++)
+            sum += l1Output[j] * l2_weights[j][i];
+
+        l2Output[i] = crelu(sum);
+    }
+
+    // l3 -> output (linear)
+    float sum = 0;
+    for (int i = 0; i < L3_SIZE; ++i)
+        sum += l2Output[i] * l3_weights[i];
+
+    const float output = sum + l3_biases[0];
+    return (Value) (output * SCALE);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {

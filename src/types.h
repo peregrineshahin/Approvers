@@ -293,6 +293,7 @@ typedef struct ExtMove ExtMove;
 #define MAX(T) \
     static T max_##T(T a, T b) { return a > b ? a : b; }
 MAX(int)
+MAX(float)
 MAX(uint64_t)
 MAX(unsigned)
 MAX(int64_t)
@@ -306,6 +307,7 @@ MAX(long)
 #define MIN(T) \
     static T min_##T(T a, T b) { return a < b ? a : b; }
 MIN(int)
+MIN(float)
 MIN(uint64_t)
 MIN(unsigned)
 MIN(int64_t)
@@ -319,6 +321,7 @@ MIN(long)
 #define CLAMP(T) \
     static T clamp_##T(T a, T b, T c) { return a < b ? b : a > c ? c : a; }
 CLAMP(int)
+CLAMP(float)
 CLAMP(uint64_t)
 CLAMP(unsigned)
 CLAMP(int64_t)
@@ -329,29 +332,16 @@ CLAMP(size_t)
 CLAMP(long)
 #undef CLAMP
 
-#ifndef __APPLE__
-    #define TEMPLATE(F, a, ...) \
-        _Generic((a), \
-          int: F##_int, \
-          uint64_t: F##_uint64_t, \
-          unsigned: F##_unsigned, \
-          int64_t: F##_int64_t, \
-          int16_t: F##_int16_t, \
-          uint8_t: F##_uint8_t, \
-          double: F##_double)(a, __VA_ARGS__)
-#else
-    #define TEMPLATE(F, a, ...) \
-        _Generic((a), \
-          int: F##_int, \
-          uint64_t: F##_uint64_t, \
-          unsigned: F##_unsigned, \
-          int64_t: F##_int64_t, \
-          int16_t: F##_int16_t, \
-          uint8_t: F##_uint8_t, \
-          size_t: F##_size_t, \
-          long: F##_long, \
-          double: F##_double)(a, __VA_ARGS__)
-#endif
+#define TEMPLATE(F, a, ...) \
+    _Generic((a), \
+      int: F##_int, \
+      float: F##_float, \
+      uint64_t: F##_uint64_t, \
+      unsigned: F##_unsigned, \
+      int64_t: F##_int64_t, \
+      int16_t: F##_int16_t, \
+      uint8_t: F##_uint8_t, \
+      double: F##_double)(a, __VA_ARGS__)
 
 #define max(a, b) TEMPLATE(max, a, b)
 #define min(a, b) TEMPLATE(min, a, b)
