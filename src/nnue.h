@@ -8,15 +8,13 @@
 #define INSIZE 768
 #define L1SIZE 64
 
-#define QA 192
-#define QB 64
 #define SCALE 400
 
 typedef struct Accumulator Accumulator;
 
 struct Accumulator {
     bool needs_refresh;
-    alignas(64) int16_t values[2][L1SIZE];
+    alignas(64) float values[2][L1SIZE];
 };
 
 void nnue_init();

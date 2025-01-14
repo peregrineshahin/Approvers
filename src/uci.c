@@ -28,6 +28,8 @@
 #include "tt.h"
 #include "uci.h"
 
+#include "evaluate.h"
+
 #ifndef KAGGLE
 extern void benchmark();
 
@@ -267,6 +269,11 @@ SMALL void uci_loop(int argc, char** argv) {
         else if (strcmp(token, "isready") == 0)
         {
             printf("readyok\n");
+            fflush(stdout);
+        }
+        else if (strcmp(token, "eval") == 0)
+        {
+            printf("Eval: %d\n", evaluate(&pos));
             fflush(stdout);
         }
         else if (strcmp(token, "setoption") == 0)

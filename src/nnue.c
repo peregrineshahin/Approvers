@@ -8,24 +8,19 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../raw.nnue");
 
-alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * 2];
+alignas(64) float in_weights[INSIZE * L1SIZE];
+alignas(64) float l1_weights[L1SIZE * 2];
 
-alignas(64) int16_t in_biases[L1SIZE];
-alignas(64) int16_t l1_bias;
+alignas(64) float in_biases[L1SIZE];
+alignas(64) float l1_bias;
 
 SMALL void nnue_init() {
-    int8_t* data = (int8_t*) gNetworkData;
+    float* data = (float*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data++);
-    }
+        in_weights[i] = *(data++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
@@ -33,7 +28,7 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1SIZE * 2; i++)
         l1_weights[i] = *(data++);
 
-    l1_bias = *((int16_t*) data);
+    l1_bias = *(data);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -43,27 +38,27 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static Value screlu(const int x) {
-    const int v = max(0, min(QA, x));
+static float screlu(const float x) {
+    const float v = max(0.0, min(1.0, x));
     return v * v;
 }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
-    const int16_t* stm  = acc->values[pos->sideToMove];
-    const int16_t* nstm = acc->values[!pos->sideToMove];
+    const float* stm  = acc->values[pos->sideToMove];
+    const float* nstm = acc->values[!pos->sideToMove];
 
-    int output = 0;
+    float output = 0;
     for (int i = 0; i < L1SIZE; i++)
     {
-        output += screlu(stm[i]) * (int) l1_weights[i];
-        output += screlu(nstm[i]) * (int) l1_weights[i + L1SIZE];
+        output += screlu(stm[i]) * l1_weights[i];
+        output += screlu(nstm[i]) * l1_weights[i + L1SIZE];
     }
 
-    return (output / QA + l1_bias) * SCALE / (QA * QB);
+    return (Value) ((output + l1_bias) * SCALE);
 }
 
 static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    memcpy(acc->values[side], in_biases, L1SIZE * sizeof(int16_t));
+    memcpy(acc->values[side], in_biases, L1SIZE * sizeof(float));
 
     const Square ksq = square_of(side, KING);
     for (Bitboard pieces = pieces(); pieces;)
