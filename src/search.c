@@ -1222,22 +1222,25 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 }
 
 // Updates histories of the move pairs formed by moves
-// at ply -1, -2, -4, and -6 with current move.
 static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
-    if (move_is_ok((ss - 1)->currentMove))
-        update_contHist(*(ss - 1)->continuationHistory, pc, s, cnht_v1 * bonus / 1024);
+    static const int conthist_indices[] = {1, 2, 3, 4, 5, 6};
+    static const int conthist_weights[] = {1025, 621, 325, 512, 122, 534};
+    const int        num_bonuses        = sizeof(conthist_indices) / sizeof(conthist_indices[0]);
 
-    if (move_is_ok((ss - 2)->currentMove))
-        update_contHist(*(ss - 2)->continuationHistory, pc, s, cnht_v2 * bonus / 1024);
+    for (int j = 0; j < num_bonuses; ++j)
+    {
+        int i      = conthist_indices[j];
+        int weight = conthist_weights[j];
 
-    if (ss->checkersBB)
-        return;
+        // Only update the first 2 continuation histories if we are in check
+        if (ss->checkersBB && i > 2)
+            break;
 
-    if (move_is_ok((ss - 4)->currentMove))
-        update_contHist(*(ss - 4)->continuationHistory, pc, s, cnht_v3 * bonus / 1024);
-
-    if (move_is_ok((ss - 6)->currentMove))
-        update_contHist(*(ss - 6)->continuationHistory, pc, s, cnht_v4 * bonus / 1024);
+        if (move_is_ok((ss - i)->currentMove))
+        {
+            update_contHist(*(ss - i)->continuationHistory, pc, s, (bonus * weight) / 1024);
+        }
+    }
 }
 
 // Updates move sorting heuristics when a new capture best move is found

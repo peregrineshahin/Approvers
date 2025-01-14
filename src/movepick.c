@@ -71,8 +71,11 @@ SMALL static void score_quiets(const Position* pos) {
 
     PieceToHistory* contHist0 = (st - 1)->continuationHistory;
     PieceToHistory* contHist1 = (st - 2)->continuationHistory;
-    PieceToHistory* contHist2 = (st - 4)->continuationHistory;
-    PieceToHistory* contHist3 = (st - 6)->continuationHistory;
+    PieceToHistory* contHist2 = (st - 3)->continuationHistory;
+    PieceToHistory* contHist3 = (st - 4)->continuationHistory;
+    PieceToHistory* contHist4 = (st - 5)->continuationHistory;
+    PieceToHistory* contHist5 = (st - 5)->continuationHistory;
+
 
     Color c = stm();
 
@@ -82,11 +85,10 @@ SMALL static void score_quiets(const Position* pos) {
         Square   to   = move & 63;
         Square   from = move >> 6;
 
-        m->value =
-          (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[piece_on(from)][to]
-           + mp_v6 * (*contHist1)[piece_on(from)][to] + mp_v7 * (*contHist2)[piece_on(from)][to]
-           + mp_v8 * (*contHist3)[piece_on(from)][to])
-          / 128;
+        m->value = 2 * (*history)[c][move] + (*contHist0)[piece_on(from)][to]
+                 + (*contHist1)[piece_on(from)][to] + (*contHist2)[piece_on(from)][to]
+                 + (*contHist3)[piece_on(from)][to] + (*contHist4)[piece_on(from)][to]
+                 + (*contHist5)[piece_on(from)][to];
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
     }
