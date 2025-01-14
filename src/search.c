@@ -729,7 +729,8 @@ moves_loop:  // When in check search starts from here.
             Depth singularDepth = (depth - 1) / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
-            value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
+            value            = search(pos, ss, singularBeta - 1, singularBeta, singularDepth,
+                                      cutNode && !ss->ttPv, false);
             ss->excludedMove = 0;
 
             if (value < singularBeta)
