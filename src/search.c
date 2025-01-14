@@ -590,6 +590,8 @@ Value search(
 
         if (nullValue >= beta)
             return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
+        else if (depth > 1 && depth < 14)
+            depth--;
     }
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
