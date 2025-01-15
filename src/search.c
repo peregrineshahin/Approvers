@@ -1191,9 +1191,19 @@ static Value value_from_tt(Value v, int ply, int r50c) {
     return v;
 }
 
+static Key weirdo_key(const Position* pos) {
+    Key hash = pawn_key();
+    hash ^= w_nonpawn_key() * 0xff51afd7ed558ccdULL;
+    hash ^= b_nonpawn_key() * 0xc4ceb9fe1a85ec53ULL;
+    hash ^= hash >> 33;
+    hash *= 0xc4ceb9fe1a85ec53ULL;
+    hash ^= hash >> 33;
+    return hash;
+}
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
-    Key keys[] = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
+    Key keys[] = {material_key(),  pawn_key(),      prev_move_key(),
+                  w_nonpawn_key(), b_nonpawn_key(), weirdo_key(pos)};
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
@@ -1209,8 +1219,9 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 }
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
-    Key keys[]    = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8};
+    Key keys[]    = {material_key(),  pawn_key(),      prev_move_key(),
+                     w_nonpawn_key(), b_nonpawn_key(), weirdo_key(pos)};
+    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8, 128};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
