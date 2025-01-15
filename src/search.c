@@ -1217,6 +1217,10 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
         correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
 
     Value v = unadjustedStaticEval + correction / 128 / ch_v2;
+
+    // Damp down the evaluation linearly when shuffling
+    v = v * (100 - rule50_count()) / 100;
+
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
