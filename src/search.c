@@ -699,9 +699,9 @@ moves_loop:  // When in check search starts from here.
                     continue;
 
                 // Futility pruning: parent node
-                if (lmrDepth < fpp_v1 && !ss->checkersBB
+                if (!ss->checkersBB
                     && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
-                           + fpp_v3 * lmrDepth
+                           + 25 * lmrDepth * lmrDepth + 90
                          <= alpha)
                     continue;
 
