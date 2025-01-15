@@ -449,7 +449,7 @@ Value search(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
-    bool     captureOrPromotion, moveCountPruning;
+    bool     capture, moveCountPruning;
     bool     ttCapture;
     Piece    movedPiece;
     int      moveCount, captureCount, quietCount;
@@ -480,7 +480,7 @@ Value search(
     tte          = tt_probe(posKey, &ttHit);
     ttValue      = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
     ttMove       = ttHit ? tte_move(tte) : 0;
-    ttCapture    = ttMove && is_capture_or_promotion(pos, ttMove);
+    ttCapture    = ttMove && capture_stage(pos, ttMove);
 
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
@@ -492,7 +492,7 @@ Value search(
         // If ttMove is quiet, update move sorting heuristics on TT hit
         if (ttMove && ttValue >= beta)
         {
-            if (!is_capture_or_promotion(pos, ttMove))
+            if (!capture_stage(pos, ttMove))
                 update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
 
             // Extra penalty for early quiet moves of the previous ply
@@ -603,7 +603,7 @@ Value search(
     {
 
         if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && is_capture_or_promotion(pos, ttMove))
+            && ttMove && capture_stage(pos, ttMove))
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
@@ -614,7 +614,7 @@ Value search(
         while ((move = next_move(pos, 0)) && probCutCount)
             if (move != excludedMove && is_legal(pos, move))
             {
-                captureOrPromotion = true;
+                capture = true;
                 probCutCount--;
 
                 ss->currentMove         = move;
@@ -667,9 +667,9 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        extension          = 0;
-        captureOrPromotion = is_capture_or_promotion(pos, move);
-        movedPiece         = moved_piece(move);
+        extension  = 0;
+        capture    = capture_stage(pos, move);
+        movedPiece = moved_piece(move);
 
         givesCheck = gives_check(pos, ss, move);
 
@@ -687,7 +687,7 @@ moves_loop:  // When in check search starts from here.
             // Reduced depth of the next LMR search
             int lmrDepth = max(newDepth - r, 0);
 
-            if (captureOrPromotion || givesCheck)
+            if (capture || givesCheck)
             {
                 // SEE based pruning
                 if (!see_test(pos, move, -scsee_v1 * depth))
@@ -785,17 +785,16 @@ moves_loop:  // When in check search starts from here.
         r = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
-        if (depth >= 2 && moveCount > 1 + 2 * rootNode
-            && (!captureOrPromotion || cutNode || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1 + 2 * rootNode && (!capture || cutNode || !ss->ttPv))
         {
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2;
 
             if (cutNode)
-                r += r_v8 + r_v9 * !captureOrPromotion;
+                r += r_v8 + r_v9 * !capture;
 
-            if (captureOrPromotion)
+            if (capture)
                 ss->statScore = 0;
             else
             {
@@ -830,7 +829,7 @@ moves_loop:  // When in check search starts from here.
                 if (newDepth > d)
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
 
-                if (!captureOrPromotion)
+                if (!capture)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
                     update_continuation_histories(ss, movedPiece, to_sq(move), bonus);
@@ -905,7 +904,7 @@ moves_loop:  // When in check search starts from here.
 
         if (move != bestMove && moveCount < 32)
         {
-            if (captureOrPromotion)
+            if (capture)
                 capturesSearched[captureCount++] = move;
             else
                 quietsSearched[quietCount++] = move;
@@ -921,7 +920,7 @@ moves_loop:  // When in check search starts from here.
     else if (bestMove)
     {
         // Quiet best move: update move sorting heuristics
-        if (!is_capture_or_promotion(pos, bestMove))
+        if (!capture_stage(pos, bestMove))
         {
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
@@ -980,7 +979,7 @@ moves_loop:  // When in check search starts from here.
                  depth, bestMove, unadjustedStaticEval);
 
     // Adjust correction history
-    if (!ss->checkersBB && (!bestMove || !is_capture_or_promotion(pos, bestMove))
+    if (!ss->checkersBB && (!bestMove || !capture_stage(pos, bestMove))
         && !(bestValue >= beta && bestValue <= ss->staticEval)
         && !(!bestMove && bestValue >= ss->staticEval))
     {
@@ -1246,7 +1245,7 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     Piece moved_piece = moved_piece(move);
     int   captured    = type_of_p(piece_on(to_sq(move)));
 
-    if (is_capture_or_promotion(pos, move))
+    if (capture_stage(pos, move))
         cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, stat_bonus(depth));
 
     Value malus = -stat_malus(depth);

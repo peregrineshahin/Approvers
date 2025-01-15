@@ -102,7 +102,7 @@ static void score_evasions(const Position* pos) {
     Color             c         = stm();
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
-        if (is_capture(pos, m->move))
+        if (capture_stage(pos, m->move))
             m->value = PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
