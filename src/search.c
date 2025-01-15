@@ -91,7 +91,6 @@ PARAM(se_v5, 27, 3.6)
 PARAM(prb_v1, 120, 14.4)
 PARAM(prb_v2, 47, 4.8)
 PARAM(lmr_v3, 3689, 300.0)
-PARAM(lmr_v8, 14516, 150.0)
 PARAM(hb_v1, 925, 75.0)
 PARAM(hb_v2, 199, 18.0)
 PARAM(hb_v3, 145, 24.0)
@@ -812,9 +811,9 @@ moves_loop:  // When in check search starts from here.
             }
 
             // Decrease/increase reduction for moves with a good/bad history.
-            r -= ss->statScore / lmr_v8 * r_v13;
+            r -= ss->statScore * r_v13 / 16384;
 
-            Depth d = clamp(newDepth - r / 1000, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
