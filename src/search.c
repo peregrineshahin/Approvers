@@ -723,7 +723,7 @@ moves_loop:  // When in check search starts from here.
             && !excludedMove  // No recursive singular search
                               /* &&  ttValue != VALUE_NONE implicit in the next condition */
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - 3)
+            && tte_depth(tte) >= depth - 2)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 128;
             Depth singularDepth = newDepth / 2;
