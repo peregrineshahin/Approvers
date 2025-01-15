@@ -585,7 +585,7 @@ Value search(
         undo_null_move(pos);
 
         if (nullValue >= beta)
-            return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
+            return beta;
     }
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
