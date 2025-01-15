@@ -141,7 +141,8 @@ PARAM(r_v7, 1087, 150.0)
 PARAM(r_v8, 1325, 150.0)
 PARAM(r_v9, 920, 150.0)
 PARAM(r_v13, 998, 50.0)
-PARAM(ded_v1, 63, 7.2)
+PARAM(ded_v1, 52, 7.2)
+PARAM(ded_v2, 3, 0.5)
 PARAM(qb_v1, 182, 18.0)
 PARAM(qb_v2, 185, 18.0)
 PARAM(cms_v1, 29166, 300.0)
@@ -818,7 +819,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
-                const bool doDeeperSearch    = value > bestValue + ded_v1;
+                const bool doDeeperSearch    = value > bestValue + ded_v1 + ded_v2 * newDepth;
                 const bool doShallowerSearch = value < bestValue + newDepth;
 
                 newDepth += doDeeperSearch - doShallowerSearch;
