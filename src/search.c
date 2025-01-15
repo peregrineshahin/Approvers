@@ -791,6 +791,9 @@ moves_loop:  // When in check search starts from here.
             if (cutNode)
                 r += r_v8 + r_v9 * !capture;
 
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
             if (capture)
                 ss->statScore = 0;
             else
@@ -798,9 +801,6 @@ moves_loop:  // When in check search starts from here.
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
 
                 ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
                               + (*contHist1)[movedPiece][to_sq(move)]
