@@ -43,10 +43,10 @@ void tt_free(void) {
 }
 
 
-// tt_allocate() allocates the transposition table, measured in megabytes.
+// tt_allocate() allocates the transposition table, measured in kilobytes.
 
-void tt_allocate(size_t mbSize) {
-    TT.clusterCount = mbSize * 1024 * 1024 / sizeof(Cluster);
+void tt_allocate(size_t kbSize) {
+    TT.clusterCount = kbSize * 1024 / sizeof(Cluster);
     size_t size     = TT.clusterCount * sizeof(Cluster);
 
 #ifdef _WIN32
