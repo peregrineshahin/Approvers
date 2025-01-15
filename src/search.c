@@ -448,12 +448,13 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, inCheck;
     bool     capture, moveCountPruning;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
+    inCheck   = checkers();
     moveCount = captureCount = quietCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
 
@@ -618,7 +619,7 @@ Value search(
 
                 ss->currentMove = move;
                 ss->continuationHistory =
-                  &(*pos->contHist)[stm()][type_of_p(moved_piece(move))][to_sq(move)];
+                  &(*pos->contHist)[inCheck][type_of_p(moved_piece(move))][to_sq(move)];
                 givesCheck = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
@@ -780,7 +781,7 @@ moves_loop:  // When in check search starts from here.
 
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[inCheck][movedPiece][to_sq(move)];
 
         r = r * r_v1;
 
@@ -997,13 +998,14 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     Key      posKey;
     Move     ttMove, move, bestMove;
     Value    bestValue, value, unadjustedStaticEval, ttValue, futilityValue, futilityBase;
-    bool     ttHit, pvHit, givesCheck;
+    bool     ttHit, pvHit, givesCheck, inCheck;
     Depth    ttDepth;
     int      moveCount;
 
     // Step 1. Initialize node
     bestMove  = 0;
     moveCount = 0;
+    inCheck   = checkers();
 
     // Step 2. Check for an immediate draw or maximum ply reached
     if (is_draw(pos) || ss->ply >= MAX_PLY)
@@ -1129,7 +1131,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[inCheck][movedPiece][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
