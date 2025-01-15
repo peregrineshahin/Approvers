@@ -30,7 +30,6 @@
 
 
 extern const char PieceToChar[];
-extern Key        matKey[16];
 
 struct Zob {
     Key psq[16][64];
@@ -48,7 +47,6 @@ void zob_init(void);
 struct Stack {
     // Copied when making a move
     Key pawnKey;
-    Key materialKey;
     Key nonPawnKey[2];
     union {
         struct {
@@ -202,7 +200,6 @@ PURE bool has_game_cycle(const Position* pos, int ply);
 
 // Accessing hash keys
 #define key() (pos->st->key)
-#define material_key() (pos->st->materialKey)
 #define pawn_key() (pos->st->pawnKey)
 #define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
 #define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])

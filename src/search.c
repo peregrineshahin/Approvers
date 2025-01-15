@@ -108,7 +108,6 @@ PARAM(qsf_v1, 193, 18.0)
 PARAM(ch_v1, 22, 3.6)
 PARAM(ch_v2, 175, 18.0)
 PARAM(ch_v3, 248, 24.0)
-PARAM(ch_v4, 96, 12.0)
 PARAM(ch_v5, 137, 12.0)
 PARAM(ch_v6, 131, 12.0)
 PARAM(ch_v7, 119, 12.0)
@@ -1190,7 +1189,7 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
-    Key keys[] = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
+    Key keys[] = {pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
@@ -1206,8 +1205,8 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 }
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
-    Key keys[]    = {material_key(), pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8};
+    Key keys[]    = {pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key()};
+    int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
