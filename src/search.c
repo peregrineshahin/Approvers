@@ -613,12 +613,13 @@ Value search(
         while ((move = next_move(pos, 0)) && probCutCount)
             if (move != excludedMove && is_legal(pos, move))
             {
-                capture = true;
+                Piece movedPiece = moved_piece(move);
+                capture          = true;
                 probCutCount--;
 
                 ss->currentMove = move;
                 ss->continuationHistory =
-                  &(*pos->contHist)[stm()][type_of_p(moved_piece(move))][to_sq(move)];
+                  &(*pos->contHist)[color_of(movedPiece)][type_of_p(movedPiece)][to_sq(move)];
                 givesCheck = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
@@ -780,7 +781,7 @@ moves_loop:  // When in check search starts from here.
 
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[color_of(movedPiece)][movedPiece][to_sq(move)];
 
         r = r * r_v1;
 
@@ -1129,7 +1130,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[color_of(movedPiece)][movedPiece][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
