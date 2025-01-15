@@ -123,6 +123,7 @@ void benchmark() {
     }
 
     elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'
+    nodes   = 1000000;
 
     dbg_print();
 
