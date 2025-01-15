@@ -792,7 +792,10 @@ moves_loop:  // When in check search starts from here.
                 r += r_v8 + r_v9 * !capture;
 
             if (capture)
-                ss->statScore = 0;
+                ss->statScore = 6 * PieceValue[captured_piece()]
+                              + (*pos->captureHistory)[moved_piece(move)][to_sq(move)]
+                                                      [type_of_p(captured_piece())]
+                              - 4700;
             else
             {
                 // Increase reduction if ttMove is a capture
