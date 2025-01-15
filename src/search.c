@@ -467,8 +467,8 @@ Value search(
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
-    (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
-    (ss + 2)->cutoffCnt                         = 0;
+    (ss + 1)->killer                  = 0;
+    (ss + 2)->cutoffCnt               = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
     ss->statScore = 0;
 
@@ -731,7 +731,7 @@ moves_loop:  // When in check search starts from here.
             Value singularBeta  = ttValue - se_v2 * depth / 128;
             Depth singularDepth = newDepth / 2;
             ss->excludedMove    = move;
-            Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
+            Move killer         = ss->mpKiller;
             value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
             ss->excludedMove = 0;
 
@@ -761,8 +761,7 @@ moves_loop:  // When in check search starts from here.
             // move picker data. So we fix it.
             mp_init(pos, ttMove, depth);
             ss->stage++;
-            ss->mpKillers[0] = k1;
-            ss->mpKillers[1] = k2;
+            ss->mpKiller = killer;
         }
 
         // Last capture extension
@@ -942,7 +941,7 @@ moves_loop:  // When in check search starts from here.
 
         // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
-             || (ss - 1)->currentMove == (ss - 1)->killers[0])
+             || (ss - 1)->currentMove == (ss - 1)->killer)
             && !captured_piece())
             update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
@@ -1263,13 +1262,8 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 
 // Updates move sorting heuristics when a new quiet best move is found
 static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
-    if (ss->killers[0] != move)
-    {
-        ss->killers[1] = ss->killers[0];
-        ss->killers[0] = move;
-    }
-
-    Color c = stm();
+    ss->killer = move;
+    Color c    = stm();
     history_update(*pos->mainHistory, c, move, bonus);
     update_continuation_histories(ss, moved_piece(move), to_sq(move), bonus);
 }
