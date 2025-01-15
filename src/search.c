@@ -1191,15 +1191,7 @@ static Value value_from_tt(Value v, int ply, int r50c) {
     return v;
 }
 
-static Key weirdo_key(const Position* pos) {
-    Key hash = pawn_key();
-    hash ^= w_nonpawn_key() * 0xff51afd7ed558ccdULL;
-    hash ^= b_nonpawn_key() * 0xc4ceb9fe1a85ec53ULL;
-    hash ^= hash >> 33;
-    hash *= 0xc4ceb9fe1a85ec53ULL;
-    hash ^= hash >> 33;
-    return hash;
-}
+static Key weirdo_key(const Position* pos) { return from_to(pos->st->killers[0]); }
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
     Key keys[] = {material_key(),  pawn_key(),      prev_move_key(),
