@@ -1352,19 +1352,18 @@ void start_thinking(Position* root) {
 SMALL void prepare_for_search(Position* root) {
     Thread.stop = false;
 
-    Position* pos  = Thread.pos;
-    pos->rootDepth = 0;
-    pos->nodes     = 0;
+    Position* pos      = Thread.pos;
+    pos->rootDepth     = 0;
+    pos->nodes         = 0;
+    pos->st->pv.length = 0;
 
-    root->st->pv.length = 0;
-    memcpy(pos, root, offsetof(Position, moveList));
+    const int size = max(7, pos->st->pliesFromNull);
 
-    // Copy enough of the root State buffer.
-    int n = max(7, root->st->pliesFromNull);
 #pragma clang loop unroll(disable)
-    for (int i = 0; i <= n; i++)
-        memcpy(&pos->stack[i], &root->st[i - n], StateSize);
-    pos->st                 = pos->stack + n;
+    for (int i = 0; i <= size; i++)
+        memcpy(&pos->stack[i], &pos->st[i - size], StateSize);
+
+    pos->st                 = pos->stack + size;
     (pos->st - 1)->endMoves = pos->moveList;
 
     pos_set_check_info(pos);
