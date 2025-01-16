@@ -190,7 +190,7 @@ static Depth reduction(int i, Depth d, int mn) {
 }
 
 static int futility_move_count(bool improving, Depth depth) {
-    return improving ? 3 + depth * depth : (2 + depth * depth) / 2;
+    return improving ? 3 + depth * depth : (3 + depth * depth) / 2;
 }
 
 // History and stats update bonus, based on depth
@@ -594,7 +594,7 @@ Value search(
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
-    if (!PvNode && depth > 4 && abs(beta) < VALUE_MATE_IN_MAX_PLY
+    if (!PvNode && depth > 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
