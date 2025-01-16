@@ -1098,20 +1098,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             {
                 if (moveCount > 2)
                     continue;
-
-                futilityValue = futilityBase + PieceValue[piece_on(to_sq(move))];
-
-                if (futilityValue <= alpha)
-                {
-                    bestValue = max(bestValue, futilityValue);
-                    continue;
-                }
-
-                if (futilityBase <= alpha && !see_test(pos, move, 1))
-                {
-                    bestValue = max(bestValue, futilityBase);
-                    continue;
-                }
             }
 
             // Do not search moves with negative SEE values
