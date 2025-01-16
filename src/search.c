@@ -113,7 +113,11 @@ PARAM(ch_v6, 131, 12.0)
 PARAM(ch_v7, 119, 12.0)
 PARAM(ch_v8, 121, 12.0)
 PARAM(ch_v9, 128, 12.0)
-PARAM(ch_v10, 96, 12.0)
+PARAM(ch_v10, 96, 8.0)
+PARAM(ch_v11, 64, 6.0)
+PARAM(ch_v12, 64, 6.0)
+PARAM(ch_v13, 64, 6.0)
+PARAM(ch_v14, 64, 6.0)
 PARAM(tempo, 45, 4.8)
 PARAM(mp_v3, 2623, 180.0)
 PARAM(mp_v4, 188, 12.0)
@@ -1219,11 +1223,22 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
+
     if (move_is_ok((ss - 2)->currentMove))
-    {
-        int16_t* entry = &(*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
-        update_correction_history(entry, depth, diff);
-    }
+        update_correction_history(&(*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
+                                  depth, diff);
+
+    if (move_is_ok((ss - 3)->currentMove))
+        update_correction_history(&(*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
+                                  depth, diff);
+
+    if (move_is_ok((ss - 4)->currentMove))
+        update_correction_history(&(*(ss - 4)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
+                                  depth, diff);
+
+    if (move_is_ok((ss - 5)->currentMove))
+        update_correction_history(&(*(ss - 5)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
+                                  depth, diff);
 }
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
@@ -1237,8 +1252,18 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
+
     if (move_is_ok((ss - 2)->currentMove))
-        correction += 128 * (*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+        correction += ch_v11 * (*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+
+    if (move_is_ok((ss - 3)->currentMove))
+        correction += ch_v12 * (*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+
+    if (move_is_ok((ss - 4)->currentMove))
+        correction += ch_v13 * (*(ss - 4)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+
+    if (move_is_ok((ss - 5)->currentMove))
+        correction += ch_v14 * (*(ss - 5)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
 
     Value v = unadjustedStaticEval + correction / 128 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
