@@ -68,6 +68,7 @@ struct Stack {
 
     // Original search stack data
     PieceToHistory* continuationHistory;
+    PieceToHistory* contCorrHistory;
     Move            currentMove;
     Move            excludedMove;
     Move            killers[2];
@@ -138,6 +139,7 @@ struct Position {
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
+    ContCorrHistoryStat*     contCorrHist;
 
     // Thread-control data.
     uint64_t bestMoveChanges;
