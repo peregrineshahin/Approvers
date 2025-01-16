@@ -42,12 +42,17 @@ void thread_init() {
     pos->st              = pos->stack + 100;
     pos->st[-1].endMoves = pos->moveList;
 
-    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
+    pos->contHist     = calloc(sizeof(ContinuationHistoryStat), 1);
+    pos->contCorrHist = calloc(sizeof(ContCorrHistoryStat), 1);
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 7; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
+        {
+            (*pos->contHist)[0][0][0][pc][sq]  = -1;
+            (*pos->contCorrHist)[0][0][pc][sq] = -1;
+        }
+
 
     Thread.pos = pos;
 
@@ -63,5 +68,6 @@ void thread_exit() {
     free(pos->moveList);
     free(pos->corrHists);
     free(pos->contHist);
+    free(pos->contCorrHist);
     free(pos);
 }
