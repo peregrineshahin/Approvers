@@ -569,7 +569,7 @@ Value search(
         return eval;
 
     // Step 7. Null move search
-    if (!PvNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
+    if (cutNode && (ss - 1)->currentMove != MOVE_NULL && (ss - 1)->statScore < nmp_v5
         && eval >= beta && eval >= ss->staticEval
         && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
         && non_pawn_material(pos))
@@ -582,7 +582,7 @@ Value search(
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
-        Value nullValue = -search(pos, ss + 1, -beta, -beta + 1, depth - R, !cutNode, false);
+        Value nullValue = -search(pos, ss + 1, -beta, -beta + 1, depth - R, false, false);
         undo_null_move(pos);
 
         if (nullValue >= beta)
