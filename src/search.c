@@ -665,7 +665,7 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        PieceType movedPiece = type_of_p(moved_piece(move));
+        PieceType movedType = type_of_p(moved_piece(move));
 
         extension  = 0;
         capture    = capture_stage(pos, move);
@@ -695,8 +695,8 @@ moves_loop:  // When in check search starts from here.
             {
                 // Countermoves based pruning
                 if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < cbp_v3
-                    && (*contHist1)[movedPiece][to_sq(move)] < cbp_v4)
+                    && (*contHist0)[movedType][to_sq(move)] < cbp_v3
+                    && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
                     continue;
 
                 // Futility pruning: parent node
@@ -720,9 +720,8 @@ moves_loop:  // When in check search starts from here.
         // that move is singular and should be extended. To verify this we do a
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
-        if (depth >= 5 && move == ttMove && !rootNode
-            && !excludedMove  // No recursive singular search
-                              /* &&  ttValue != VALUE_NONE implicit in the next condition */
+        // Recursive singular search is avoided.
+        if (depth >= 5 && move == ttMove && !rootNode && !excludedMove
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
@@ -778,7 +777,7 @@ moves_loop:  // When in check search starts from here.
 
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
         r = r * r_v1;
 
@@ -803,9 +802,9 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
-                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
-                              + (*contHist1)[movedPiece][to_sq(move)]
-                              + (*contHist2)[movedPiece][to_sq(move)]
+                ss->statScore = (*contHist0)[movedType][to_sq(move)]
+                              + (*contHist1)[movedType][to_sq(move)]
+                              + (*contHist2)[movedType][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
             }
 
@@ -830,8 +829,7 @@ moves_loop:  // When in check search starts from here.
                 if (!capture)
                 {
                     int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
-                    update_continuation_histories(ss, make_piece(0, movedPiece), to_sq(move),
-                                                  bonus);
+                    update_continuation_histories(ss, make_piece(0, movedType), to_sq(move), bonus);
                 }
             }
         }
@@ -1118,7 +1116,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 continue;
         }
 
-        PieceType movedPiece = type_of_p(moved_piece(move));
+        PieceType movedType = type_of_p(moved_piece(move));
 
         // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
@@ -1127,7 +1125,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
+        ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
