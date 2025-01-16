@@ -630,6 +630,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     // Update the key with the final value
     st->key = key;
+    // Speculative prefetch as early as possible
+    prefetch(tt_first_entry(st->key));
 
     // Calculate checkers bitboard (if move gives check)
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
@@ -713,6 +715,7 @@ void do_null_move(Position* pos) {
     }
 
     st->key ^= zob.side;
+    // Speculative prefetch as early as possible
     prefetch(tt_first_entry(st->key));
 
     st->rule50++;

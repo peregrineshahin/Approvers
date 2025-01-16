@@ -772,9 +772,6 @@ moves_loop:  // When in check search starts from here.
         // Step 13. Make the move.
         do_move(pos, move, givesCheck);
 
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
-
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
@@ -1120,9 +1117,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
         // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
-
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
