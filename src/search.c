@@ -1220,21 +1220,13 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
 
-    if (move_is_ok((ss - 2)->currentMove))
-        update_correction_history(&(*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
+    const int offsets[] = {2, 3, 4, 5, 6, 7};
 
-    if (move_is_ok((ss - 3)->currentMove))
-        update_correction_history(&(*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
-
-    if (move_is_ok((ss - 4)->currentMove))
-        update_correction_history(&(*(ss - 4)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
-
-    if (move_is_ok((ss - 5)->currentMove))
-        update_correction_history(&(*(ss - 5)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
+    for (int i = 0; i < 6; i++)
+        if (move_is_ok((ss - offsets[i])->currentMove))
+            update_correction_history(
+              &(*(ss - offsets[i])->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)], depth,
+              diff);
 }
 
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
@@ -1249,17 +1241,12 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
 
-    if (move_is_ok((ss - 2)->currentMove))
-        correction += 64 * (*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+    const int offsets[] = {2, 3, 4, 5, 6, 7};
 
-    if (move_is_ok((ss - 3)->currentMove))
-        correction += 64 * (*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
-
-    if (move_is_ok((ss - 4)->currentMove))
-        correction += 64 * (*(ss - 4)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
-
-    if (move_is_ok((ss - 5)->currentMove))
-        correction += 64 * (*(ss - 5)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+    for (int i = 0; i < 6; i++)
+        if (move_is_ok((ss - offsets[i])->currentMove))
+            correction +=
+              64 * (*(ss - offsets[i])->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
 
     Value v = unadjustedStaticEval + correction / 128 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
