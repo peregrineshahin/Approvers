@@ -69,7 +69,6 @@ struct Stack {
     PVariation pv;
 
     // Original search stack data
-    PieceToHistory* continuationHistory;
     Move            currentMove;
     Move            excludedMove;
     Move            killers[2];
@@ -108,9 +107,9 @@ struct Stack {
 typedef struct Stack Stack;
 
 #define StateCopySize offsetof(Stack, capturedPiece)
-#define StateSize offsetof(Stack, continuationHistory)
-#define SStackBegin(st) (&st.continuationHistory)
-#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, continuationHistory))
+#define StateSize offsetof(Stack, currentMove)
+#define SStackBegin(st) (&st.currentMove)
+#define SStackSize (offsetof(Stack, stage) - offsetof(Stack, currentMove))
 
 
 // Position struct stores information regarding the board representation as
@@ -139,7 +138,6 @@ struct Position {
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
-    ContinuationHistoryStat* contHist;
 
     // Thread-control data.
     uint64_t bestMoveChanges;

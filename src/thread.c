@@ -34,13 +34,6 @@ void thread_init() {
     pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
 
     pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
-    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
-#pragma clang loop unroll(disable)
-    for (int pc = 0; pc < 7; pc++)
-#pragma clang loop unroll(disable)
-        for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
-
     Thread.pos = pos;
 
     search_init();
@@ -54,6 +47,5 @@ void thread_exit() {
     free(pos->stackAllocation);
     free(pos->moveList);
     free(pos->corrHists);
-    free(pos->contHist);
     free(pos);
 }

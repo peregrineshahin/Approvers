@@ -202,7 +202,6 @@ static Value stat_malus(Depth d) { return min((hm_v1 * d / 128 + hm_v2) * d - hm
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
-static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value unadjustedStaticEval);
 static void  update_correction_histories(const Position* pos, Depth depth, int32_t diff);
 static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
@@ -244,14 +243,6 @@ SMALL void search_clear(void) {
     Position* pos = Thread.pos;
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
-    stats_clear(pos->contHist);
-
-#pragma clang loop unroll(disable)
-    for (int pc = 0; pc < 7; pc++)
-#pragma clang loop unroll(disable)
-        for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
-
     Thread.previousScore = VALUE_INFINITE;
 }
 
@@ -316,9 +307,8 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = -7; i < 0; i++)
     {
-        ss[i].continuationHistory = &(*pos->contHist)[0][0][0];  // Use as sentinel
-        ss[i].staticEval          = VALUE_NONE;
-        ss[i].checkersBB          = 0;
+        ss[i].staticEval = VALUE_NONE;
+        ss[i].checkersBB = 0;
     }
 
 #pragma clang loop unroll(disable)
@@ -492,11 +482,6 @@ Value search(
         {
             if (!capture_stage(pos, ttMove))
                 update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
-
-            // Extra penalty for early quiet moves of the previous ply
-            if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
-                update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              ttct_v2 * -stat_malus(depth + 1) / 128);
         }
 
         // Partial workaround for the graph history interaction problem
@@ -578,8 +563,7 @@ Value search(
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
-        ss->currentMove         = MOVE_NULL;
-        ss->continuationHistory = &(*pos->contHist)[0][0][0];
+        ss->currentMove = MOVE_NULL;
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -616,9 +600,7 @@ Value search(
                 probCutCount--;
 
                 ss->currentMove = move;
-                ss->continuationHistory =
-                  &(*pos->contHist)[stm()][type_of_p(moved_piece(move))][to_sq(move)];
-                givesCheck = gives_check(pos, ss, move);
+                givesCheck      = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
                 // Perform a preliminary qsearch to verify that the move holds
@@ -645,10 +627,6 @@ Value search(
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
-    PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
-    PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
-    PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
-
     mp_init(pos, ttMove, depth);
 
     value            = bestValue;
@@ -694,12 +672,6 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
-                // Countermoves based pruning
-                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedPiece][to_sq(move)] < cbp_v3
-                    && (*contHist1)[movedPiece][to_sq(move)] < cbp_v4)
-                    continue;
-
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !ss->checkersBB
                     && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
@@ -778,10 +750,8 @@ moves_loop:  // When in check search starts from here.
         prefetch(tt_first_entry(key()));
 
         // Update the current move (this must be done after singular extension search)
-        ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
-
-        r = r * r_v1;
+        ss->currentMove = move;
+        r               = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 + 2 * rootNode && (!capture || cutNode || !ss->ttPv))
@@ -804,10 +774,7 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
-                ss->statScore = (*contHist0)[movedPiece][to_sq(move)]
-                              + (*contHist1)[movedPiece][to_sq(move)]
-                              + (*contHist2)[movedPiece][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+                ss->statScore = (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
             }
 
             // Decrease/increase reduction for moves with a good/bad history.
@@ -827,13 +794,6 @@ moves_loop:  // When in check search starts from here.
 
                 if (newDepth > d)
                     value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
-
-                if (!capture)
-                {
-                    int bonus = value > alpha ? stat_bonus(newDepth) : -stat_malus(newDepth);
-                    update_continuation_histories(ss, make_piece(0, movedPiece), to_sq(move),
-                                                  bonus);
-                }
             }
         }
         // Step 15. Full-depth search when LMR is skipped or fails high.
@@ -932,18 +892,11 @@ moves_loop:  // When in check search starts from here.
             for (int i = 0; i < quietCount; i++)
             {
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
-                update_continuation_histories(ss, moved_piece(quietsSearched[i]),
-                                              to_sq(quietsSearched[i]), -malus);
             }
         }
 
         update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
 
-        // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
-        if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
-             || (ss - 1)->currentMove == (ss - 1)->killers[0])
-            && !captured_piece())
-            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
@@ -956,8 +909,6 @@ moves_loop:  // When in check search starts from here.
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
 
         bonus = max(bonus, 0);
-        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                      stat_bonus(depth) * bonus / pcmb_v10);
 
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
                        stat_bonus(depth) * bonus / pcmb_v11);
@@ -1070,8 +1021,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         futilityBase = ss->staticEval + qsf_v1;
     }
 
-    ss->continuationHistory = &(*pos->contHist)[0][0][0];
-
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
     // Initialize move picker data for the current position, and prepare to search
@@ -1128,7 +1077,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         prefetch(tt_first_entry(key()));
 
         ss->currentMove         = move;
-        ss->continuationHistory = &(*pos->contHist)[stm()][movedPiece][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
@@ -1221,27 +1169,6 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
-// Updates histories of the move pairs formed by moves
-// at ply -1, -2, -4, and -6 with current move.
-static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
-    PieceType pt = type_of_p(pc);
-
-    if (move_is_ok((ss - 1)->currentMove))
-        update_contHist(*(ss - 1)->continuationHistory, pt, s, cnht_v1 * bonus / 1024);
-
-    if (move_is_ok((ss - 2)->currentMove))
-        update_contHist(*(ss - 2)->continuationHistory, pt, s, cnht_v2 * bonus / 1024);
-
-    if (ss->checkersBB)
-        return;
-
-    if (move_is_ok((ss - 4)->currentMove))
-        update_contHist(*(ss - 4)->continuationHistory, pt, s, cnht_v3 * bonus / 1024);
-
-    if (move_is_ok((ss - 6)->currentMove))
-        update_contHist(*(ss - 6)->continuationHistory, pt, s, cnht_v4 * bonus / 1024);
-}
-
 // Updates move sorting heuristics when a new capture best move is found
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth) {
@@ -1272,7 +1199,6 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
 
     Color c = stm();
     history_update(*pos->mainHistory, c, move, bonus);
-    update_continuation_histories(ss, moved_piece(move), to_sq(move), bonus);
 }
 
 static int peak_stdin() {
