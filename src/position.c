@@ -13,23 +13,6 @@ static void set_state(Position* pos, Stack* st);
 
 struct Zob zob;
 
-Key matKey[16] = {0ULL,
-                  0x5ced000000000101ULL,
-                  0xe173000000001001ULL,
-                  0xd64d000000010001ULL,
-                  0xab88000000100001ULL,
-                  0x680b000001000001ULL,
-                  0x0000000000000001ULL,
-                  0ULL,
-                  0ULL,
-                  0xf219000010000001ULL,
-                  0xbb14000100000001ULL,
-                  0x58df001000000001ULL,
-                  0xa15f010000000001ULL,
-                  0x7c94100000000001ULL,
-                  0x0000000000000001ULL,
-                  0ULL};
-
 const char PieceToChar[] = " PNBRQK  pnbrqk";
 
 static void put_piece(Position* pos, Color c, Piece piece, Square s) {
@@ -220,8 +203,8 @@ SMALL void pos_set(Position* pos, char* fen) {
 // computed is updated incrementally as moves are made.
 // The function is only used when a new position is set up.
 SMALL static void set_state(Position* pos, Stack* st) {
-    st->key = st->materialKey = 0;
-    st->pawnKey               = zob.noPawns;
+    st->key               = 0;
+    st->pawnKey           = zob.noPawns;
     st->nonPawnKey[WHITE] = st->nonPawnKey[BLACK] = 0;
     st->majorKey = st->minorKey = 0;
 
@@ -236,7 +219,6 @@ SMALL static void set_state(Position* pos, Stack* st) {
         PieceType pt = type_of_p(pc);
 
         st->key ^= zob.psq[pc][s];
-        st->materialKey += matKey[pc];
 
         if (pt == PAWN)
             st->pawnKey ^= zob.psq[piece_on(s)][s];
@@ -561,9 +543,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
         // Update board and piece lists
         remove_piece(pos, them, captured, capsq);
 
-        // Update material hash key
+        // Update hash key
         key ^= zob.psq[captured][capsq];
-        st->materialKey -= matKey[captured];
 
         // Reset ply counters
         st->plyCounters = 0;
@@ -619,7 +600,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
             st->pawnKey ^= zob.psq[piece][to];
-            st->materialKey += matKey[promotion] - matKey[piece];
 
             if (type_of_p(promotion) >= ROOK)
                 st->majorKey ^= zob.psq[promotion][to];
