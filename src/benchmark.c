@@ -88,7 +88,7 @@ static char* Defaults[] = {
 };
 
 void benchmark() {
-    Limits            = (LimitsType){0};
+    Limits            = (LimitsType) {0};
     Limits.depth      = 16;
     Thread.testPonder = 0;
 
@@ -97,13 +97,8 @@ void benchmark() {
 
     const int numFens = sizeof(Defaults) / sizeof(char*);
 
-    uint64_t nodes      = 0;
-    Position pos        = {0};
-    pos.stackAllocation = malloc(63 + 217 * sizeof(*pos.stack));
-    pos.stack           = (Stack*) (((uintptr_t) pos.stackAllocation + 0x3f) & ~0x3f);
-    pos.st              = pos.stack + 7;
-    pos.moveList        = malloc(10000 * sizeof(*pos.moveList));
-
+    uint64_t  nodes   = 0;
+    Position* pos     = Thread.pos;
     TimePoint elapsed = now();
 
     for (int i = 0, j = 0; i < numFens; i++)
@@ -113,13 +108,13 @@ void benchmark() {
         strncat(buf, Defaults[i], 127 - 4);
         buf[127] = 0;
 
-        position(&pos, buf);
+        position(pos, buf);
 
         fprintf(stdout, "\nPosition: %d/%d\n", ++j, numFens);
 
         Limits.startTime = now();
-        start_thinking(&pos);
-        nodes += Thread.pos->nodes;
+        start_thinking();
+        nodes += pos->nodes;
     }
 
     elapsed = now() - elapsed + 1;  // Ensure positivity to avoid a 'divide by zero'
@@ -131,7 +126,4 @@ void benchmark() {
             "\nTotal time (ms) : %" PRIu64 "\nNodes searched  : %" PRIu64
             "\nNodes/second    : %" PRIu64 "\n",
             elapsed, nodes, 1000 * nodes / elapsed);
-
-    free(pos.stackAllocation);
-    free(pos.moveList);
 }

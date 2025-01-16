@@ -160,8 +160,8 @@ void setoption(char* str) {
 // Called when engine receives the "go" UCI command. The function sets
 // the thinking time and other parameters from the input string, then
 // starts the search.
-static void go(Position* pos, char* str) {
-    Limits           = (struct LimitsType){0};
+static void go(char* str) {
+    Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
 #pragma clang loop unroll(disable)
@@ -183,7 +183,7 @@ static void go(Position* pos, char* str) {
 #endif
     }
 
-    start_thinking(pos);
+    start_thinking();
 }
 
 
@@ -202,24 +202,13 @@ SMALL void uci_loop(int argc, char** argv) {
     }
 #endif
 
-    Position pos;
-    char     fen[strlen(StartFEN) + 1];
-
-    // Allocate 215 Stack slots.
-    // Slots 100-200 form a circular buffer to be filled with game moves.
-    // Slots 0-99 make room for prepending the part of game history relevant
-    // for repetition detection.
-    // Slots 201-214 may be used by TB root probing.
-    pos.stackAllocation = malloc(63 + 215 * sizeof(Stack));
-    pos.stack           = (Stack*) (((uintptr_t) pos.stackAllocation + 0x3f) & ~0x3f);
-    pos.moveList        = malloc(1000 * sizeof(ExtMove));
-    pos.st              = pos.stack + 100;
-    pos.st[-1].endMoves = pos.moveList;
-
     char cmd[4096] = {0};
+    char fen[strlen(StartFEN) + 1];
+
+    Position* pos = Thread.pos;
 
     strcpy(fen, StartFEN);
-    pos_set(&pos, fen);
+    pos_set(pos, fen);
 
     while (get_input(cmd))
     {
@@ -243,9 +232,9 @@ SMALL void uci_loop(int argc, char** argv) {
         Thread.stop   = true;
 
         if (strcmp(token, "go") == 0)
-            go(&pos, str);
+            go(str);
         else if (strcmp(token, "position") == 0)
-            position(&pos, str);
+            position(pos, str);
 #ifndef KAGGLE
         else if (strcmp(token, "uci") == 0)
         {
@@ -301,9 +290,6 @@ SMALL void uci_loop(int argc, char** argv) {
             break;
 #endif
     }
-
-    free(pos.stackAllocation);
-    free(pos.moveList);
 }
 
 

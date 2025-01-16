@@ -26,14 +26,22 @@ ThreadStruct Thread = {0};
 void thread_init() {
     Thread.testPonder = 0;
 
-    Position* pos        = calloc(sizeof(Position), 1);
-    pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
-    pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
-    pos->corrHists       = calloc(sizeof(CorrectionHistory), 1);
-    pos->stackAllocation = calloc(63 + (MAX_PLY + 110) * sizeof(Stack), 1);
-    pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
+    Position* pos       = calloc(sizeof(Position), 1);
+    pos->mainHistory    = calloc(sizeof(ButterflyHistory), 1);
+    pos->captureHistory = calloc(sizeof(CapturePieceToHistory), 1);
+    pos->corrHists      = calloc(sizeof(CorrectionHistory), 1);
+    pos->moveList       = calloc(10000 * sizeof(ExtMove), 1);
 
-    pos->stack    = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    // Allocate 215 Stack slots.
+    // Slots 100-200 form a circular buffer to be filled with game moves.
+    // Slots 0-99 make room for prepending the part of game history relevant
+    // for repetition detection.
+    // Slots 201-214 may be used by TB root probing.
+    pos->stackAllocation = calloc(63 + 215 * sizeof(Stack), 1);
+    pos->stack           = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    pos->st              = pos->stack + 100;
+    pos->st[-1].endMoves = pos->moveList;
+
     pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 7; pc++)
