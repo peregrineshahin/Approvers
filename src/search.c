@@ -338,6 +338,8 @@ void thread_search(Position* pos) {
 
     PVariation* pv = &pos->st->pv;
 
+    int newMoveCounter = 0;
+
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
     while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
@@ -357,7 +359,8 @@ void thread_search(Position* pos) {
 
         while (true)
         {
-            bestValue = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
+            bestValue = search(pos, ss, alpha, beta, max(2, pos->rootDepth - 4 * newMoveCounter),
+                               false, true);
 
             // If search has been stopped, we break immediately
             if (Thread.stop)
@@ -378,6 +381,12 @@ void thread_search(Position* pos) {
 
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
+
+        if (pv->line[0] != lastMove)
+        {
+            if (Thread.previousScore > bestValue)
+                newMoveCounter++;
+        }
 
         pvStability = pv->line[0] == lastMove ? min(pvStability + 1, tm_v23) : 0;
         lastMove    = pv->line[0];
