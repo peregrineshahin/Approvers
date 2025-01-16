@@ -1219,9 +1219,9 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
-    if (move_is_ok((ss - 1)->currentMove))
+    if (move_is_ok((ss - 2)->currentMove))
     {
-        int16_t* entry = &(*(ss - 1)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+        int16_t* entry = &(*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
         update_correction_history(entry, depth, diff);
     }
 }
@@ -1237,8 +1237,8 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 
     Stack* ss   = pos->st;
     Move   move = (ss - 1)->currentMove;
-    if (move_is_ok((ss - 1)->currentMove))
-        correction += 128 * (*(ss - 1)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+    if (move_is_ok((ss - 2)->currentMove))
+        correction += 128 * (*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
 
     Value v = unadjustedStaticEval + correction / 128 / ch_v2;
     return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
