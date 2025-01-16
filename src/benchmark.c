@@ -113,7 +113,7 @@ void benchmark() {
         fprintf(stdout, "\nPosition: %d/%d\n", ++j, numFens);
 
         Limits.startTime = now();
-        start_thinking(pos);
+        start_thinking();
         nodes += pos->nodes;
     }
 

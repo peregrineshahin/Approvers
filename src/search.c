@@ -285,7 +285,7 @@ void mainthread_search(void) {
         pos->completedDepth = 0;
         pos->rootDepth      = 0;
 
-        prepare_for_search(pos);
+        prepare_for_search();
         thread_search(pos);
 
         Thread.ponder = false;
@@ -1344,12 +1344,12 @@ static void uci_print_pv(Position* pos, Depth depth) {
 
 
 // Wakes up the main thread to start a new search, then returns immediately.
-void start_thinking(Position* root) {
-    prepare_for_search(root);
+void start_thinking() {
+    prepare_for_search();
     mainthread_search();
 }
 
-SMALL void prepare_for_search(Position* root) {
+SMALL void prepare_for_search() {
     Thread.stop = false;
 
     Position* pos      = Thread.pos;

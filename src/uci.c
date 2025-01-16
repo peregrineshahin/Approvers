@@ -160,7 +160,7 @@ void setoption(char* str) {
 // Called when engine receives the "go" UCI command. The function sets
 // the thinking time and other parameters from the input string, then
 // starts the search.
-static void go(Position* pos, char* str) {
+static void go(char* str) {
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
@@ -183,7 +183,7 @@ static void go(Position* pos, char* str) {
 #endif
     }
 
-    start_thinking(pos);
+    start_thinking();
 }
 
 
@@ -232,7 +232,7 @@ SMALL void uci_loop(int argc, char** argv) {
         Thread.stop   = true;
 
         if (strcmp(token, "go") == 0)
-            go(pos, str);
+            go(str);
         else if (strcmp(token, "position") == 0)
             position(pos, str);
 #ifndef KAGGLE
