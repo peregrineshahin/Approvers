@@ -1237,9 +1237,6 @@ static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bon
 
     if (move_is_ok((ss - 4)->currentMove))
         update_contHist(*(ss - 4)->continuationHistory, pt, s, cnht_v3 * bonus / 1024);
-
-    if (move_is_ok((ss - 6)->currentMove))
-        update_contHist(*(ss - 6)->continuationHistory, pt, s, cnht_v4 * bonus / 1024);
 }
 
 // Updates move sorting heuristics when a new capture best move is found

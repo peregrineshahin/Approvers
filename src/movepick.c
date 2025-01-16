@@ -72,7 +72,6 @@ SMALL static void score_quiets(const Position* pos) {
     PieceToHistory* contHist0 = (st - 1)->continuationHistory;
     PieceToHistory* contHist1 = (st - 2)->continuationHistory;
     PieceToHistory* contHist2 = (st - 4)->continuationHistory;
-    PieceToHistory* contHist3 = (st - 6)->continuationHistory;
 
     Color c = stm();
 
@@ -83,10 +82,9 @@ SMALL static void score_quiets(const Position* pos) {
         Square    from = move >> 6;
         PieceType pt   = type_of_p(piece_on(from));
 
-        m->value =
-          (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[pt][to] + mp_v6 * (*contHist1)[pt][to]
-           + mp_v7 * (*contHist2)[pt][to] + mp_v8 * (*contHist3)[pt][to])
-          / 128;
+        m->value = (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[pt][to]
+                    + mp_v6 * (*contHist1)[pt][to] + mp_v7 * (*contHist2)[pt][to])
+                 / 128;
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
     }
