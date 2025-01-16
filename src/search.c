@@ -113,6 +113,8 @@ PARAM(ch_v5, 137, 12.0)
 PARAM(ch_v6, 131, 12.0)
 PARAM(ch_v7, 119, 12.0)
 PARAM(ch_v8, 121, 12.0)
+PARAM(ch_v9, 128, 12.0)
+PARAM(ch_v10, 96, 12.0)
 PARAM(tempo, 45, 4.8)
 PARAM(mp_v3, 2623, 180.0)
 PARAM(mp_v4, 188, 12.0)
@@ -1209,7 +1211,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     Key keys[]    = {material_key(),  pawn_key(),  prev_move_key(), w_nonpawn_key(),
                      b_nonpawn_key(), minor_key(), major_key()};
-    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8, 128, 96};
+    int weights[] = {ch_v4, ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
