@@ -799,7 +799,7 @@ moves_loop:  // When in check search starts from here.
             {
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
-                    r += r_v6;
+                    r += r_v6 + 1024 * ss->ttPv;
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
