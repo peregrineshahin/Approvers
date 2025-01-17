@@ -687,7 +687,7 @@ moves_loop:  // When in check search starts from here.
             if (capture || givesCheck)
             {
                 // SEE based pruning
-                if (!see_test(pos, move, -scsee_v1 * depth))
+                if (!PvNode && !see_test(pos, move, -scsee_v1 * depth))
                     continue;
             }
             else
@@ -707,7 +707,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths
-                if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
+                if (!PvNode && !see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
                     continue;
             }
         }
