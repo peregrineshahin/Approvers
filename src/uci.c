@@ -249,6 +249,9 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < L1SIZE; i++)
                 printf("option name inb_v%d type string\n", i);
 
+            for (int i = 0; i < L1SIZE * 2; i++)
+                printf("option name l1w_v%d type string\n", i);
+
             printf("uciok\n");
             fflush(stdout);
         }
