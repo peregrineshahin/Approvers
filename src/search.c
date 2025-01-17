@@ -781,19 +781,25 @@ moves_loop:  // When in check search starts from here.
         r = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
-        if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1)
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
+
 
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
 
             if (capture)
+            {
                 ss->statScore = 0;
+                if (ss->ttPv)
+                    r = 0;
+            }
             else
             {
+                // Decrease reduction if position is or has been on the PV
+                if (ss->ttPv)
+                    r -= r_v2;
+
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;
