@@ -812,6 +812,22 @@ bool see_test(const Position* pos, Move m, int value) {
 // Tests whether the position is drawn by 50-move rule or by repetition.
 // It does not detect stalemates.
 SMALL bool is_draw(const Position* pos) {
+    const int count = popcount(pieces());
+    if (count == 2)
+        return true;
+
+    if (count == 3 && pieces_pp(KNIGHT, BISHOP))
+        return true;
+
+    if (count == 4)
+    {
+        if (popcount(pieces_p(KNIGHT)) == 2)
+            return true;
+
+        if (popcount(pieces_p(BISHOP)) == 2 && pieces_cp(WHITE, BISHOP) && pieces_cp(BLACK, BISHOP))
+            return true;
+    }
+
     Stack* st = pos->st;
 
     // st->pliesFromNull is reset both on null moves and on zeroing moves.
