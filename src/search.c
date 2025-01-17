@@ -935,7 +935,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         update_capture_stats(pos, bestMove, capturesSearched, captureCount,
-                             depth + 1 + (ttMove == bestMove));
+                             depth + 1);
 
         // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
