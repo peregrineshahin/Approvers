@@ -205,8 +205,8 @@ static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bo
 Value        to_corrected(Position* pos, Value unadjustedStaticEval);
 static void  update_correction_histories(const Position* pos, Depth depth, int32_t diff);
 static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
-static void
-update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth);
+static void  update_capture_stats(
+   const Position* pos, Move move, Move* captures, int captureCnt, Depth depth, bool isTtMove);
 static void check_time(void);
 static void uci_print_pv(Position* pos, Depth depth);
 
@@ -916,10 +916,11 @@ moves_loop:  // When in check search starts from here.
         bestValue = excludedMove ? alpha : ss->checkersBB ? mated_in(ss->ply) : VALUE_DRAW;
     else if (bestMove)
     {
+        bool isTTMove = (ttMove == bestMove);
         // Quiet best move: update move sorting heuristics
         if (!capture_stage(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
+            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1)) + 300 * isTTMove;
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
             update_quiet_stats(pos, ss, bestMove, bonus);
@@ -934,7 +935,7 @@ moves_loop:  // When in check search starts from here.
             }
         }
 
-        update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
+        update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1, isTTMove);
 
         // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
@@ -1240,13 +1241,14 @@ static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bon
 }
 
 // Updates move sorting heuristics when a new capture best move is found
-static void
-update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth) {
+static void update_capture_stats(
+  const Position* pos, Move move, Move* captures, int captureCnt, Depth depth, bool isTtMove) {
     Piece moved_piece = moved_piece(move);
     int   captured    = type_of_p(piece_on(to_sq(move)));
 
     if (capture_stage(pos, move))
-        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, stat_bonus(depth));
+        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured,
+                    stat_bonus(depth) + 300 * isTtMove);
 
     Value malus = -stat_malus(depth);
 
