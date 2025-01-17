@@ -30,6 +30,33 @@
 #include "tt.h"
 #include "uci.h"
 
+float lmr_l1_weights[4][8] = {{-21.16, 17.60, 21.05, 18.33, 17.47, -20.55, 17.30, 17.75},
+                              {18.88, -23.59, -18.47, -24.33, -23.96, 11.51, -23.31, -23.78},
+                              {8.94, -14.00, -9.26, -14.08, -13.17, 5.08, -14.48, -14.53},
+                              {7.41, -11.38, -7.67, -12.27, -12.29, 5.48, -11.96, -13.23}};
+float lmr_l1_biases[8]     = {-2.94, -1.88, 2.99, -2.40, -1.97, -4.84, -2.34, -2.74};
+float lmr_l2_weights[8][1] = {{15.75},  {-12.45}, {-15.50}, {-13.61},
+                              {-12.56}, {13.27},  {-12.17}, {-13.25}};
+float lmr_l2_biases[1]     = {9.51};
+
+static int lmr_value(int input[4]) {
+    float l1[8] = {0};
+    for (int i = 0; i < 8; i++)
+    {
+        l1[i] = lmr_l1_biases[i];
+        for (int j = 0; j < 4; j++)
+            l1[i] += lmr_l1_weights[j][i] * (float)input[j];
+
+        l1[i] = (l1[i] > 0) ? l1[i] : 0;
+    }
+
+    float l2 = lmr_l2_biases[0];
+    for (int i = 0; i < 8; i++)
+        l2 += lmr_l2_weights[i][0] * l1[i];
+
+    return (int) l2;
+}
+
 #ifndef KAGGLE
 Parameter parameters[255];
 int       parameters_count = 0;
@@ -783,29 +810,22 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
+            int conditions[4] = {
+              ss->ttPv,
+              cutNode,
+              ttCapture,
+              (ss + 1)->cutoffCnt > 3,
+            };
 
-            if (cutNode && move != ss->killers[0])
-                r += r_v8;
+            r += lmr_value(conditions);
 
             if (capture)
                 ss->statScore = 0;
             else
-            {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
                               + (*contHist2)[movedType][to_sq(move)]
                               + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-            }
 
             // Decrease/increase reduction for moves with a good/bad history.
             r -= ss->statScore * r_v13 / 16384;
