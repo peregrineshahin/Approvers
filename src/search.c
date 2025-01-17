@@ -136,7 +136,7 @@ PARAM(pcmb_v8, 130, 8.4)
 PARAM(pcmb_v9, 252, 30.0)
 PARAM(pcmb_v10, 125, 8.4)
 PARAM(pcmb_v11, 143, 8.4)
-PARAM(r_v2, 2454, 250.0)
+PARAM(r_v2, 1024, 250.0)
 PARAM(r_v6, 1244, 150.0)
 PARAM(r_v7, 1087, 150.0)
 PARAM(r_v8, 2245, 150.0)
@@ -781,10 +781,10 @@ moves_loop:  // When in check search starts from here.
         r = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
-        if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1 && !(ss->ttPv && !PvNode))
         {
             // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
+            if (PvNode)
                 r -= r_v2;
 
             if (cutNode && move != ss->killers[0])
