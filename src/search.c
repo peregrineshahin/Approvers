@@ -139,8 +139,7 @@ PARAM(pcmb_v11, 143, 8.4)
 PARAM(r_v2, 2454, 250.0)
 PARAM(r_v6, 1244, 150.0)
 PARAM(r_v7, 1087, 150.0)
-PARAM(r_v8, 1325, 150.0)
-PARAM(r_v9, 920, 150.0)
+PARAM(r_v8, 2245, 150.0)
 PARAM(r_v13, 998, 50.0)
 PARAM(ded_v1, 63, 7.2)
 PARAM(qb_v1, 182, 18.0)
@@ -788,8 +787,8 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v2;
 
-            if (cutNode)
-                r += r_v8 + r_v9 * !capture;
+            if (cutNode && move != ss->killers[0])
+                r += r_v8;
 
             if (capture)
                 ss->statScore = 0;
