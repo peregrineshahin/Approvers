@@ -136,7 +136,8 @@ PARAM(pcmb_v8, 130, 8.4)
 PARAM(pcmb_v9, 252, 30.0)
 PARAM(pcmb_v10, 125, 8.4)
 PARAM(pcmb_v11, 143, 8.4)
-PARAM(r_v2, 2454, 250.0)
+PARAM(r_v2, 1200, 150.0)
+PARAM(r_v3, 1200, 150.0)
 PARAM(r_v6, 1244, 150.0)
 PARAM(r_v7, 1087, 150.0)
 PARAM(r_v8, 2245, 150.0)
@@ -785,7 +786,7 @@ moves_loop:  // When in check search starts from here.
         {
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2;
+                r -= r_v2 + r_v3 * cutNode;
 
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
