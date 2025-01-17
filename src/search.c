@@ -919,7 +919,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!capture_stage(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1)) + 300 * (ttMove == bestMove);
+            int bonus = stat_bonus(depth + ((ttMove == bestMove) || bestValue > beta + qb_v1));
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
             update_quiet_stats(pos, ss, bestMove, bonus);
@@ -934,8 +934,7 @@ moves_loop:  // When in check search starts from here.
             }
         }
 
-        update_capture_stats(pos, bestMove, capturesSearched, captureCount,
-                             depth + 1);
+        update_capture_stats(pos, bestMove, capturesSearched, captureCount, depth + 1);
 
         // Extra penalty for a quiet TT or main killer move in previous ply when it gets refuted
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
