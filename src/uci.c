@@ -36,6 +36,11 @@ extern int       parameters_count;
 
 extern alignas(64) int16_t l1_weights[L1SIZE * 2];
 extern alignas(64) int16_t in_biases[L1SIZE];
+
+extern int16_t lmr_l1_weights[6][8];
+extern int16_t lmr_l1_biases[8];
+extern int16_t lmr_l2_weights[8];
+extern int16_t lmr_l2_biases[1];
 #endif
 
 // FEN string of the initial position, normal chess
@@ -138,17 +143,32 @@ void setoption(char* str) {
         return;
     }
 
-    if (strstr(name, "inb_v"))
+    if (strstr(name, "lmr_l1w"))
     {
-        int i        = atoi(name + 5);
-        in_biases[i] = atoi(value);
+        int i                = name[7] - '0';
+        int j                = name[8] - '0';
+        lmr_l1_weights[i][j] = atoi(value);
         return;
     }
 
-    if (strstr(name, "l1w_v"))
+    if (strstr(name, "lmr_l1b"))
     {
-        int i         = atoi(name + 5);
-        l1_weights[i] = atoi(value);
+        int i            = atoi(name + 7);
+        lmr_l1_biases[i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "lmr_l2w"))
+    {
+        int i             = atoi(name + 7);
+        lmr_l2_weights[i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "lmr_l2b"))
+    {
+        int i            = atoi(name + 7);
+        lmr_l2_biases[i] = atoi(value);
         return;
     }
 
@@ -243,11 +263,18 @@ SMALL void uci_loop(int argc, char** argv) {
             printf("option name Hash type spin default 1 min 1 max 16\n");
             printf("option name Pondering type string\n");
 
-            for (int i = 0; i < parameters_count; i++)
-                printf("option name %s type string\n", parameters[i].name);
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < 8; j++)
+                    printf("option name lmr_l1w%d%d type string\n", i, j);
 
-            for (int i = 0; i < L1SIZE; i++)
-                printf("option name inb_v%d type string\n", i);
+            for (int i = 0; i < 8; i++)
+                printf("option name lmr_l1b%d type string\n", i);
+
+            for (int i = 0; i < 8; i++)
+                printf("option name lmr_l2w%d type string\n", i);
+
+            for (int i = 0; i < 1; i++)
+                printf("option name lmr_l2b%d type string\n", i);
 
             printf("uciok\n");
             fflush(stdout);
@@ -268,12 +295,19 @@ SMALL void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "nnparams") == 0)
         {
-            for (int i = 0; i < L1SIZE; i++)
-                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i],
-                       max(abs(in_biases[i]) / 20.0, 0.5));
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i],
-                       max(abs(l1_weights[i]) / 20.0, 0.5));
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < 8; j++)
+                    printf("lmr_l1w%d%d, int, %d, -4096, 4096, 32, 0.002\n", i, j,
+                           lmr_l1_weights[i][j]);
+
+            for (int i = 0; i < 8; i++)
+                printf("lmr_l1b%d, int, %d, -1024, 1024, 8, 0.002\n", i, lmr_l1_biases[i]);
+
+            for (int i = 0; i < 8; i++)
+                printf("lmr_l2w%d, int, %d, -2048, 2048, 16, 0.002\n", i, lmr_l2_weights[i]);
+
+            for (int i = 0; i < 1; i++)
+                printf("lmr_l2b%d, int, %d, -2048, 2048, 16, 0.002\n", i, lmr_l2_biases[i]);
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
