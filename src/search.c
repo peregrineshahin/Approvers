@@ -256,16 +256,18 @@ SMALL void search_clear(void) {
 // Called by the main thread when the program receives the UCI 'go' command.
 // It searches from the root position and outputs the "bestmove".
 void mainthread_search(void) {
+    const int GENERATION = 8;
+
     Position* pos = Thread.pos;
     Color     us  = stm();
     time_init(us, game_ply());
-    tt_new_search();
-    char buf[16];
 
+    TT.generation8 += GENERATION;
     Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
     Thread.previousScore = pos->st->pv.score;
 
+    char buf[16];
     printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
 
@@ -275,6 +277,7 @@ void mainthread_search(void) {
     // Start pondering right after the best move has been printed if we can
     if (pos->st->pv.length >= 1)
     {
+        TT.generation8 += GENERATION;
         Thread.ponder = true;
         Thread.stop   = false;
 
@@ -287,6 +290,7 @@ void mainthread_search(void) {
         prepare_for_search();
         thread_search(pos);
 
+        TT.generation8 -= GENERATION;
         Thread.ponder = false;
         Thread.stop   = true;
     }
