@@ -44,17 +44,17 @@ void tt_free(void) {
 
 // Allocates the transposition table, measured in megabytes.
 void tt_allocate(size_t mbSize) {
-    TT.clusterCount = mbSize * 1024 * 1024 / sizeof(Cluster);
-    size_t size     = TT.clusterCount * sizeof(Cluster);
+    TT.count    = mbSize * 1024 * 1024 / sizeof(TTEntry);
+    size_t size = TT.count * sizeof(TTEntry);
 
 #ifdef _WIN32
     TT.mem   = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    TT.table = (Cluster*) TT.mem;
+    TT.table = (TTEntry*) TT.mem;
 #else /* Unix */
     TT.mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
     TT.allocSize = size;
-    TT.table     = (Cluster*) ((uintptr_t) TT.mem & ~0);
+    TT.table     = (TTEntry*) ((uintptr_t) TT.mem & ~0);
 #endif
 
     // Clear the TT table to page in the memory immediately. This avoids
@@ -66,9 +66,7 @@ void tt_allocate(size_t mbSize) {
 // Initialises the entire transposition table to zero.
 void tt_clear(void) {
     if (TT.table)
-    {
-        memset((uint8_t*) TT.table, 0, TT.clusterCount * sizeof(Cluster));
-    }
+        memset((uint8_t*) TT.table, 0, TT.count * sizeof(TTEntry));
 }
 
 
@@ -80,29 +78,24 @@ void tt_clear(void) {
 // considered more valuable than TTEntry t2 if its replace value is greater
 // than that of t2.
 TTEntry* tt_probe(Key key, bool* found) {
-    TTEntry* tte   = tt_first_entry(key);
-    uint16_t key16 = key;  // Use the low 16 bits as key inside the cluster
+    TTEntry* tte = tt_entry(key);
+    *found       = tte->key16 == (uint16_t) key;
+    return tte;
+}
 
-    for (int i = 0; i < ClusterSize; i++)
-        if (tte[i].key16 == key16 || !tte[i].depth8)
-        {
-            //      if ((tte[i].genBound8 & 0xF8) != TT.generation8 && tte[i].key16)
-            tte[i].genBound8 = TT.generation8 | (tte[i].genBound8 & 0x7);  // Refresh
-            *found           = tte[i].depth8;
-            return &tte[i];
-        }
+void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
+    // Don't overwrite more valuable entries
+    if (!(b == BOUND_EXACT || tte->key16 != (uint16_t) k
+          || d - DEPTH_OFFSET + 4 + 2 * pv > tte->depth8))
+        return;
 
-    // Find an entry to be replaced according to the replacement strategy
-    TTEntry* replace = tte;
-    for (int i = 1; i < ClusterSize; i++)
-        // Due to our packed storage format for generation and its cyclic
-        // nature we add 263 (256 is the modulus plus 7 to keep the unrelated
-        // lowest three bits from affecting the result) to calculate the entry
-        // age correctly even after generation8 overflows into the next cycle.
-        if (replace->depth8 - ((263 + TT.generation8 - replace->genBound8) & 0xF8)
-            > tte[i].depth8 - ((263 + TT.generation8 - tte[i].genBound8) & 0xF8))
-            replace = &tte[i];
+    // Preserve any existing move for the same position
+    if (m || (uint16_t) k != tte->key16)
+        tte->move16 = (uint16_t) m;
 
-    *found = false;
-    return replace;
+    tte->key16   = (uint16_t) k;
+    tte->depth8  = (uint8_t) (d - DEPTH_OFFSET);
+    tte->bound8  = (uint8_t) (((uint8_t) pv << 2) | b);
+    tte->value16 = (int16_t) v;
+    tte->eval16  = (int16_t) ev;
 }

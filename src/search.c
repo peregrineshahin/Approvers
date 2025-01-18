@@ -259,7 +259,6 @@ void mainthread_search(void) {
     Position* pos = Thread.pos;
     Color     us  = stm();
     time_init(us, game_ply());
-    tt_new_search();
     char buf[16];
 
     Thread.pos->bestMoveChanges = 0;
@@ -772,7 +771,7 @@ moves_loop:  // When in check search starts from here.
         do_move(pos, move, givesCheck);
 
         // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
+        prefetch(tt_entry(key()));
 
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
@@ -1121,7 +1120,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         do_move(pos, move, givesCheck);
 
         // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
+        prefetch(tt_entry(key()));
 
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
