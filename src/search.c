@@ -563,7 +563,7 @@ Value search(
     }
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv && eval + (100 * !excludedMove) - futility_margin(depth, improving) >= beta
+    if (!ss->ttPv && eval - (50 * !excludedMove) - futility_margin(depth, improving) >= beta
         && (ttCapture || !ttMove) && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
