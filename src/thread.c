@@ -32,14 +32,9 @@ void thread_init() {
     pos->corrHists      = calloc(sizeof(CorrectionHistory), 1);
     pos->moveList       = calloc(10000 * sizeof(ExtMove), 1);
 
-    pos->accumulator = _mm_malloc(sizeof(Accumulator) * (MAX_PLY + 1), 64);
+    pos->accumulator = _mm_malloc(sizeof(Accumulator) * (1 + MAX_PLY), 64);
 
-    // Allocate 215 Stack slots.
-    // Slots 100-200 form a circular buffer to be filled with game moves.
-    // Slots 0-99 make room for prepending the part of game history relevant
-    // for repetition detection.
-    // Slots 201-214 may be used by TB root probing.
-    pos->stackAllocation = calloc(63 + 215 * sizeof(Stack), 1);
+    pos->stackAllocation = calloc(63 + (110 + MAX_PLY) * sizeof(Stack), 1);
     pos->stack           = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
     pos->st              = pos->stack + 100;
     pos->st[-1].endMoves = pos->moveList;

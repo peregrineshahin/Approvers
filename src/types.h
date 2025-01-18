@@ -82,7 +82,7 @@ typedef uint64_t Bitboard;
 
 enum {
     MAX_MOVES = 100,
-    MAX_PLY   = 100
+    MAX_PLY   = 64
 };
 
 // A move needs 16 bits to be stored
