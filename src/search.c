@@ -800,6 +800,9 @@ moves_loop:  // When in check search starts from here.
 
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
+                else if (improving && movedType != KING && ttValue <= alpha && movedType != PAWN
+                         && move != ss->killers[1])
+                    r += 1024;
 
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
