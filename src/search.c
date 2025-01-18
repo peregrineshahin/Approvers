@@ -30,16 +30,17 @@
 #include "tt.h"
 #include "uci.h"
 
-int16_t lmr_l1_weights[4][8] = {{-2116, 1760, 2105, 1833, 1747, -2055, 1730, 1775},
-                                  {1888, -2359, -1847, -2433, -2396, 1151, -2331, -2378},
-                                  {894, -1400, -926, -1408, -1317, 508, -1448, -1453},
-                                  {741, -1138, -767, -1227, -1229, 548, -1196, -1323}};
+int16_t lmr_l1_weights[6][8] = {{-2116, 1760, 2105, 1833, 1747, -2055, 1730, 1775},
+                                {1888, -2359, -1847, -2433, -2396, 1151, -2331, -2378},
+                                {894, -1400, -926, -1408, -1317, 508, -1448, -1453},
+                                {741, -1138, -767, -1227, -1229, 548, -1196, -1323},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0}};
 int16_t lmr_l1_biases[8]     = {-294, -188, 299, -240, -197, -484, -234, -274};
-int16_t lmr_l2_weights[8][1] = {{1575},  {-1245}, {-1550}, {-1361},
-                                  {-1256}, {1327},  {-1217}, {-1325}};
+int16_t lmr_l2_weights[8]    = {1575, -1245, -1550, -1361, -1256, 1327, -1217, -1325};
 int16_t lmr_l2_biases[1]     = {951};
 
-static int lmr_value(const int input[4]) {
+static int lmr_value(const int input[6]) {
     const int Q1 = 100;
     const int Q2 = 100;
 
@@ -48,7 +49,7 @@ static int lmr_value(const int input[4]) {
     for (int i = 0; i < 8; i++)
     {
         l1[i] = lmr_l1_biases[i];
-        for (int j = 0; j < 4; j++)
+        for (int j = 0; j < 6; j++)
             l1[i] += lmr_l1_weights[j][i] * input[j];
 
         l1[i] = (l1[i] > 0) ? l1[i] : 0;
@@ -57,13 +58,9 @@ static int lmr_value(const int input[4]) {
 
     int l2 = lmr_l2_biases[0];
     for (int i = 0; i < 8; i++)
-        l2 += lmr_l2_weights[i][0] * l1[i];
+        l2 += lmr_l2_weights[i] * l1[i];
 
-    l2 = (l2 + Q2 / 2) / Q2;
-
-    // dbg_mean_of(l2, 0);
-
-    return l2;
+    return (l2 + Q2 / 2) / Q2;
 }
 
 #ifndef KAGGLE
@@ -819,11 +816,8 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            int conditions[4] = {
-              ss->ttPv,
-              cutNode,
-              ttCapture,
-              (ss + 1)->cutoffCnt > 3,
+            int conditions[6] = {
+              ss->ttPv, cutNode, ttCapture, (ss + 1)->cutoffCnt > 3, PvNode, improving,
             };
 
             r += lmr_value(conditions);
