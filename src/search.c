@@ -51,7 +51,6 @@ int       parameters_count = 0;
 PARAM(nmp_v1, 764, 0)
 PARAM(nmp_v2, 56, 0)
 PARAM(nmp_v3, 165, 0)
-PARAM(r_v1, 1056, 0)
 PARAM(cms_v1, 29166, 0)
 PARAM(hu_v1, 10294, 0)
 PARAM(cpth_v1, 11627, 0)
@@ -185,7 +184,7 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+    return r + rd_v1 + (!i && r > rd_v3) * 1056;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -682,7 +681,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / 1024, 0);
 
             if (capture || givesCheck)
             {
@@ -777,8 +776,6 @@ moves_loop:  // When in check search starts from here.
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
-
-        r = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
