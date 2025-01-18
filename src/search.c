@@ -547,10 +547,13 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    // Use static evaluation difference to improve quiet move ordering
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
+        bonus     = bonus > 0 ? 2 * bonus : bonus / 2;
+
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
