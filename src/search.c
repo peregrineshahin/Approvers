@@ -720,7 +720,7 @@ moves_loop:  // When in check search starts from here.
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
         // Recursive singular search is avoided.
-        if (depth >= 5 && move == ttMove && !rootNode && !excludedMove
+        if (!rootNode && ss->ply < pos->rootDepth && depth >= 5 && move == ttMove && !excludedMove
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
@@ -735,7 +735,7 @@ moves_loop:  // When in check search starts from here.
             {
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5)
-                    extension = 2;
+                    extension = 2 + (value < singularBeta - 100 && !ttCapture);
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
