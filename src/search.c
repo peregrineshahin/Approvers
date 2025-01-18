@@ -1000,9 +1000,26 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     bestMove  = 0;
     moveCount = 0;
 
-    // Step 2. Check for an immediate draw or maximum ply reached
-    if (is_draw(pos) || ss->ply >= MAX_PLY)
+
+    // Check for the available remaining time
+    if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
+        check_time();
+
+    // Step 2. Check for aborted search and immediate draw
+    if ((Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
         return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
+
+    // Step 3. Mate distance pruning. Even if we mate at the next move our score
+    // would be at best mate_in(ss->ply+1), but if alpha is already bigger because
+    // a shorter mate was found upward in the tree then there is no need to search
+    // because we will never beat the current alpha. Same logic but with reversed
+    // signs apply also in the opposite condition of being mated instead of giving
+    // mate. In this case, return a fail-high score.
+    alpha = max(mated_in(ss->ply), alpha);
+    beta  = min(mate_in(ss->ply + 1), beta);
+    if (alpha >= beta)
+        return alpha;
+
 
     // Decide whether to include checks: this fixes also the type of
     // TT entry depth that we are going to use. Note that in qsearch we use
