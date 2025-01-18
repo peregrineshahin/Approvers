@@ -508,7 +508,13 @@ Value search(
     {
         // Skip early pruning when in check
         unadjustedStaticEval = eval = ss->staticEval = VALUE_NONE;
-        improving                                    = false;
+
+        probCutBeta = beta + 412;
+        if (ttValue != VALUE_NONE && tte_bound(tte) & BOUND_LOWER && tte_depth(tte) >= depth - 4
+            && ttValue >= probCutBeta)
+            return probCutBeta;
+
+        improving = false;
         goto moves_loop;
     }
     else if (excludedMove)
