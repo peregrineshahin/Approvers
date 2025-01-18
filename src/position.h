@@ -99,8 +99,6 @@ struct Stack {
         };
     };
     Square ksq;
-
-    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;
@@ -138,6 +136,8 @@ struct Position {
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
+
+    Accumulator* accumulator;
 
     // Thread-control data.
     uint64_t bestMoveChanges;

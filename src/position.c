@@ -472,8 +472,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+    Accumulator* acc = ++pos->accumulator;
+    memcpy(acc, (pos->accumulator - 1), sizeof(Accumulator));
 
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
@@ -644,6 +644,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 // Unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
 void undo_move(Position* pos, Move m) {
+    pos->accumulator--;
     pos->sideToMove = !pos->sideToMove;
 
     Color  us   = stm();
@@ -700,11 +701,8 @@ void undo_move(Position* pos, Move m) {
 // Used to do a "null move": it flips
 // the side to move without executing any move on the board.
 void do_null_move(Position* pos) {
-
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
-
-    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
 
     if (unlikely(st->epSquare))
     {

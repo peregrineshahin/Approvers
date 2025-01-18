@@ -71,7 +71,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
 
-static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
+static void refresh_accumulator(Accumulator* acc, const Position* pos, Color side) {
     const __m256i* biases                 = (__m256i*) in_biases;
     __m256i        registers[L1SIZE / 16] = {
       biases[0],
@@ -137,12 +137,12 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
 }
 
 Value nnue_evaluate(Position* pos) {
-    Accumulator* acc = &pos->st->accumulator;
+    Accumulator* acc = pos->accumulator;
 
     if (acc->needs_refresh)
     {
-        build_accumulator(acc, pos, WHITE);
-        build_accumulator(acc, pos, BLACK);
+        refresh_accumulator(acc, pos, WHITE);
+        refresh_accumulator(acc, pos, BLACK);
         acc->needs_refresh = false;
     }
 
