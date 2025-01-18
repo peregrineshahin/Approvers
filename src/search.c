@@ -76,7 +76,7 @@ PARAM(rd_v1, 560, 60.0)
 PARAM(rd_v2, 1264, 48.0)
 PARAM(rd_v3, 997, 72.0)
 PARAM(rd_init_v1, 3625, 150.0)
-PARAM(d_v1, 17, 1.2)
+PARAM(d_v1, 10, 1.2)
 PARAM(cbp_v2, 0, 9.6)
 PARAM(cbp_v3, -6, 9.6)
 PARAM(cbp_v4, -10, 9.6)
@@ -104,7 +104,6 @@ PARAM(cnht_v1, 1021, 80.0)
 PARAM(cnht_v2, 996, 80.0)
 PARAM(cnht_v3, 1044, 80.0)
 PARAM(cnht_v4, 943, 80.0)
-PARAM(asd_v1, 3, 0.5)
 PARAM(qsf_v1, 207, 18.0)
 PARAM(ch_v1, 23, 3.6)
 PARAM(ch_v2, 176, 18.0)
@@ -366,7 +365,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta *= 2;
         }
 
 #ifndef KAGGLE
