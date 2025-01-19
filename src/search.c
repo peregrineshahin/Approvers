@@ -86,7 +86,7 @@ PARAM(fpp_v3, 187, 21.6)
 PARAM(fpp_v4, 66, 7.2)
 PARAM(fpp_v5, 69, 7.2)
 PARAM(sqsee_v1, 26, 2.4)
-PARAM(scsee_v1, 204, 12.0)
+PARAM(scsee_v1, 200, 12.0)
 PARAM(se_v2, 150, 15.0)
 PARAM(se_v5, 29, 3.6)
 PARAM(prb_v1, 119, 14.4)
@@ -664,7 +664,8 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        PieceType movedType = type_of_p(moved_piece(move));
+        Piece     movedPiece = moved_piece(move);
+        PieceType movedType  = type_of_p(movedPiece);
 
         extension  = 0;
         capture    = capture_stage(pos, move);
@@ -686,8 +687,22 @@ moves_loop:  // When in check search starts from here.
 
             if (capture || givesCheck)
             {
-                // SEE based pruning
-                if (!see_test(pos, move, -scsee_v1 * depth))
+
+                Piece capturedPiece = piece_on(to_sq(move));
+
+                int captHist =
+                  (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
+
+                if (!givesCheck && lmrDepth < 7 && !ss->checkersBB)
+                {
+                    Value futilityValue = ss->staticEval + 271 + 243 * lmrDepth
+                                        + PieceValue[capturedPiece] + captHist / 7;
+                    if (futilityValue <= alpha)
+                        continue;
+                }
+
+                int seeHist = clamp(captHist / 32, -200 * depth, 200 * depth);
+                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
                     continue;
             }
             else
