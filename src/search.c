@@ -30,6 +30,17 @@
 #include "tt.h"
 #include "uci.h"
 
+#define N_PARAMS 24
+#define N_CONDS 3
+
+PRNG rng;
+
+int P[N_PARAMS];
+int P_SUM;
+
+int Index[N_PARAMS * 200];
+int IndexSize = 0;
+
 #ifndef KAGGLE
 Parameter parameters[255];
 int       parameters_count = 0;
@@ -230,6 +241,8 @@ SMALL double my_log(double x) {
 SMALL void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
         Reductions[i] = (int) (rd_init_v1 / 128.0 * my_log(i));
+
+    prng_init(&rng, 0x5102C6UL);
 }
 
 
@@ -256,6 +269,24 @@ SMALL void search_clear(void) {
 // Called by the main thread when the program receives the UCI 'go' command.
 // It searches from the root position and outputs the "bestmove".
 void mainthread_search(void) {
+    P_SUM     = 0;
+    IndexSize = 0;
+
+    int p = 0;
+    for (int i = 0; i < N_PARAMS; ++i)
+    {
+        P_SUM += abs(P[i]);
+        for (; p < P_SUM; ++p)
+            Index[IndexSize++] = i;
+    }
+
+    if (P_SUM == 0)
+        for (int i = 0; i < N_PARAMS; ++i)
+        {
+            Index[IndexSize++] = i;
+            P_SUM++;
+        }
+
     Position* pos = Thread.pos;
     Color     us  = stm();
     time_init(us, game_ply());
@@ -446,13 +477,14 @@ Value search(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
-    bool     capture, moveCountPruning;
+    bool     capture, moveCountPruning, priorCapture;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
     moveCount = captureCount = quietCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
+    priorCapture                                          = captured_piece();
 
     // Check for the available remaining time
     if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
@@ -809,6 +841,46 @@ moves_loop:  // When in check search starts from here.
                 ss->statScore = 0;
             else
             {
+                bool CC = true;
+                if (CC)
+                {
+                    bool C[N_PARAMS] = {
+                      PvNode,
+                      ss->ttPv,
+                      cutNode,
+                      improving,
+                      priorCapture,
+                      ttCapture,
+                      capture,
+                      givesCheck,
+                      (ss + 1)->cutoffCnt > 3,
+                      (ss - 1)->currentMove == MOVE_NULL,
+                      move == ttMove,
+                      move == ss->killers[0],
+                      move == ss->killers[1],
+                      extension > 0,
+                      extension < 0,
+                      ttValue <= alpha,
+                      ttHit,
+                      (ss - 1)->checkersBB,
+                      (ss - 1)->ttPv,
+                      (ss - 1)->excludedMove,
+                      excludedMove,
+                      ss->checkersBB,
+                      ttValue < ss->staticEval,
+                      alpha < ss->staticEval,
+                    };
+
+                    for (int k = 0; k < N_CONDS && CC; ++k)
+                    {
+                        int i = Index[(pos->nodes + prng_rand(&rng)) % P_SUM];
+                        CC    = CC && (P[i] > 0 ? C[i] : !C[i]);
+                    }
+
+                    if (CC)
+                        r += 1024;
+                }
+
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;

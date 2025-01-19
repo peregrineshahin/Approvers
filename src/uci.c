@@ -28,6 +28,9 @@
 #include "tt.h"
 #include "uci.h"
 
+#define N_PARAMS 24
+extern int P[N_PARAMS];
+
 #ifndef KAGGLE
 extern void benchmark();
 
@@ -152,6 +155,13 @@ void setoption(char* str) {
         return;
     }
 
+    if (strstr(name, "P"))
+    {
+        int i = atoi(name + 1);
+        P[i]  = atoi(value);
+        return;
+    }
+
     fprintf(stderr, "No such option: %s\n", name);
 #endif
 }
@@ -252,6 +262,9 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < L1SIZE * 2; i++)
                 printf("option name l1w_v%d type string\n", i);
 
+            for (int i = 0; i < N_PARAMS; i++)
+                printf("option name P%d type string\n", i);
+
             printf("uciok\n");
             fflush(stdout);
         }
@@ -277,6 +290,11 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < L1SIZE * 2; i++)
                 printf("l1w_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[i],
                        max(abs(l1_weights[i]) / 20.0, 0.5));
+        }
+        else if (strcmp(token, "lmrparams") == 0)
+        {
+            for (int i = 0; i < N_PARAMS; i++)
+                printf("P%d, int, %d, -100, 100, 30, 0.002\n", i, P[i]);
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
