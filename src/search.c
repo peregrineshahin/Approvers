@@ -664,7 +664,8 @@ moves_loop:  // When in check search starts from here.
 
         ss->moveCount = ++moveCount;
 
-        PieceType movedType = type_of_p(moved_piece(move));
+        Piece     movedPiece = moved_piece(move);
+        PieceType movedType  = type_of_p(movedPiece);
 
         extension  = 0;
         capture    = capture_stage(pos, move);
@@ -761,8 +762,11 @@ moves_loop:  // When in check search starts from here.
             ss->mpKillers[1] = k2;
         }
 
-        // Last capture extension
-        else if (PieceValue[captured_piece()] > PawnValue && low_material(pos))
+        // Extension for capturing the previous moved piece
+        else if (PvNode && to_sq(move) == prevSq
+                 && (*pos
+                        ->captureHistory)[movedPiece][to_sq(move)][type_of_p(piece_on(to_sq(move)))]
+                      > 4126)
             extension = 1;
 
         // Add extension to new depth
