@@ -805,6 +805,8 @@ moves_loop:  // When in check search starts from here.
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
 
+            r += 307 - moveCount * 16;
+
             if (capture)
                 ss->statScore = 0;
             else
