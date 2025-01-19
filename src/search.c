@@ -547,6 +547,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
+
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -734,8 +736,11 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5)
-                    extension = 2;
+                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= 6)
+                {
+                    extension       = 2;
+                    ss->dextensions = (ss - 1)->dextensions + 1;
+                }
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
