@@ -813,8 +813,9 @@ moves_loop:  // When in check search starts from here.
                 if (ttCapture)
                     r += r_v6;
 
+                // Increase reduction if next ply has a lot of fail high
                 if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
+                    r += 940 + !(PvNode || cutNode) * 887;
 
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
