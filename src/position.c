@@ -45,9 +45,9 @@ static void set_check_info(Position* pos) {
     Stack* st = pos->st;
 
     st->blockersForKing[WHITE] =
-      slider_blockers(pos, pieces_c(BLACK), square_of(WHITE, KING), &st->pinnersForKing[WHITE]);
+      slider_blockers(pos, pieces_c(BLACK), square_of(WHITE, KING), &st->pinnersForKing[BLACK]);
     st->blockersForKing[BLACK] =
-      slider_blockers(pos, pieces_c(WHITE), square_of(BLACK, KING), &st->pinnersForKing[BLACK]);
+      slider_blockers(pos, pieces_c(WHITE), square_of(BLACK, KING), &st->pinnersForKing[WHITE]);
 
     Color them = !stm();
     st->ksq    = square_of(them, KING);
@@ -734,14 +734,13 @@ void undo_null_move(Position* pos) {
 // Tests if the SEE (Static Exchange Evaluation) value of move
 // is greater or equal to the given threshold. We'll use an
 // algorithm similar to alpha-beta pruning with a null window.
-bool see_test(const Position* pos, Move m, int value) {
+bool see_test(const Position* pos, Move m, int threshold) {
     if (unlikely(type_of_m(m) != NORMAL))
-        return 0 >= value;
+        return 0 >= threshold;
 
-    Square   from = from_sq(m), to = to_sq(m);
-    Bitboard occ;
+    Square from = from_sq(m), to = to_sq(m);
 
-    int swap = PieceValue[piece_on(to)] - value;
+    int swap = PieceValue[piece_on(to)] - threshold;
     if (swap < 0)
         return false;
 
@@ -749,23 +748,33 @@ bool see_test(const Position* pos, Move m, int value) {
     if (swap <= 0)
         return true;
 
-    occ                = pieces() ^ sq_bb(from) ^ sq_bb(to);
-    Color    stm       = color_of(piece_on(from));
-    Bitboard attackers = attackers_to_occ(pos, to, occ), stmAttackers;
-    bool     res       = true;
+    Bitboard occ       = pieces() ^ sq_bb(from) ^ sq_bb(to);
+    Color    stm       = stm();
+    Bitboard attackers = attackers_to_occ(pos, to, occ);
+    Bitboard stmAttackers, bb;
+    bool     res = true;
 
     while (true)
     {
         stm = !stm;
         attackers &= occ;
+
+        // If stm has no more attackers then give up: stm loses
         if (!(stmAttackers = attackers & pieces_c(stm)))
             break;
-        if ((stmAttackers & blockers_for_king(pos, stm)) && (pos->st->pinnersForKing[stm] & occ))
+
+        // Don't allow pinned pieces to attack as long as there are
+        // pinners on their original square.
+        if (pos->st->pinnersForKing[!stm] & occ)
+        {
             stmAttackers &= ~blockers_for_king(pos, stm);
-        if (!stmAttackers)
-            break;
+
+            if (!stmAttackers)
+                break;
+        }
+
         res = !res;
-        Bitboard bb;
+
         if ((bb = stmAttackers & pieces_p(PAWN)))
         {
             if ((swap = PawnValue - swap) < res)

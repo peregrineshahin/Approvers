@@ -162,7 +162,7 @@ void do_null_move(Position* pos);
 void undo_null_move(Position* pos);
 
 // Static exchange evaluation
-PURE bool see_test(const Position* pos, Move m, int value);
+PURE bool see_test(const Position* pos, Move m, int threshold);
 
 PURE bool is_draw(const Position* pos);
 PURE bool has_game_cycle(const Position* pos, int ply);
