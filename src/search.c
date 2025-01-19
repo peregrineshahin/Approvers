@@ -365,7 +365,7 @@ void thread_search(Position* pos) {
                 break;
 
             beta  = (alpha + beta) / 2;
-            alpha = max(bestValue - delta, -VALUE_INFINITE);
+            alpha = max(alpha - delta, -VALUE_INFINITE);
             delta += delta / 4 + asd_v1;
         }
 
