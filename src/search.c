@@ -707,22 +707,34 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
-                // Countermoves based pruning
-                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedType][to_sq(move)] < cbp_v3
-                    && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
+
+                int history =
+                  (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)];
+
+                if (history < -3901 * depth)
                     continue;
 
+                history += 2 * (*pos->mainHistory)[stm()][from_to(move)];
+
+                lmrDepth += history / 3459;
+
+                Value futilityValue =
+                  ss->staticEval + (bestValue < ss->staticEval - 47 ? 137 : 47) + 142 * lmrDepth;
+
                 // Futility pruning: parent node
-                if (lmrDepth < fpp_v1 && !ss->checkersBB
-                    && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
-                           + fpp_v3 * lmrDepth
-                         <= alpha)
+                if (!ss->checkersBB && lmrDepth < 12 && futilityValue <= alpha)
+                {
+                    if (bestValue <= futilityValue && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
+                        && futilityValue < VALUE_MATE_IN_MAX_PLY)
+                        bestValue = futilityValue;
                     continue;
+                }
+
+                lmrDepth = max(lmrDepth, 0);
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths
-                if (!see_test(pos, move, -(sqsee_v1 * lmrDepth * lmrDepth)))
+                if (!see_test(pos, move, -25 * lmrDepth * lmrDepth))
                     continue;
             }
         }
