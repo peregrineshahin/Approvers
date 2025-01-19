@@ -73,7 +73,6 @@ struct Stack {
     Move            killers[2];
     Value           staticEval;
     Value           statScore;
-    int             cutoffCnt;
     int             moveCount;
     bool            ttPv;
     uint8_t         ply;

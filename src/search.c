@@ -465,7 +465,6 @@ Value search(
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
     (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
-    (ss + 2)->cutoffCnt                         = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
     ss->statScore = 0;
 
@@ -813,9 +812,6 @@ moves_loop:  // When in check search starts from here.
                 if (ttCapture)
                     r += r_v6;
 
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
                               + (*contHist2)[movedType][to_sq(move)]
@@ -905,7 +901,6 @@ moves_loop:  // When in check search starts from here.
 
                 if (value >= beta)
                 {
-                    ss->cutoffCnt += !ttMove + (extension < 2);
                     break;
                 }
 
