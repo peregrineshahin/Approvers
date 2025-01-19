@@ -675,6 +675,12 @@ moves_loop:  // When in check search starts from here.
 
         Depth r = reduction(improving, depth, moveCount);
 
+        r = r * r_v1;
+
+        // Decrease reduction if position is or has been on the PV
+        if (ss->ttPv)
+            r -= r_v2;
+
         // Step 11. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
@@ -682,7 +688,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / r_v1, 0);
 
             if (capture || givesCheck)
             {
@@ -778,15 +784,9 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
-        r = r * r_v1;
-
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2;
-
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
 
