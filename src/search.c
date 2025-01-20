@@ -466,6 +466,8 @@ Value search(
     (ss + 1)->excludedMove = bestMove = 0;
     (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
     (ss + 2)->cutoffCnt                         = 0;
+    (ss + 2)->qsCutoffCnt                       = 0;
+
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
     ss->statScore = 0;
 
@@ -909,6 +911,8 @@ moves_loop:  // When in check search starts from here.
                 alpha = value;
             }
         }
+        else if (depth > 12 && (ss + 1)->qsCutoffCnt == 0)
+            ss->cutoffCnt = 0;
 
         if (move != bestMove && moveCount < 32)
         {
@@ -1168,7 +1172,10 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 bestMove = move;
 
                 if (value >= beta)
-                    break;
+                {
+                    ss->qsCutoffCnt++;
+                    break;  // Fail high
+                }
 
                 alpha = value;
             }

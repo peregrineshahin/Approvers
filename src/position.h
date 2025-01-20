@@ -74,6 +74,7 @@ struct Stack {
     Value           staticEval;
     Value           statScore;
     int             cutoffCnt;
+    int             qsCutoffCnt;
     int             moveCount;
     bool            ttPv;
     uint8_t         ply;
