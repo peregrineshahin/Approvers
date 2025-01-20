@@ -810,7 +810,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 if ((ss - 1)->ttPv && ss->ttPv && ss->checkersBB)
-                    r += 1024;
+                    r += 1024 * 3 / 4;
 
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
