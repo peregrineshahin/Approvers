@@ -593,7 +593,7 @@ Value search(
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
-    if (!PvNode && depth > 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
+    if (!PvNode && depth >= 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
@@ -603,15 +603,13 @@ Value search(
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
-        int  probCutCount = 2 + 2 * cutNode;
-        bool ttPv         = ss->ttPv;
-        ss->ttPv          = false;
 
-        while ((move = next_move(pos, 0)) && probCutCount)
+        Depth probCutDepth = max(depth - 4, 0);
+
+        while ((move = next_move(pos, 0)))
             if (move != excludedMove && is_legal(pos, move))
             {
                 capture = true;
-                probCutCount--;
 
                 ss->currentMove = move;
                 ss->continuationHistory =
@@ -623,18 +621,17 @@ Value search(
                 value = -qsearch(pos, ss + 1, -probCutBeta, -probCutBeta + 1, 0);
 
                 // If the qsearch held, perform the regular search
-                if (value >= probCutBeta)
-                    value = -search(pos, ss + 1, -probCutBeta, -probCutBeta + 1, depth - 4,
+                if (value >= probCutBeta && probCutDepth > 0)
+                    value = -search(pos, ss + 1, -probCutBeta, -probCutBeta + 1, probCutDepth,
                                     !cutNode, false);
                 undo_move(pos, move);
                 if (value >= probCutBeta)
                 {
-                    tte_save(tte, posKey, value_to_tt(value, ss->ply), ttPv, BOUND_LOWER, depth - 3,
-                             move, unadjustedStaticEval);
+                    tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
+                             probCutDepth + 1, move, unadjustedStaticEval);
                     return value - (probCutBeta - beta);
                 }
             }
-        ss->ttPv = ttPv;
     }
 
     // Step 9. Internal iterative reductions
