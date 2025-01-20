@@ -317,11 +317,15 @@ void thread_search(Position* pos) {
         ss[i].continuationHistory = &(*pos->contHist)[0][0][0];  // Use as sentinel
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
+        ss[i].reduction           = 0;
     }
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
-        ss[i].ply = i;
+    {
+        ss[i].ply       = i;
+        ss[i].reduction = 0;
+    }
 
     ss->accumulator.needs_refresh = 1;
 
@@ -448,11 +452,15 @@ Value search(
     bool     ttHit, givesCheck, improving;
     bool     capture, moveCountPruning;
     bool     ttCapture;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, priorReduction;
 
     // Step 1. Initialize node
-    moveCount = captureCount = quietCount = ss->moveCount = 0;
-    bestValue                                             = -VALUE_INFINITE;
+    moveCount = captureCount = quietCount = 0;
+    bestValue                             = -VALUE_INFINITE;
+
+    priorReduction = ss->reduction;
+    ss->reduction  = 0;
+    ss->moveCount  = 0;
 
     // Check for the available remaining time
     if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
@@ -553,6 +561,9 @@ Value search(
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
+
+    if (priorReduction >= 3 && ss->staticEval + (ss - 1)->staticEval < 0)
+        depth++;
 
     // Step 5. Razoring
     if (!PvNode && !improving && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
@@ -826,7 +837,10 @@ moves_loop:  // When in check search starts from here.
             r -= ss->statScore * r_v13 / 16384;
 
             Depth d = clamp(newDepth - r / 1024, 1, newDepth);
-            value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+
+            (ss + 1)->reduction = newDepth - d;
+            value               = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+            (ss + 1)->reduction = 0;
 
             if (value > alpha && d < newDepth)
             {
