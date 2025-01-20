@@ -799,7 +799,7 @@ moves_loop:  // When in check search starts from here.
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
             // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
+            if (ss->ttPv && !((ss - 1)->ttPv && ss->checkersBB))
                 r -= r_v2;
 
             if (cutNode && move != ss->killers[0])
@@ -809,8 +809,6 @@ moves_loop:  // When in check search starts from here.
                 ss->statScore = 0;
             else
             {
-                if ((ss - 1)->ttPv && ss->ttPv && ss->checkersBB)
-                    r += 1024;
 
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
