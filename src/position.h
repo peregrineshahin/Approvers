@@ -142,10 +142,10 @@ struct Position {
     // Thread-control data.
     uint64_t bestMoveChanges;
 
-    int nnueAdds[2][2];
-    int nnueSubs[2][2];
-    int nnueAddSize;
-    int nnueSubSize;
+    size_t nnueAdds[2][2];
+    size_t nnueSubs[2][2];
+    size_t nnueAddSize;
+    size_t nnueSubSize;
 
     void* stackAllocation;
 };

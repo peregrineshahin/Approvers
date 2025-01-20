@@ -115,11 +115,11 @@ void nnue_remove_piece(Position* pos, Piece pc, Square sq, Square wksq, Square b
 }
 
 static void add_sub(Accumulator* acc, Accumulator* prev, Position* pos, Color color) {
-    int16_t* add_input = &in_weights[pos->nnueAdds[0][color] * L1SIZE];
-    int16_t* sub_input = &in_weights[pos->nnueSubs[0][color] * L1SIZE];
+    int add = pos->nnueAdds[0][color] * L1SIZE;
+    int sub = pos->nnueSubs[0][color] * L1SIZE;
 
     for (int i = 0; i < L1SIZE; i++)
-        acc->values[color][i] = prev->values[color][i] - sub_input[i] + add_input[i];
+        acc->values[color][i] = prev->values[color][i] - in_weights[sub + i] + in_weights[add + i];
 }
 
 static void add_sub_sub(Accumulator* acc, Accumulator* prev, Position* pos, Color color) {
@@ -158,8 +158,8 @@ void nnue_commit(Position* pos) {
         return;
     }
 
-    const int adds = pos->nnueAddSize;
-    const int subs = pos->nnueSubSize;
+    const size_t adds = pos->nnueAddSize;
+    const size_t subs = pos->nnueSubSize;
 
     if (adds == 1 && subs == 1)
     {
