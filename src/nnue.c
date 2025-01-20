@@ -147,19 +147,15 @@ void nnue_commit(Position* pos) {
     Accumulator* acc  = &pos->st->accumulator;
     Accumulator* prev = &(pos->st - 1)->accumulator;
 
+    acc->needs_refresh |= prev->needs_refresh;
     if (acc->needs_refresh)
         return;
 
-    if (prev->needs_refresh)
-    {
-        build_accumulator(acc, pos, WHITE);
-        build_accumulator(acc, pos, BLACK);
-        acc->needs_refresh = false;
-        return;
-    }
-
     const size_t adds = pos->nnueAddSize;
     const size_t subs = pos->nnueSubSize;
+
+    if (adds == 0 && subs == 0)
+        return;
 
     if (adds == 1 && subs == 1)
     {
