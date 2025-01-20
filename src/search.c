@@ -978,7 +978,7 @@ moves_loop:  // When in check search starts from here.
     // previous opponent move is probably good and the new position is added
     // to the search tree
     if (bestValue <= alpha)
-        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 3);
+        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 2 && (ss - 1)->currentMove != MOVE_NULL);
 
     // Write gathered information in transposition table. Note that the
     // static evaluation is saved as it was before correction history.
