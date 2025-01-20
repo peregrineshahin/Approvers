@@ -805,17 +805,17 @@ moves_loop:  // When in check search starts from here.
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
 
+            // Increase reduction if ttMove is a capture
+            if (ttCapture)
+                r += r_v6;
+
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
             if (capture)
                 ss->statScore = 0;
             else
             {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
                               + (*contHist2)[movedType][to_sq(move)]
