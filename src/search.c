@@ -734,7 +734,7 @@ moves_loop:  // When in check search starts from here.
         // Recursive singular search is avoided.
         if (depth >= 5 && move == ttMove && !rootNode && !excludedMove
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - 3)
+            && tte_depth(tte) >= depth - 4)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 128;
             Depth singularDepth = newDepth / 2;
