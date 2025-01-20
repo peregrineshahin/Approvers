@@ -8,6 +8,7 @@
 #include "movegen.h"
 #include "position.h"
 #include "tt.h"
+#include "types.h"
 
 static void set_state(Position* pos, Stack* st);
 
@@ -735,21 +736,32 @@ void undo_null_move(Position* pos) {
 // is greater or equal to the given threshold. We'll use an
 // algorithm similar to alpha-beta pruning with a null window.
 bool see_test(const Position* pos, Move m, int value) {
-    if (unlikely(type_of_m(m) != NORMAL))
+    if (unlikely(type_of_m(m) == CASTLING))
         return 0 >= value;
 
     Square   from = from_sq(m), to = to_sq(m);
     Bitboard occ;
 
-    int swap = PieceValue[piece_on(to)] - value;
+    int target = unlikely((type_of_m(m) == ENPASSANT)) ? PAWN : piece_on(to);
+    int promo  = promotion_type(m);
+
+    int swap = PieceValue[target] - value;
+
+    if (unlikely(type_of_m(m) == PROMOTION))
+        swap += PieceValue[promo] - PieceValue[PAWN];
+
     if (swap < 0)
         return false;
-
-    swap = PieceValue[piece_on(from)] - swap;
+    int attacker = piece_on(from);
+    swap = unlikely(type_of_m(m) == PROMOTION) ? PieceValue[promo] : PieceValue[attacker] - swap;
     if (swap <= 0)
         return true;
 
-    occ                = pieces() ^ sq_bb(from) ^ sq_bb(to);
+    occ = pieces() ^ sq_bb(from) ^ sq_bb(to);
+    if (unlikely(type_of_m(m) == ENPASSANT))
+    {
+        occ ^= ep_square();
+    }
     Color    stm       = color_of(piece_on(from));
     Bitboard attackers = attackers_to_occ(pos, to, occ), stmAttackers;
     bool     res       = true;
