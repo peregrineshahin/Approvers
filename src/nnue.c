@@ -114,57 +114,67 @@ void nnue_remove_piece(Position* pos, Piece pc, Square sq, Square wksq, Square b
     pos->nnueSubs[index][BLACK] = make_index(type_of_p(pc), color_of(pc), sq, bksq, BLACK);
 }
 
-static void add_sub(Accumulator* acc, Position* pos, Color color) {
+static void add_sub(Accumulator* acc, Accumulator* prev, Position* pos, Color color) {
     int16_t* add_input = &in_weights[pos->nnueAdds[0][color] * L1SIZE];
     int16_t* sub_input = &in_weights[pos->nnueSubs[0][color] * L1SIZE];
 
     for (int i = 0; i < L1SIZE; i++)
-        acc->values[color][i] += add_input[i] - sub_input[i];
+        acc->values[color][i] = prev->values[color][i] - sub_input[i] + add_input[i];
 }
 
-static void add_sub_sub(Accumulator* acc, Position* pos, Color color) {
+static void add_sub_sub(Accumulator* acc, Accumulator* prev, Position* pos, Color color) {
     int add1 = pos->nnueAdds[0][color] * L1SIZE;
     int sub1 = pos->nnueSubs[0][color] * L1SIZE;
     int sub2 = pos->nnueSubs[1][color] * L1SIZE;
 
     for (int i = 0; i < L1SIZE; i++)
-        acc->values[color][i] += in_weights[add1 + i] - in_weights[sub1 + i] - in_weights[sub2 + i];
+        acc->values[color][i] = prev->values[color][i] - in_weights[sub1 + i] - in_weights[sub2 + i]
+                              + in_weights[add1 + i];
 }
 
-static void add_add_sub_sub(Accumulator* acc, Position* pos, Color color) {
+static void add_add_sub_sub(Accumulator* acc, Accumulator* prev, Position* pos, Color color) {
     int add1 = pos->nnueAdds[0][color] * L1SIZE;
     int add2 = pos->nnueAdds[1][color] * L1SIZE;
     int sub1 = pos->nnueSubs[0][color] * L1SIZE;
     int sub2 = pos->nnueSubs[1][color] * L1SIZE;
 
     for (int i = 0; i < L1SIZE; i++)
-        acc->values[color][i] +=
-          in_weights[add1 + i] + in_weights[add2 + i] - in_weights[sub1 + i] - in_weights[sub2 + i];
+        acc->values[color][i] = prev->values[color][i] - in_weights[sub1 + i] - in_weights[sub2 + i]
+                              + in_weights[add1 + i] + in_weights[add2 + i];
 }
 
 void nnue_commit(Position* pos) {
-    Accumulator* acc = &pos->st->accumulator;
+    Accumulator* acc  = &pos->st->accumulator;
+    Accumulator* prev = &(pos->st - 1)->accumulator;
 
     if (acc->needs_refresh)
         return;
+
+    if (prev->needs_refresh)
+    {
+        build_accumulator(acc, pos, WHITE);
+        build_accumulator(acc, pos, BLACK);
+        acc->needs_refresh = false;
+        return;
+    }
 
     const int adds = pos->nnueAddSize;
     const int subs = pos->nnueSubSize;
 
     if (adds == 1 && subs == 1)
     {
-        add_sub(acc, pos, WHITE);
-        add_sub(acc, pos, BLACK);
+        add_sub(acc, prev, pos, WHITE);
+        add_sub(acc, prev, pos, BLACK);
     }
     else if (adds == 1 && subs == 2)
     {
-        add_sub_sub(acc, pos, WHITE);
-        add_sub_sub(acc, pos, BLACK);
+        add_sub_sub(acc, prev, pos, WHITE);
+        add_sub_sub(acc, prev, pos, BLACK);
     }
     else
     {
-        add_add_sub_sub(acc, pos, WHITE);
-        add_add_sub_sub(acc, pos, BLACK);
+        add_add_sub_sub(acc, prev, pos, WHITE);
+        add_add_sub_sub(acc, prev, pos, BLACK);
     }
 
     pos->nnueAddSize = pos->nnueSubSize = 0;

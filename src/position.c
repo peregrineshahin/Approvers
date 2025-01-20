@@ -472,9 +472,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
-
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
     st->plyCounters += 0x101;  // Increment both rule50 and pliesFromNull
@@ -491,7 +488,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
     pos->nnueAddSize = pos->nnueSubSize = 0;
 
     if (type_of_p(piece) == KING && (from & 4) != (to & 4))
-        acc->needs_refresh = true;
+        st->accumulator.needs_refresh = true;
 
     if (unlikely(type_of_m(m) == CASTLING))
     {
