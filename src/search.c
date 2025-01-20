@@ -344,14 +344,10 @@ void thread_search(Position* pos) {
         // Age out PV variability metric
         totBestMoveChanges /= 2;
 
-        // Reset aspiration window starting size
-        if (pos->rootDepth >= 4)
-        {
-            Value previousScore = pv->score;
-            delta               = d_v1;
-            alpha               = max(previousScore - delta, -VALUE_INFINITE);
-            beta                = min(previousScore + delta, VALUE_INFINITE);
-        }
+        Value previousScore = pv->score;
+        delta               = d_v1;
+        alpha               = max(previousScore - delta, -VALUE_INFINITE);
+        beta                = min(previousScore + delta, VALUE_INFINITE);
 
         while (true)
         {
@@ -366,7 +362,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta += delta / 3;
         }
 
 #ifndef KAGGLE
