@@ -809,6 +809,9 @@ moves_loop:  // When in check search starts from here.
                 ss->statScore = 0;
             else
             {
+                if ((ss - 1)->ttPv && ss->ttPv && ss->checkersBB)
+                    r += 1024;
+
                 // Increase reduction if ttMove is a capture
                 if (ttCapture)
                     r += r_v6;
