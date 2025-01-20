@@ -1148,7 +1148,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
 
             // Continuation history based pruning
-            if (!capture
+            if (!capture && !captured_piece()
                 && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)] <= 0)
                 continue;
 
