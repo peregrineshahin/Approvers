@@ -1007,7 +1007,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     Key      posKey;
     Move     ttMove, move, bestMove;
     Value    bestValue, value, unadjustedStaticEval, ttValue, futilityValue, futilityBase;
-    bool     ttHit, pvHit, givesCheck;
+    bool     ttHit, pvHit, capture, givesCheck;
     Depth    ttDepth;
     int      moveCount;
 
@@ -1114,8 +1114,10 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         if (!is_legal(pos, move))
             continue;
 
-        givesCheck = gives_check(pos, ss, move);
         moveCount++;
+        givesCheck          = gives_check(pos, ss, move);
+        capture             = capture_stage(pos, move);
+        PieceType movedType = type_of_p(moved_piece(move));
 
         // Step 6. Pruning
         if (bestValue > VALUE_MATED_IN_MAX_PLY)
@@ -1142,12 +1144,19 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 }
             }
 
+            PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
+            PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
+
+            // Continuation history based pruning
+            if (!capture
+                && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)] <= 0)
+                continue;
+
             // Do not search moves with negative SEE values
             if (!see_test(pos, move, 0))
                 continue;
         }
 
-        PieceType movedType = type_of_p(moved_piece(move));
 
         // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
