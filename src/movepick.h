@@ -38,9 +38,9 @@ static void update_contHist(PieceToHistory cms, Piece pc, Square to, int v) {
     cms[pc][to] += v - cms[pc][to] * abs(v) / cms_v1;
 }
 
-static void history_update(ButterflyHistory history, Color c, Move m, int v) {
-    m &= 4095;
-    history[c][m] += v - history[c][m] * abs(v) / hu_v1;
+static void history_update(const Position* pos, Color c, Move m, int v) {
+    int16_t* entry = &(*pos->mainHistory)[attacked_by_opp(pos, from_sq(m))][c][from_to(m)];
+    *entry += v - (*entry) * abs(v) / hu_v1;
 }
 
 static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {

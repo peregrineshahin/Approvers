@@ -551,7 +551,7 @@ Value search(
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+        history_update(pos, !stm(), (ss - 1)->currentMove, bonus);
     }
 
     // Step 5. Razoring
@@ -816,10 +816,11 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
-                ss->statScore = (*contHist0)[movedType][to_sq(move)]
-                              + (*contHist1)[movedType][to_sq(move)]
-                              + (*contHist2)[movedType][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+                ss->statScore =
+                  (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
+                  + (*contHist2)[movedType][to_sq(move)]
+                  + (*pos->mainHistory)[attacked_by_opp(pos, from_sq(move))][!stm()][from_to(move)]
+                  - lmr_v3;
             }
 
             // Decrease/increase reduction for moves with a good/bad history.
@@ -942,7 +943,7 @@ moves_loop:  // When in check search starts from here.
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
             {
-                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
+                history_update(pos, stm(), quietsSearched[i], -malus);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
                                               to_sq(quietsSearched[i]), -malus);
             }
@@ -970,8 +971,7 @@ moves_loop:  // When in check search starts from here.
         update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
                                       stat_bonus(depth) * bonus / pcmb_v10);
 
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
-                       stat_bonus(depth) * bonus / pcmb_v11);
+        history_update(pos, !stm(), (ss - 1)->currentMove, stat_bonus(depth) * bonus / pcmb_v11);
     }
 
     // If no good move is found and the previous position was ttPv, then the
@@ -1299,7 +1299,7 @@ static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bo
     }
 
     Color c = stm();
-    history_update(*pos->mainHistory, c, move, bonus);
+    history_update(pos, c, move, bonus);
     update_continuation_histories(ss, moved_piece(move), to_sq(move), bonus);
 }
 

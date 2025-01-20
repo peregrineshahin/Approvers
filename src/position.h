@@ -64,6 +64,7 @@ struct Stack {
     uint8_t    epSquare;
     Key        key;
     Bitboard   checkersBB;
+    Bitboard   oppThreats;
     PVariation pv;
 
     // Original search stack data
@@ -150,6 +151,7 @@ void pos_set(Position* pos, char* fen);
 
 // PURE Bitboard attackers_to_occ(const Position *pos, Square s, Bitboard occupied);
 PURE Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboard* pinners);
+Bitboard      threats(Position* pos, Color side);
 
 PURE bool is_legal(const Position* pos, Move m);
 PURE bool is_pseudo_legal(const Position* pos, Move m);
@@ -240,6 +242,10 @@ static bool low_material(const Position* pos) {
     const Bitboard rooks = pieces_p(ROOK);
     return pieces_p(QUEEN) == 0 && !more_than_one(rooks)
         && popcount(pieces_pp(KNIGHT, BISHOP)) + 2 * (rooks != 0) <= 3;
+}
+
+static bool attacked_by_opp(const Position* pos, Square sq) {
+    return pos->st->oppThreats & sq_bb(sq);
 }
 
 void pos_set_check_info(Position* pos);

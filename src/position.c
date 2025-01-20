@@ -58,6 +58,7 @@ static void set_check_info(Position* pos) {
     st->checkSquares[ROOK]   = attacks_from_rook(st->ksq);
     st->checkSquares[QUEEN]  = st->checkSquares[BISHOP] | st->checkSquares[ROOK];
     st->checkSquares[KING]   = 0;
+    st->oppThreats           = threats(pos, them);
 }
 
 Key H1(Key h) { return h & 0x1fff; }
@@ -277,6 +278,25 @@ Bitboard slider_blockers(const Position* pos, Bitboard sliders, Square s, Bitboa
     return blockers;
 }
 #endif
+
+
+Bitboard threats(Position* pos, Color side) {
+    Bitboard threats = 0;
+    Bitboard occ     = pieces();
+
+    Bitboard pawns = pieces_cp(side, PAWN);
+    while (pawns)
+        threats |= attacks_from_pawn(pop_lsb(&pawns), side);
+
+    for (int pt = KNIGHT; pt <= KING; pt++)
+    {
+        Bitboard bb = pieces_cp(side, pt);
+        while (bb)
+            threats |= attacks_bb(pt, pop_lsb(&bb), occ);
+    }
+
+    return threats;
+}
 
 
 // Tests whether a pseudo-legal move is legal
