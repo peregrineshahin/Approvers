@@ -35,9 +35,9 @@ Value evaluate(Position* pos, bool isRootStm) {
     v = eval_scale * v / 100;
 
     if (isRootStm)
-        v += 40;
+        v += 24;
     else
-        v -= 40;
+        v -= 24;
 
     int non_pawn_material = mat_n * popcount(pieces_p(KNIGHT)) + mat_b * popcount(pieces_p(BISHOP))
                           + mat_r * popcount(pieces_p(ROOK)) + mat_q * popcount(pieces_p(QUEEN));
