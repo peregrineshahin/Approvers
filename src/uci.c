@@ -234,7 +234,13 @@ SMALL void uci_loop(int argc, char** argv) {
         if (strcmp(token, "go") == 0)
             go(str);
         else if (strcmp(token, "position") == 0)
+        {
+            char final[4096] = "fen ";
             position(pos, str);
+            pos_fen(pos, final + 4);
+
+            position(pos, final);
+        }
 #ifndef KAGGLE
         else if (strcmp(token, "uci") == 0)
         {
