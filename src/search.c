@@ -183,9 +183,10 @@ static int futility_margin(Depth d, bool improving) {
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
-static Depth reduction(int i, Depth d, int mn) {
-    int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+static Depth reduction(bool i, Depth d, int mn, int delta, int rootDelta) {
+    int reductionScale = Reductions[d] * Reductions[mn];
+    return reductionScale - delta * 768 / rootDelta + !i * reductionScale * 108 / 300 + 1168
+         - mn * 64;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -283,6 +284,7 @@ void mainthread_search(void) {
 
         pos->completedDepth = 0;
         pos->rootDepth      = 0;
+        pos->rootDelta      = 0;
 
         prepare_for_search();
         thread_search(pos);
@@ -355,7 +357,8 @@ void thread_search(Position* pos) {
 
         while (true)
         {
-            bestValue = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
+            pos->rootDelta = beta - alpha;
+            bestValue      = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
 
             // If search has been stopped, we break immediately
             if (Thread.stop)
@@ -671,7 +674,9 @@ moves_loop:  // When in check search starts from here.
         // Calculate new depth for this move
         newDepth = depth - 1;
 
-        Depth r = reduction(improving, depth, moveCount);
+        int delta = beta - alpha;
+
+        Depth r = reduction(improving, depth, moveCount, delta, pos->rootDelta);
 
         // Step 11. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
@@ -680,7 +685,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / 1056, 0);
 
             if (capture || givesCheck)
             {
@@ -789,8 +794,6 @@ moves_loop:  // When in check search starts from here.
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
-
-        r = r * r_v1;
 
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
@@ -1380,6 +1383,7 @@ SMALL void prepare_for_search() {
 
     Position* pos      = Thread.pos;
     pos->rootDepth     = 0;
+    pos->rootDelta     = 0;
     pos->nodes         = 0;
     pos->st->pv.length = 0;
 
