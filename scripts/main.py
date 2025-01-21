@@ -1,8 +1,6 @@
-import os
 import subprocess
 
 p = "/kaggle_simulations/agent/cfish"
-os.system("chmod +x " + p)
 e = subprocess.Popen([p], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
 def w(v):

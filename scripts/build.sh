@@ -6,6 +6,7 @@ cd ../src || exit
 make clean
 make kaggle
 strip cfish
+chmod +x cfish
 
 cd ../build || exit
 
