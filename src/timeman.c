@@ -55,12 +55,11 @@ void time_init(Color us, int ply) {
     Time.startTime = Limits.startTime;
 
     int mtg = 50;
-    if (!Limits.inc[us] && Limits.time[us] < 1000 && (double) mtg / Limits.time[us] > 0.05)
+    if (Limits.time[us] < 1000 && (double) mtg / Limits.time[us] > 0.05)
         mtg = (int) (Limits.time[us] * 0.05);
 
     // Make sure that timeLeft > 0 since we may use it as a divisor
-    TimePoint timeLeft =
-      max(1, Limits.time[us] + Limits.inc[us] * (mtg - 1) - MoveOverhead * (2 + mtg));
+    TimePoint timeLeft = max(1, Limits.time[us] - MoveOverhead * (2 + mtg));
 
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
