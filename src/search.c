@@ -1105,6 +1105,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     // and checks (only if depth >= DEPTH_QS_CHECKS) will be generated.
     mp_init_q(pos, ttMove, depth, prevSq);
 
+    int quietCheckEvasions = 0;
+
     // Step 5. Loop through the moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, 0)))
     {
@@ -1140,10 +1142,17 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 }
             }
 
+            // We prune after 2nd quiet check evasion where being 'in check' is implicitly checked through the counter
+            // and being a 'quiet' apart from being a tt move is assumed after an increment because captures are pushed ahead.
+            if (quietCheckEvasions > 1)
+                break;
+
             // Do not search moves with negative SEE values
             if (!see_test(pos, move, 0))
                 continue;
         }
+
+        quietCheckEvasions += !capture_stage(pos, move) && ss->checkersBB;
 
         PieceType movedType = type_of_p(moved_piece(move));
 
