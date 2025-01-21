@@ -24,6 +24,12 @@
 
 int MoveOverhead = 10;
 
+#ifdef KAGGLE
+int DelayMs = 50;
+#else
+int DelayMs = 0;
+#endif
+
 extern int tm_v13;
 extern int tm_v14;
 extern int tm_v15;
@@ -71,7 +77,7 @@ void time_init(Color us, int ply) {
     max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
 
     // Never use more than 80% of the available time for this move
-    Time.optimumTime = opt_scale * timeLeft;
+    Time.optimumTime = DelayMs + opt_scale * timeLeft;
     Time.maximumTime =
-      min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+      DelayMs + min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
 }
