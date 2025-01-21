@@ -203,7 +203,8 @@ static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
 Value        to_corrected(Position* pos, Value unadjustedStaticEval);
 static void  update_correction_histories(const Position* pos, Depth depth, int32_t diff);
-static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
+static void
+update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus, int quietCount, int depth);
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth);
 static void check_time(void);
@@ -489,7 +490,8 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!capture_stage(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
+                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128, quietCount,
+                                   depth);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
@@ -933,7 +935,7 @@ moves_loop:  // When in check search starts from here.
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
-            update_quiet_stats(pos, ss, bestMove, bonus);
+            update_quiet_stats(pos, ss, bestMove, bonus, quietCount, depth);
 
 #pragma clang loop unroll(disable)
             // Decrease all the other played quiet moves
@@ -1288,12 +1290,17 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
 }
 
 // Updates move sorting heuristics when a new quiet best move is found
-static void update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus) {
+static void update_quiet_stats(
+  const Position* pos, Stack* ss, Move move, int bonus, int quietCount, int depth) {
     if (ss->killers[0] != move)
     {
         ss->killers[1] = ss->killers[0];
         ss->killers[0] = move;
     }
+
+    // We found a low-depth cutoff too easily
+    if ((quietCount == 1 && depth <= 3))
+        return;
 
     Color c = stm();
     history_update(*pos->mainHistory, c, move, bonus);
