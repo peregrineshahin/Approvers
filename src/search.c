@@ -597,11 +597,6 @@ Value search(
         && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
              && ttValue < probCutBeta))
     {
-
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && capture_stage(pos, ttMove))
-            return probCutBeta;
-
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
 
         Depth probCutDepth = max(depth - 4, 0);
