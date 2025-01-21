@@ -1075,7 +1075,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         else
         {
             unadjustedStaticEval =
-              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
+              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval;
 
             ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
         }
