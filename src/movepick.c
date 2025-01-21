@@ -89,6 +89,8 @@ SMALL static void score_quiets(const Position* pos) {
           / 128;
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
+
+        m->value += (bool) (st->checkSquares[pt] & sq_bb(to)) * 16384;
     }
 }
 
