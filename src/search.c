@@ -838,7 +838,7 @@ moves_loop:  // When in check search starts from here.
 
                 if (!capture)
                 {
-                    int bonus = value >= beta  ? stat_bonus(newDepth)
+                    int bonus = value >= beta ? (1 + 2 * (moveCount > depth)) * stat_bonus(newDepth)
                               : value <= alpha ? -stat_malus(newDepth)
                                                : 0;
                     update_continuation_histories(ss, make_piece(0, movedType), to_sq(move), bonus);
