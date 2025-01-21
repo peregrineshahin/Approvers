@@ -547,7 +547,7 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
+    if (!excludedMove && prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
