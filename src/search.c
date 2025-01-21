@@ -460,7 +460,7 @@ Value search(
 
     // Step 2. Check for aborted search and immediate draw
     if (!rootNode && (Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
-        return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
+        return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos, !(ss->ply & 1)) : VALUE_DRAW;
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
@@ -514,14 +514,15 @@ Value search(
     else if (excludedMove)
     {
         // Providing the hint that this node's accumulator will be used often
-        evaluate(pos);
+        evaluate(pos, !(ss->ply & 1));
         unadjustedStaticEval = eval = ss->staticEval;
     }
     else if (ttHit)
     {
         // Never assume anything about values stored in TT
         if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
-            unadjustedStaticEval = evaluate(pos);
+            unadjustedStaticEval = evaluate(pos, !(ss->ply & 1));
+
 
         eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
 
@@ -533,7 +534,8 @@ Value search(
     else
     {
         if ((ss - 1)->currentMove != MOVE_NULL)
-            unadjustedStaticEval = evaluate(pos);
+            unadjustedStaticEval = evaluate(pos, !(ss->ply & 1));
+
         else
             unadjustedStaticEval = -(ss - 1)->staticEval + tempo;
 
@@ -1020,7 +1022,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
     // Step 2. Check for aborted search and immediate draw
     if ((Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
-        return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
+        return ss->ply >= MAX_PLY && !ss->checkersBB ? !(ss->ply & 1) : VALUE_DRAW;
 
     // Step 3. Mate distance pruning. Even if we mate at the next move our score
     // would be at best mate_in(ss->ply+1), but if alpha is already bigger because
@@ -1063,7 +1065,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         {
             // Never assume anything about values stored in TT
             if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
-                unadjustedStaticEval = evaluate(pos);
+                unadjustedStaticEval = evaluate(pos, !(ss->ply & 1));
 
             ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
 
@@ -1074,8 +1076,9 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         }
         else
         {
-            unadjustedStaticEval =
-              (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
+            unadjustedStaticEval = (ss - 1)->currentMove != MOVE_NULL
+                                   ? evaluate(pos, !(ss->ply & 1))
+                                   : -(ss - 1)->staticEval + tempo;
 
             ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
         }

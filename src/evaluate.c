@@ -29,10 +29,15 @@ extern int mat_b;
 extern int mat_r;
 extern int mat_q;
 
-Value evaluate(Position* pos) {
+Value evaluate(Position* pos, bool isRootStm) {
     Value v = nnue_evaluate(pos);
 
     v = eval_scale * v / 100;
+
+    if (isRootStm)
+        v += 40;
+    else
+        v -= 40;
 
     int non_pawn_material = mat_n * popcount(pieces_p(KNIGHT)) + mat_b * popcount(pieces_p(BISHOP))
                           + mat_r * popcount(pieces_p(ROOK)) + mat_q * popcount(pieces_p(QUEEN));

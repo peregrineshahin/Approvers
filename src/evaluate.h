@@ -3,5 +3,5 @@
 
 #include "types.h"
 
-Value evaluate(Position* pos);
+Value evaluate(Position* pos, bool isRootStm);
 #endif  // EVALUATE_H
