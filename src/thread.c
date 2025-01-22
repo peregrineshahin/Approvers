@@ -45,7 +45,7 @@ void thread_init() {
     pos->st[-1].endMoves = pos->moveList;
 
 #pragma clang loop unroll(disable)
-    for (int pc = 0; pc < 7; pc++)
+    for (int pc = 0; pc < 6; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
             Sentinel[pc][sq] = -1;
