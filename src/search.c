@@ -177,9 +177,7 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) {
-    return ft_v1 * (d - improving) + ft_v2 * d * d;
-}
+static PieceToHistory Sentinel;
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -187,6 +185,10 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
     return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+}
+
+static int futility_margin(Depth d, bool improving) {
+    return ft_v1 * (d - improving) + ft_v2 * d * d;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -249,7 +251,7 @@ SMALL void search_clear(void) {
     for (int pc = 0; pc < 7; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
+            Sentinel[pc][sq] = -1;
 
     Thread.previousScore = VALUE_INFINITE;
 }
@@ -315,7 +317,7 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = -7; i < 0; i++)
     {
-        ss[i].continuationHistory = &(*pos->contHist)[0][0][0];  // Use as sentinel
+        ss[i].continuationHistory = &Sentinel;
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
     }
@@ -573,7 +575,7 @@ Value search(
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
-        ss->continuationHistory = &(*pos->contHist)[0][0][0];
+        ss->continuationHistory = &Sentinel;
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -1091,7 +1093,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         futilityBase = ss->staticEval + qsf_v1;
     }
 
-    ss->continuationHistory = &(*pos->contHist)[0][0][0];
+    ss->continuationHistory = &Sentinel;
 
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 

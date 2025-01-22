@@ -21,7 +21,8 @@
 #include "search.h"
 #include "thread.h"
 
-ThreadStruct Thread = {0};
+PieceToHistory Sentinel;
+ThreadStruct   Thread = {0};
 
 void thread_init() {
     Thread.testPonder = 0;
@@ -30,6 +31,7 @@ void thread_init() {
     pos->mainHistory    = calloc(sizeof(ButterflyHistory), 1);
     pos->captureHistory = calloc(sizeof(CapturePieceToHistory), 1);
     pos->corrHists      = calloc(sizeof(CorrectionHistory), 1);
+    pos->contHist       = calloc(sizeof(ContinuationHistoryStat), 1);
     pos->moveList       = calloc(10000 * sizeof(ExtMove), 1);
 
     // Allocate 215 Stack slots.
@@ -42,12 +44,11 @@ void thread_init() {
     pos->st              = pos->stack + 100;
     pos->st[-1].endMoves = pos->moveList;
 
-    pos->contHist = calloc(sizeof(ContinuationHistoryStat), 1);
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 7; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
+            Sentinel[pc][sq] = -1;
 
     Thread.pos = pos;
 
