@@ -102,8 +102,9 @@ PARAM(hm_v3, 128, 20.0)
 PARAM(hm_v4, 1530, 180.0)
 PARAM(cnht_v1, 1021, 80.0)
 PARAM(cnht_v2, 996, 80.0)
-PARAM(cnht_v3, 1044, 80.0)
-PARAM(cnht_v4, 943, 80.0)
+PARAM(cnht_v3, 1024, 80.0)
+PARAM(cnht_v4, 1044, 80.0)
+PARAM(cnht_v5, 943, 80.0)
 PARAM(asd_v1, 3, 0.5)
 PARAM(qsf_v1, 207, 18.0)
 PARAM(ch_v1, 23, 3.6)
@@ -122,8 +123,9 @@ PARAM(mp_v3, 2678, 180.0)
 PARAM(mp_v4, 195, 12.0)
 PARAM(mp_v5, 334, 12.0)
 PARAM(mp_v6, 297, 12.0)
-PARAM(mp_v7, 250, 12.0)
-PARAM(mp_v8, 136, 12.0)
+PARAM(mp_v7, 128, 12.0)
+PARAM(mp_v8, 250, 12.0)
+PARAM(mp_v9, 136, 12.0)
 PARAM(eval_scale, 93, 2.0)
 PARAM(mat_scale, 25855, 340.0)
 PARAM(mat_n, 643, 48.0)
@@ -1261,11 +1263,14 @@ static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bon
     if (ss->checkersBB)
         return;
 
+    if (move_is_ok((ss - 3)->currentMove))
+        update_contHist(*(ss - 3)->continuationHistory, pt, s, cnht_v3 * bonus / 1024);
+
     if (move_is_ok((ss - 4)->currentMove))
-        update_contHist(*(ss - 4)->continuationHistory, pt, s, cnht_v3 * bonus / 1024);
+        update_contHist(*(ss - 4)->continuationHistory, pt, s, cnht_v4 * bonus / 1024);
 
     if (move_is_ok((ss - 6)->currentMove))
-        update_contHist(*(ss - 6)->continuationHistory, pt, s, cnht_v4 * bonus / 1024);
+        update_contHist(*(ss - 6)->continuationHistory, pt, s, cnht_v5 * bonus / 1024);
 }
 
 // Updates move sorting heuristics when a new capture best move is found
