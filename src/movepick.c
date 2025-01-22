@@ -151,7 +151,7 @@ top:
             move = (st->cur++)->move;
             if (move != st->ttMove)
             {
-                if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2))
+                if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2 + 100))
                     return move;
 
                 // Losing capture, move it to the beginning of the array.
