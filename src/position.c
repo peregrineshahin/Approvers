@@ -811,7 +811,7 @@ bool see_test(const Position* pos, Move m, int value) {
 
 // Tests whether the position is drawn by 50-move rule or by repetition.
 // It does not detect stalemates.
-SMALL bool is_draw(const Position* pos) {
+bool is_draw(const Position* pos) {
     Stack* st = pos->st;
 
     // st->pliesFromNull is reset both on null moves and on zeroing moves.
