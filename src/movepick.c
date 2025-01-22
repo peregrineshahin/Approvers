@@ -24,11 +24,6 @@
 extern int mp_v1;
 extern int mp_v2;
 extern int mp_v3;
-extern int mp_v4;
-extern int mp_v5;
-extern int mp_v6;
-extern int mp_v7;
-extern int mp_v8;
 
 #define LIMIT (-(1 << 30))
 
@@ -83,10 +78,12 @@ SMALL static void score_quiets(const Position* pos) {
         Square    from = move >> 6;
         PieceType pt   = type_of_p(piece_on(from));
 
-        m->value =
-          (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[pt][to] + mp_v6 * (*contHist1)[pt][to]
-           + mp_v7 * (*contHist2)[pt][to] + mp_v8 * (*contHist3)[pt][to])
-          / 128;
+        m->value = (*history)[c][move];
+
+        m->value += (*contHist0)[pt][to];
+        m->value += (*contHist1)[pt][to];
+        m->value += (*contHist2)[pt][to];
+        m->value += (*contHist3)[pt][to] / 2;
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
     }
