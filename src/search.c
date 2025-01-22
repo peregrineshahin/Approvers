@@ -1227,16 +1227,16 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
 
+    int32_t newWeight  = min(ch_v1, 1 + depth);
+    int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
+
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
     {
-        int16_t* entry = &(*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
+        int16_t* entry  = &(*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
+        int32_t  update = (*entry * (ch_v3 - newWeight) + scaledDiff * newWeight) / ch_v3;
 
-        int32_t newWeight  = min(ch_v1, 1 + depth);
-        int32_t scaledDiff = diff * ch_v2;
-        int32_t update     = *entry * (ch_v3 - newWeight) + scaledDiff * newWeight;
-
-        *entry = max(-CORRECTION_HISTORY_MAX, min(CORRECTION_HISTORY_MAX, update / ch_v3));
+        *entry = clamp(update, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
     }
 }
 
