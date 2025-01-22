@@ -483,7 +483,7 @@ Value search(
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff
-    if (!PvNode && ttHit && tte_depth(tte) >= depth && !excludedMove
+    if (!PvNode && ttValue != VALUE_NONE && tte_depth(tte) >= depth && !excludedMove
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
@@ -508,8 +508,8 @@ Value search(
     if (ss->checkersBB)
     {
         // Skip early pruning when in check
-        unadjustedStaticEval = eval = ss->staticEval = VALUE_NONE;
-        improving                                    = false;
+        unadjustedStaticEval = ss->staticEval = VALUE_NONE;
+        improving                             = false;
         goto moves_loop;
     }
     else if (excludedMove)
@@ -556,12 +556,8 @@ Value search(
     }
 
     // Step 5. Razoring
-    if (!PvNode && !improving && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
-    {
-        value = qsearch(pos, ss, alpha - 1, alpha, 0);
-        if (value < alpha)
-            return value;
-    }
+    if (!PvNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
+        return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
     if (!ss->ttPv && eval - futility_margin(depth, improving) >= beta && (ttCapture || !ttMove)
@@ -593,13 +589,12 @@ Value search(
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
-    if (!PvNode && depth >= 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
-        && !(ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE
-             && ttValue < probCutBeta))
+    if (depth >= 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
+        && !(tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue < probCutBeta))
     {
 
-        if (ttHit && tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta
-            && ttMove && capture_stage(pos, ttMove))
+        if (tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta && ttMove
+            && capture_stage(pos, ttMove))
             return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
@@ -609,8 +604,6 @@ Value search(
         while ((move = next_move(pos, 0)))
             if (move != excludedMove && is_legal(pos, move))
             {
-                capture = true;
-
                 ss->currentMove = move;
                 ss->continuationHistory =
                   &(*pos->contHist)[stm()][type_of_p(moved_piece(move))][to_sq(move)];
@@ -629,7 +622,8 @@ Value search(
                 {
                     tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
                              probCutDepth + 1, move, unadjustedStaticEval);
-                    return value - (probCutBeta - beta);
+                    if (abs(value) < VALUE_MATE_IN_MAX_PLY)
+                        return value - (probCutBeta - beta);
                 }
             }
     }
@@ -1047,7 +1041,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     ttMove  = ttHit ? tte_move(tte) : 0;
     pvHit   = ttHit && tte_is_pv(tte);
 
-    if (ttHit && tte_depth(tte) >= ttDepth
+    if (ttValue != VALUE_NONE && tte_depth(tte) >= ttDepth
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
         return ttValue;
 
