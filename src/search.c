@@ -132,7 +132,6 @@ PARAM(mat_r, 1461, 96.0)
 PARAM(mat_q, 2321, 192.0)
 PARAM(pcmb_v1, 85, 12.0)
 PARAM(pcmb_v4, 151, 12.0)
-PARAM(pcmb_v5, 7, 0.5)
 PARAM(pcmb_v6, 113, 12.0)
 PARAM(pcmb_v7, 102, 12.0)
 PARAM(pcmb_v8, 134, 8.4)
@@ -957,7 +956,7 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > 4) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
+        int bonus = pcmb_v1 * (depth > 5) + pcmb_v4 * ((ss - 1)->moveCount > 10)
                   + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
                   + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83);
 
