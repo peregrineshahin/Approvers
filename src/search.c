@@ -637,6 +637,7 @@ moves_loop:  // When in check search starts from here.
     PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
     PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
     PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
+    PieceToHistory* contHist3 = (ss - 6)->continuationHistory;
 
     mp_init(pos, ttMove, depth);
 
@@ -807,10 +808,13 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
-                ss->statScore = (*contHist0)[movedType][to_sq(move)]
-                              + (*contHist1)[movedType][to_sq(move)]
-                              + (*contHist2)[movedType][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+                ss->statScore = (mp_v4 * (*pos->mainHistory)[!stm()][from_to(move)]
+                                 + mp_v5 * (*contHist0)[movedType][to_sq(move)]
+                                 + mp_v6 * (*contHist1)[movedType][to_sq(move)]
+                                 + mp_v7 * (*contHist2)[movedType][to_sq(move)]
+                                 + mp_v8 * (*contHist3)[movedType][to_sq(move)])
+                                / 128
+                              - lmr_v3;
             }
 
             // Decrease/increase reduction for moves with a good/bad history.
