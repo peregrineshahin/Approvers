@@ -965,7 +965,7 @@ moves_loop:  // When in check search starts from here.
         int bonus = pcmb_v1 * (depth > 4) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
                   + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
                   + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83)
-                  + 80 * ((ss - 1)->isTTMove);
+                  - 80 * ((ss - 1)->isTTMove);
 
         // Proportional to "how much damage we have to undo"
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
