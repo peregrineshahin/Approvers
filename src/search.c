@@ -473,6 +473,7 @@ Value search(
     (ss + 2)->cutoffCnt                         = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
     ss->statScore = 0;
+    ss->isTTMove  = false;
 
 
     // Step 3. Transposition table lookup
@@ -578,6 +579,7 @@ Value search(
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
+        ss->isTTMove            = false;
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
 
@@ -611,6 +613,7 @@ Value search(
             if (move != excludedMove && is_legal(pos, move))
             {
                 ss->currentMove = move;
+                ss->isTTMove    = (move == ttMove);
                 ss->continuationHistory =
                   &(*pos->contHist)[stm()][type_of_p(moved_piece(move)) - 1][to_sq(move)];
 
@@ -788,6 +791,7 @@ moves_loop:  // When in check search starts from here.
         prefetch(tt_first_entry(key()));
 
         // Update the current move (this must be done after singular extension search)
+        ss->isTTMove            = (move == ttMove);
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
@@ -965,7 +969,8 @@ moves_loop:  // When in check search starts from here.
     {
         int bonus = pcmb_v1 * (depth > 4) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
                   + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
-                  + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83);
+                  + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83)
+                  - 128 * ((ss - 1)->isTTMove);
 
         // Proportional to "how much damage we have to undo"
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
@@ -1160,6 +1165,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         // Speculative prefetch as early as possible
         prefetch(tt_first_entry(key()));
 
+        ss->isTTMove            = (move == ttMove);
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
