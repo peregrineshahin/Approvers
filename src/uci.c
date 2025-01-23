@@ -228,15 +228,15 @@ SMALL void uci_loop(int argc, char** argv) {
         if (strcmp(token, "kpos") == 0)
         {
             char* lastMove = strstr(str, "moves") + 6;
-            if (*lastMove)
+            if (!*lastMove || KagglePosition[0] == 0)
             {
-                strcat(KagglePosition, " ");
-                strcat(KagglePosition, lastMove);
+                lastMove[-1] = 0;
+                strcpy(KagglePosition, str);
             }
             else
             {
-                strcpy(KagglePosition, str);
-                KagglePosition[strlen(KagglePosition) - 1] = 0;
+                strcat(KagglePosition, " ");
+                strcat(KagglePosition, lastMove);
             }
 
             char* buffer = strdup(KagglePosition);
