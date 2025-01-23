@@ -932,7 +932,7 @@ moves_loop:  // When in check search starts from here.
         // Quiet best move: update move sorting heuristics
         if (!capture_stage(pos, bestMove))
         {
-            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
+            int bonus = stat_bonus(depth + (bestValue > beta + qb_v1)) + 25 * quietCount;
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
             update_quiet_stats(pos, ss, bestMove, bonus);
