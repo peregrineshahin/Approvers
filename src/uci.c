@@ -41,11 +41,12 @@ extern alignas(64) int16_t in_biases[L1SIZE];
 // FEN string of the initial position, normal chess
 char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+char KagglePosition[4096] = {0};
+
 // position() is called when the engine receives the "position" UCI
 // command. The function sets up the position described in the given FEN
 // string ("fen") or the starting position ("startpos") and then makes
 // the moves given in the following move list ("moves").
-
 SMALL void position(Position* pos, char* str) {
     // Start of circular buffer of 100 slots.
     pos->st = pos->stack + 100;
@@ -55,6 +56,7 @@ SMALL void position(Position* pos, char* str) {
 #ifndef KAGGLE
     else if (strncmp(str, "startpos", 8) == 0)
         pos_set(pos, StartFEN);
+#endif
 
     // Parse move list (if any).
     char* moves = strstr(str, "moves");
@@ -65,13 +67,11 @@ SMALL void position(Position* pos, char* str) {
         moves += 5;
 
         int ply = 0;
-    #pragma clang loop unroll(disable)
+#pragma clang loop unroll(disable)
         for (moves = strtok(moves, " \t"); moves; moves = strtok(NULL, " \t"))
         {
-            Move m = uci_to_move(pos, moves);
-            if (!m)
-                break;
-            do_move(pos, m, gives_check(pos, pos->st, m));
+            Move move = uci_to_move(pos, moves);
+            do_move(pos, move, gives_check(pos, pos->st, move));
             pos->gamePly++;
             // Roll over if we reach 100 plies.
             if (++ply == 100)
@@ -91,11 +91,10 @@ SMALL void position(Position* pos, char* str) {
         // Now move some of the game history at the end of the circular buffer
         // in front of that buffer.
         int k = (pos->st - (pos->stack + 100)) - max(7, pos->st->pliesFromNull);
-    #pragma clang loop unroll(disable)
+#pragma clang loop unroll(disable)
         for (; k < 0; k++)
             memcpy(pos->stack + 100 + k, pos->stack + 200 + k, StateSize);
     }
-#endif
 }
 
 
@@ -226,9 +225,27 @@ SMALL void uci_loop(int argc, char** argv) {
 
         if (strcmp(token, "go") == 0)
             go(str);
+        if (strcmp(token, "kpos") == 0)
+        {
+            char* lastMove = strstr(str, "moves") + 6;
+            if (*lastMove)
+            {
+                strcat(KagglePosition, " ");
+                strcat(KagglePosition, lastMove);
+            }
+            else
+            {
+                strcpy(KagglePosition, str);
+                KagglePosition[strlen(KagglePosition) - 1] = 0;
+            }
+
+            char* buffer = strdup(KagglePosition);
+            position(pos, buffer);
+            free(buffer);
+        }
+#ifndef KAGGLE
         else if (strcmp(token, "position") == 0)
             position(pos, str);
-#ifndef KAGGLE
         else if (strcmp(token, "uci") == 0)
         {
             printf("id name\n");

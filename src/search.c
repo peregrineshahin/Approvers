@@ -30,6 +30,8 @@
 #include "tt.h"
 #include "uci.h"
 
+extern char KagglePosition[4096];
+
 #ifndef KAGGLE
 Parameter parameters[255];
 int       parameters_count = 0;
@@ -271,6 +273,11 @@ void mainthread_search(void) {
 
     printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
+
+#ifdef KAGGLE
+    strcat(KagglePosition, " ");
+    strcat(KagglePosition, buf);
+#endif
 
     if (!IsKaggle && !Thread.testPonder)
         return;
