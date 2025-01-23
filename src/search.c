@@ -1041,16 +1041,24 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     ttDepth = ss->checkersBB || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS : DEPTH_QS_NO_CHECKS;
 
     // Step 3. Transposition table lookup
-    posKey  = key();
-    tte     = tt_probe(posKey, &ttHit);
-    ttValue = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
-    ttMove  = ttHit ? tte_move(tte) : 0;
-    pvHit   = ttHit && tte_is_pv(tte);
+    posKey        = key();
+    tte           = tt_probe(posKey, &ttHit);
+    ttValue       = ttHit ? value_from_tt(tte_value(tte), ss->ply, rule50_count()) : VALUE_NONE;
+    ttMove        = ttHit ? tte_move(tte) : 0;
+    pvHit         = ttHit && tte_is_pv(tte);
+    Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
     if (ttValue != VALUE_NONE && tte_depth(tte) >= ttDepth
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
-        return ttValue;
+    {
+        // Extra penalty for early quiet moves of the previous ply
+        if (depth == 0 && ttValue >= beta && !capture_stage(pos, ttMove) && (ss - 1)->moveCount <= 2
+            && !captured_piece() && prevSq != SQ_NONE)
+            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                          ttct_v2 * -stat_malus(1) / 128);
 
+        return ttValue;
+    }
     // Step 4. Static evaluation of the position
     if (ss->checkersBB)
     {
@@ -1099,7 +1107,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
     ss->continuationHistory = &Sentinel;
 
-    Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
     // Initialize move picker data for the current position, and prepare to search
     // the moves. Because the depth is <= 0 here, only captures, queen promotions
