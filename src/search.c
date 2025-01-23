@@ -789,36 +789,39 @@ moves_loop:  // When in check search starts from here.
 
         r = r * r_v1;
 
+        // Decrease reduction if position is or has been on the PV
+        if (ss->ttPv)
+            r -= r_v2 + PvNode * r_v3;
+
+        if (cutNode)
+            r += 2355 - (tte_depth(tte) >= depth && ss->ttPv) * 1141;
+
+        if (capture)
+            ss->statScore = 0;
+        else
+        {
+            // Increase reduction if ttMove is a capture
+            if (ttCapture)
+                r += r_v6;
+
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
+            ss->statScore = (*contHist0)[movedType][to_sq(move)]
+                          + (*contHist1)[movedType][to_sq(move)]
+                          + (*contHist2)[movedType][to_sq(move)]
+                          + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+        }
+
+        if (move == ttMove)
+            r -= 1960;
+
+        // Decrease/increase reduction for moves with a good/bad history.
+        r -= ss->statScore * r_v13 / 16384;
+
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2 + PvNode * r_v3;
-
-            if (cutNode && move != ss->killers[0])
-                r += r_v8;
-
-            if (capture)
-                ss->statScore = 0;
-            else
-            {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
-                ss->statScore = (*contHist0)[movedType][to_sq(move)]
-                              + (*contHist1)[movedType][to_sq(move)]
-                              + (*contHist2)[movedType][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
-            }
-
-            // Decrease/increase reduction for moves with a good/bad history.
-            r -= ss->statScore * r_v13 / 16384;
-
             Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
@@ -847,7 +850,12 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+            // Increase reduction if ttMove is not present (~6 Elo)
+            if (!ttMove)
+                r += 2111;
+
+            value =
+              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > 3444), !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
