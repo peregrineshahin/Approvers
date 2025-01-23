@@ -108,9 +108,8 @@ PARAM(cnht_v3, 1044, 80.0)
 PARAM(cnht_v4, 943, 80.0)
 PARAM(asd_v1, 3, 0.5)
 PARAM(qsf_v1, 207, 18.0)
-PARAM(ch_v1, 23, 3.6)
+PARAM(ch_v1, 128, 3.6)
 PARAM(ch_v2, 176, 18.0)
-PARAM(ch_v3, 223, 24.0)
 PARAM(ch_v5, 146, 12.0)
 PARAM(ch_v6, 131, 12.0)
 PARAM(ch_v7, 111, 12.0)
@@ -1222,14 +1221,14 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
 
-    int32_t newWeight  = min(ch_v1, 1 + depth);
+    int32_t newWeight  = min(ch_v1, depth * depth + 4 * depth + 4);
     int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
     {
         int16_t* entry  = &(*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
-        int32_t  update = (*entry * (ch_v3 - newWeight) + scaledDiff * newWeight) / ch_v3;
+        int32_t  update = (*entry * (1024 - newWeight) + scaledDiff * newWeight) / 1024;
 
         *entry = clamp(update, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
     }
