@@ -796,8 +796,8 @@ moves_loop:  // When in check search starts from here.
             if (ss->ttPv)
                 r -= r_v2 + PvNode * r_v3;
 
-            if (cutNode && move != ss->killers[0])
-                r += r_v8;
+            if (cutNode)
+                r += 2355 - (tte_depth(tte) >= depth && ss->ttPv) * 1141;
 
             if (capture)
                 ss->statScore = 0;
