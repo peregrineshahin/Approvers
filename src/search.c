@@ -50,122 +50,135 @@ int       parameters_count = 0;
 
 // Disabled parameters
 // Search parameters
-PARAM(rd_init_v1, 3486)
-PARAM(rd_v1, 569)
-PARAM(rd_v2, 1196)
-PARAM(rd_v3, 988)
-PARAM(qmo_v1, 379)
-PARAM(qmo_v2, 1296)
-PARAM(qmo_v3, 949)
-PARAM(qmo_v4, 1026)
+PARAM(rd_init_v1, 3681)
+PARAM(rd_v1, 579)
+PARAM(rd_v2, 1156)
+PARAM(rd_v3, 1003)
+PARAM(qmo_v1, 380)
+PARAM(qmo_v2, 1373)
+PARAM(qmo_v3, 916)
+PARAM(qmo_v4, 1039)
 PARAM(rz_v1, 6)
-PARAM(rz_v2, 325)
-PARAM(rz_v3, 239)
-PARAM(ft_v1, 82)
+PARAM(rz_v2, 304)
+PARAM(rz_v3, 231)
+PARAM(ft_v1, 87)
 PARAM(ft_v2, 17)
 PARAM(cv_v1, 29)
-PARAM(cv_v2, 117)
-PARAM(nmp_v1, 739)
-PARAM(nmp_v2, 55)
-PARAM(nmp_v3, 156)
-PARAM(nmp_v4, 170)
-PARAM(nmp_v6, 23)
-PARAM(nmp_v8, 87)
-PARAM(nmp_v9, 196)
+PARAM(cv_v2, 116)
+PARAM(nmp_v1, 743)
+PARAM(nmp_v2, 56)
+PARAM(nmp_v3, 160)
+PARAM(nmp_v4, 171)
+PARAM(nmp_v6, 22)
+PARAM(nmp_v8, 95)
+PARAM(nmp_v9, 208)
 PARAM(d_v1, 18)
+PARAM(cbp_v1, 3)
 PARAM(cbp_v2, 3)
 PARAM(cbp_v3, -8)
 PARAM(cbp_v4, -7)
 PARAM(fpp_v1, 7)
-PARAM(fpp_v2, 243)
-PARAM(fpp_v3, 173)
-PARAM(fpp_v4, 68)
+PARAM(fpp_v2, 263)
+PARAM(fpp_v3, 160)
+PARAM(fpp_v4, 65)
 PARAM(fpp_v5, 66)
-PARAM(sqsee_v1, 27)
-PARAM(scsee_v1, 192)
-PARAM(scsee_v2, 30)
-PARAM(scsee_v3, 205)
-PARAM(scsee_v4, 204)
+PARAM(sqsee_v1, 24)
+PARAM(scsee_v1, 193)
+PARAM(scsee_v2, 31)
+PARAM(scsee_v3, 212)
+PARAM(scsee_v4, 233)
 PARAM(fp_v1, 6)
-PARAM(fp_v2, 286)
-PARAM(fp_v3, 259)
+PARAM(fp_v2, 269)
+PARAM(fp_v3, 271)
 PARAM(fp_v4, 7)
 PARAM(se_v1, 5)
-PARAM(se_v2, 131)
-PARAM(se_v5, 26)
-PARAM(prb_v1, 118)
-PARAM(prb_v2, 52)
+PARAM(se_v2, 128)
+PARAM(se_v5, 24)
+PARAM(prb_v1, 120)
+PARAM(prb_v2, 51)
+PARAM(prb_v3, -2)
 PARAM(iir_v1, 6)
 PARAM(iir_v2, 11)
 PARAM(iir_v3, 2)
 PARAM(iir_v4, 2)
-PARAM(hb_v1, 1002)
-PARAM(hb_v2, 168)
-PARAM(hb_v3, 146)
-PARAM(hb_v4, 2832)
-PARAM(hm_v1, 728)
-PARAM(hm_v2, 193)
-PARAM(hm_v3, 126)
-PARAM(hm_v4, 1470)
-PARAM(cnht_v1, 1031)
-PARAM(cnht_v2, 991)
-PARAM(cnht_v3, 955)
-PARAM(cnht_v4, 901)
+PARAM(hb_v1, 1039)
+PARAM(hb_v2, 155)
+PARAM(hb_v3, 148)
+PARAM(hb_v4, 2776)
+PARAM(hm_v1, 748)
+PARAM(hm_v2, 191)
+PARAM(hm_v3, 123)
+PARAM(hm_v4, 1387)
+PARAM(cnht_v1, 1029)
+PARAM(cnht_v2, 939)
+PARAM(cnht_v3, 1023)
+PARAM(cnht_v4, 916)
 PARAM(asd_v1, 3)
-PARAM(qsf_v1, 210)
-PARAM(ch_v1, 133)
-PARAM(ch_v2, 150)
-PARAM(ch_v5, 163)
-PARAM(ch_v6, 132)
-PARAM(ch_v7, 108)
-PARAM(ch_v8, 116)
-PARAM(ch_v9, 121)
-PARAM(ch_v10, 83)
-PARAM(ch_v11, 128)
-PARAM(ch_v12, 512)
-PARAM(ch_v13, 512)
-PARAM(ch_v14, 32768)
-PARAM(ch_v15, 32768)
+PARAM(qsf_v1, 208)
+PARAM(qss_v1, -15)
+PARAM(ch_v1, 134)
+PARAM(ch_v2, 139)
+PARAM(ch_v5, 1265)
+PARAM(ch_v6, 1130)
+PARAM(ch_v7, 862)
+PARAM(ch_v8, 942)
+PARAM(ch_v9, 1020)
+PARAM(ch_v10, 646)
+PARAM(ch_v11, 1040)
+PARAM(ch_v12, 4238)
+PARAM(ch_v13, 4078)
+PARAM(ch_v14, 33417)
+PARAM(ch_v15, 37025)
+PARAM(ch_v16, 159)
 PARAM(tempo, 40)
-PARAM(mp_v1, 75)
-PARAM(mp_v2, 1098)
-PARAM(mp_v3, 2561)
-PARAM(pcmb_v1, 86)
+PARAM(mp_v1, 74)
+PARAM(mp_v2, 1065)
+PARAM(mp_v3, 2399)
+PARAM(pcmb_v1, 83)
 PARAM(pcmb_v2, 4)
-PARAM(pcmb_v4, 146)
+PARAM(pcmb_v4, 140)
 PARAM(pcmb_v5, 7)
-PARAM(pcmb_v6, 128)
-PARAM(pcmb_v7, 96)
-PARAM(pcmb_v8, 130)
-PARAM(pcmb_v9, 225)
-PARAM(pcmb_v12, 120)
-PARAM(pcmb_v13, 79)
-PARAM(r_v2, 1990)
-PARAM(r_v3, 1047)
-PARAM(r_v4, 177)
-PARAM(r_v5, 524)
-PARAM(r_v6, 1353)
-PARAM(r_v7, 1036)
-PARAM(r_v8, 2102)
-PARAM(r_v12, 3962)
-PARAM(r_v13, 908)
-PARAM(ded_v1, 62)
-PARAM(qb_v1, 183)
-PARAM(qb_v2, 190)
+PARAM(pcmb_v6, 126)
+PARAM(pcmb_v7, 91)
+PARAM(pcmb_v8, 131)
+PARAM(pcmb_v9, 235)
+PARAM(pcmb_v12, 121)
+PARAM(pcmb_v13, 80)
+PARAM(lce_v1, 191)
+PARAM(r_v2, 1733)
+PARAM(r_v3, 1051)
+PARAM(r_v4, 180)
+PARAM(r_v5, 3724)
+PARAM(r_v6, 1318)
+PARAM(r_v7, 1122)
+PARAM(r_v8, 2182)
+PARAM(r_v12, 3828)
+PARAM(r_v13, 935)
+PARAM(r_v14, 1975)
+PARAM(r_v15, 2191)
+PARAM(r_v16, 3205)
+PARAM(ded_v1, 68)
+PARAM(qb_v1, 207)
+PARAM(qb_v2, 202)
 PARAM(de_v1, 6)
-PARAM(hs_v1, 1046)
-PARAM(hs_v2, 1074)
-PARAM(hs_v3, 1006)
-PARAM(hs_v4, 1004)
-PARAM(hs_v5, 941)
-PARAM(hs_v6, 1053)
-PARAM(hs_v7, 1076)
-PARAM(hs_v8, 946)
-PARAM(hs_v9, 257)
-PARAM(hs_v10, 254)
-PARAM(cms_v1, 29498)
-PARAM(hu_v1, 10961)
-PARAM(cpth_v1, 11755)
+PARAM(hs_v1, 1142)
+PARAM(hs_v2, 1095)
+PARAM(hs_v3, 1030)
+PARAM(hs_v4, 818)
+PARAM(hs_v5, 904)
+PARAM(hs_v6, 1068)
+PARAM(hs_v7, 1070)
+PARAM(hs_v8, 883)
+PARAM(hs_v9, 271)
+PARAM(hs_v10, 221)
+PARAM(hs_v11, 905)
+PARAM(hs_v12, 1070)
+PARAM(ttpv_v1, 3)
+PARAM(fh_v1, 800)
+PARAM(fh_v2, 223)
+PARAM(cms_v1, 32135)
+PARAM(hu_v1, 10981)
+PARAM(cpth_v1, 11629)
 
 // Time management parameters
 PARAM(tm_v1, 364)
@@ -631,7 +644,7 @@ Value search(
             && capture_stage(pos, ttMove))
             return probCutBeta;
 
-        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
+        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval - prb_v3);
 
         Depth probCutDepth = max(depth - 4, 0);
 
@@ -743,7 +756,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 // Countermoves based pruning
-                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
+                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
                     && (*contHist0)[movedType][to_sq(move)] < cbp_v3
                     && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
                     continue;
@@ -815,7 +828,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (PieceValue[captured_piece()] > PawnValue && low_material(pos))
+        else if (PieceValue[captured_piece()] > lce_v1 && low_material(pos))
             extension = 1;
 
         // Add extension to new depth
@@ -828,41 +841,44 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
+        r *= 1056;
+        r += r_v4;
+
+        r -= abs(r_v5 * correctionValue / 1024);
+
+        // Decrease reduction if position is or has been on the PV
+        if (ss->ttPv)
+            r -= r_v2 + PvNode * r_v3;
+
+        if (cutNode && move != ss->killers[0])
+            r += r_v8;
+
+        if (capture)
+            ss->statScore = 0;
+        else
+        {
+            // Increase reduction if ttMove is a capture
+            if (ttCapture)
+                r += r_v6;
+
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
+            ss->statScore = (*contHist0)[movedType][to_sq(move)]
+                          + (*contHist1)[movedType][to_sq(move)]
+                          + (*contHist2)[movedType][to_sq(move)]
+                          + (*pos->mainHistory)[!stm()][from_to(move)] - r_v12;
+        }
+
+        if (move == ttMove && (ss + 1)->cutoffCnt <= 3)
+            r -= r_v14;
+
+        // Decrease/increase reduction for moves with a good/bad history.
+        r -= ss->statScore * r_v13 / 16384;
+
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            r *= 1056;
-            r += r_v4;
-
-            r -= abs(r_v5 * correctionValue / 128);
-
-            // Decrease reduction if position is or has been on the PV
-            if (ss->ttPv)
-                r -= r_v2 + PvNode * r_v3;
-
-            if (cutNode && move != ss->killers[0])
-                r += r_v8;
-
-            if (capture)
-                ss->statScore = 0;
-            else
-            {
-                // Increase reduction if ttMove is a capture
-                if (ttCapture)
-                    r += r_v6;
-
-                if ((ss + 1)->cutoffCnt > 3)
-                    r += r_v7;
-
-                ss->statScore = (*contHist0)[movedType][to_sq(move)]
-                              + (*contHist1)[movedType][to_sq(move)]
-                              + (*contHist2)[movedType][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - r_v12;
-            }
-
-            // Decrease/increase reduction for moves with a good/bad history.
-            r -= ss->statScore * r_v13 / 16384;
-
             Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
@@ -880,8 +896,8 @@ moves_loop:  // When in check search starts from here.
 
                 if (!capture)
                 {
-                    int bonus = value >= beta  ? stat_bonus(newDepth)
-                              : value <= alpha ? -stat_malus(newDepth)
+                    int bonus = value >= beta  ? stat_bonus(newDepth) * hs_v11 / 1024
+                              : value <= alpha ? -stat_malus(newDepth) * hs_v12 / 1024
                                                : 0;
                     update_continuation_histories(ss, make_piece(0, movedType + 1), to_sq(move),
                                                   bonus);
@@ -891,7 +907,12 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+            // Increase reduction if ttMove is not present (~6 Elo)
+            if (!ttMove)
+                r += r_v15;
+
+            value =
+              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > r_v16), !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
@@ -1023,7 +1044,7 @@ moves_loop:  // When in check search starts from here.
     // previous opponent move is probably good and the new position is added
     // to the search tree
     if (bestValue <= alpha)
-        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 3);
+        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > ttpv_v1);
 
     // Write gathered information in transposition table. Note that the
     // static evaluation is saved as it was before correction history.
@@ -1189,7 +1210,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             }
 
             // Do not search moves with negative SEE values
-            if (!see_test(pos, move, 0))
+            if (!see_test(pos, move, qss_v1))
                 continue;
         }
 
@@ -1228,7 +1249,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         return mated_in(ss->ply);  // Plies to mate from the root
 
     if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
-        bestValue = (3 * bestValue + beta) / 4;
+        bestValue = (fh_v1 * bestValue + fh_v2 * beta) / 1024;
 
     // Save gathered info in transposition table. The static evaluation
     // is saved as it was before adjustment by correction history.
@@ -1266,8 +1287,8 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
 
-    int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 128);
-    int32_t scaledDiff = clamp(diff * ch_v2, -ch_v14, ch_v15);
+    int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 1024);
+    int32_t scaledDiff = clamp(diff * ch_v16, -ch_v14, ch_v15);
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
@@ -1288,7 +1309,7 @@ Value correction_value(Position* pos) {
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
 
-    return correction / 128 / ch_v2;
+    return correction / 1024 / ch_v2;
 }
 
 Value to_corrected(Value v, Value cv) {
