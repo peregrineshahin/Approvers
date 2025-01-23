@@ -30,7 +30,7 @@ Value evaluate(Position* pos) {
 
     v = v * (192 + min(phase, 64)) / 256;
 
-    v = v * (200 - rule50_count()) / 200;
+    v = v * (100 - rule50_count()) / 100;
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }
