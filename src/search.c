@@ -508,7 +508,7 @@ Value search(
     if (ss->checkersBB)
     {
         // Skip early pruning when in check
-        unadjustedStaticEval = ss->staticEval = VALUE_NONE;
+        unadjustedStaticEval = ss->staticEval = (ss - 2)->staticEval;
         improving                             = false;
         goto moves_loop;
     }
@@ -544,9 +544,11 @@ Value search(
                  unadjustedStaticEval);
     }
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    // Set up the improving flag, which is true if current static evaluation is
+    // bigger than the previous static evaluation at our turn (if we were in
+    // check at our previous move we go back until we weren't in check) and is
+    // false otherwise. The improving flag is used in various pruning heuristics.
+    improving = ss->staticEval > (ss - 2)->staticEval;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -563,6 +565,8 @@ Value search(
     if (!ss->ttPv && eval - futility_margin(depth, improving) >= beta && (ttCapture || !ttMove)
         && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
+
+    improving |= ss->staticEval >= beta + 100;
 
     // Step 7. Null move search
     if (cutNode && (ss - 1)->currentMove != MOVE_NULL && eval >= beta
