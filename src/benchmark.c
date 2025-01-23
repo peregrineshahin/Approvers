@@ -92,7 +92,7 @@ void benchmark() {
     Limits.depth      = 16;
     Thread.testPonder = 0;
 
-    tt_allocate(1);
+    tt_allocate(768);
     search_clear();
 
     const int numFens = sizeof(Defaults) / sizeof(char*);
