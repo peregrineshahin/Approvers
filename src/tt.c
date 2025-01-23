@@ -42,7 +42,7 @@ void tt_free(void) {
 }
 
 
-// Allocates the transposition table, measured in megabytes.
+// Allocates the transposition table, measured in kilobytes.
 void tt_allocate(size_t kbSize) {
     TT.clusterCount = kbSize * 1024 / sizeof(Cluster);
     size_t size     = TT.clusterCount * sizeof(Cluster);
