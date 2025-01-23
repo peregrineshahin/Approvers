@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../quantised.bin");
+INCBIN(Network, "../buckets.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
@@ -17,20 +17,27 @@ alignas(64) int16_t in_biases[L1SIZE];
 alignas(64) int16_t l1_biases[BUCKETS];
 
 SMALL void nnue_init() {
-    int16_t* data = (int16_t*) gNetworkData;
+    int8_t* data = (int8_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-        in_weights[i] = *(data++);
+    {
+        int x = i / L1SIZE;
+        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
+              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
+            in_weights[i] = *(data++);
+    }
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
 
-    for (int i = 0; i < BUCKETS; i++)
-        for (int j = 0; j < L1SIZE * 2; j++)
-            l1_weights[i][j] = *(data++);
+    for (int i = 0; i < L1SIZE * 2; i++)
+        for (int j = 0; j < BUCKETS; j++)
+            l1_weights[j][i] = *(data++);
+
+    int16_t* data16 = (int16_t*) data;
 
     for (int i = 0; i < BUCKETS; i++)
-        l1_biases[i] = *(data++);
+        l1_biases[i] = *(data16++);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
