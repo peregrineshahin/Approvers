@@ -177,9 +177,7 @@ enum {
     PV
 };
 
-static int futility_margin(Depth d, bool improving) {
-    return ft_v1 * (d - improving) + ft_v2 * d * d;
-}
+static PieceToHistory Sentinel;
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -187,6 +185,10 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
     return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+}
+
+static int futility_margin(Depth d, bool improving) {
+    return ft_v1 * (d - improving) + ft_v2 * d * d;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -246,10 +248,10 @@ SMALL void search_clear(void) {
     stats_clear(pos->contHist);
 
 #pragma clang loop unroll(disable)
-    for (int pc = 0; pc < 7; pc++)
+    for (int pc = 0; pc < 6; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            (*pos->contHist)[0][0][0][pc][sq] = -1;
+            Sentinel[pc][sq] = -1;
 
     Thread.previousScore = VALUE_INFINITE;
 }
@@ -315,7 +317,7 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = -7; i < 0; i++)
     {
-        ss[i].continuationHistory = &(*pos->contHist)[0][0][0];  // Use as sentinel
+        ss[i].continuationHistory = &Sentinel;
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
     }
@@ -573,7 +575,7 @@ Value search(
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
-        ss->continuationHistory = &(*pos->contHist)[0][0][0];
+        ss->continuationHistory = &Sentinel;
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -606,7 +608,8 @@ Value search(
             {
                 ss->currentMove = move;
                 ss->continuationHistory =
-                  &(*pos->contHist)[stm()][type_of_p(moved_piece(move))][to_sq(move)];
+                  &(*pos->contHist)[stm()][type_of_p(moved_piece(move)) - 1][to_sq(move)];
+
                 givesCheck = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
 
@@ -656,7 +659,7 @@ moves_loop:  // When in check search starts from here.
         ss->moveCount = ++moveCount;
 
         Piece     movedPiece = moved_piece(move);
-        PieceType movedType  = type_of_p(movedPiece);
+        PieceType movedType  = type_of_p(movedPiece) - 1;
 
         extension  = 0;
         capture    = capture_stage(pos, move);
@@ -836,7 +839,8 @@ moves_loop:  // When in check search starts from here.
                     int bonus = value >= beta  ? stat_bonus(newDepth)
                               : value <= alpha ? -stat_malus(newDepth)
                                                : 0;
-                    update_continuation_histories(ss, make_piece(0, movedType), to_sq(move), bonus);
+                    update_continuation_histories(ss, make_piece(0, movedType + 1), to_sq(move),
+                                                  bonus);
                 }
             }
         }
@@ -1091,7 +1095,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         futilityBase = ss->staticEval + qsf_v1;
     }
 
-    ss->continuationHistory = &(*pos->contHist)[0][0][0];
+    ss->continuationHistory = &Sentinel;
 
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
@@ -1140,7 +1144,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
                 continue;
         }
 
-        PieceType movedType = type_of_p(moved_piece(move));
+        PieceType movedType = type_of_p(moved_piece(move)) - 1;
 
         // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
@@ -1246,6 +1250,10 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
 // at ply -1, -2, -4, and -6 with current move.
 static void update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus) {
     PieceType pt = type_of_p(pc);
+    if (pt == 0)
+        return;
+
+    pt--;
 
     if (move_is_ok((ss - 1)->currentMove))
         update_contHist(*(ss - 1)->continuationHistory, pt, s, cnht_v1 * bonus / 1024);

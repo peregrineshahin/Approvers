@@ -81,7 +81,7 @@ SMALL static void score_quiets(const Position* pos) {
         uint32_t  move = m->move & 4095;
         Square    to   = move & 63;
         Square    from = move >> 6;
-        PieceType pt   = type_of_p(piece_on(from));
+        PieceType pt   = type_of_p(piece_on(from)) - 1;
 
         m->value =
           (mp_v4 * (*history)[c][move] + mp_v5 * (*contHist0)[pt][to] + mp_v6 * (*contHist1)[pt][to]
@@ -106,7 +106,8 @@ static void score_evasions(const Position* pos) {
             m->value = PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
-                     + (*contHist0)[type_of_p(moved_piece(m->move))][to_sq(m->move)] - (1 << 28);
+                     + (*contHist0)[type_of_p(moved_piece(m->move)) - 1][to_sq(m->move)]
+                     - (1 << 28);
 }
 
 
