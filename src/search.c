@@ -806,15 +806,14 @@ moves_loop:  // When in check search starts from here.
 
             if ((ss + 1)->cutoffCnt > 3)
                 r += r_v7;
+            else if (move == ttMove)
+             r -= 1960;
 
             ss->statScore = (*contHist0)[movedType][to_sq(move)]
                           + (*contHist1)[movedType][to_sq(move)]
                           + (*contHist2)[movedType][to_sq(move)]
                           + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
         }
-
-        if (move == ttMove)
-            r -= 1960;
 
         // Decrease/increase reduction for moves with a good/bad history.
         r -= ss->statScore * r_v13 / 16384;
