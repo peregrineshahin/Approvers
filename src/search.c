@@ -301,7 +301,7 @@ void mainthread_search(void) {
 // depth until the allocated thinking time has been consumed, the user stops
 // the search, or the maximum search depth is reached.
 void thread_search(Position* pos) {
-    Value  bestValue, alpha, beta, delta;
+    Value  bestValue, averageValue, alpha, beta, delta;
     Move   lastMove           = MOVE_NONE;
     Depth  pvStability        = 0;
     double totBestMoveChanges = 0;
@@ -329,9 +329,9 @@ void thread_search(Position* pos) {
 
     ss->accumulator.needs_refresh = 1;
 
-    bestValue = delta = alpha = -VALUE_INFINITE;
-    beta                      = VALUE_INFINITE;
-    pos->completedDepth       = 0;
+    bestValue = averageValue = delta = alpha = -VALUE_INFINITE;
+    beta                                     = VALUE_INFINITE;
+    pos->completedDepth                      = 0;
 
     int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
 #pragma clang loop unroll(disable)
@@ -352,7 +352,7 @@ void thread_search(Position* pos) {
         if (pos->rootDepth >= 4)
         {
             Value previousScore = pv->score;
-            delta               = d_v1;
+            delta               = d_v1 + averageValue * averageValue / 16384;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
         }
@@ -361,16 +361,12 @@ void thread_search(Position* pos) {
         {
             bestValue = search(pos, ss, alpha, beta, pos->rootDepth, false, true);
 
-            // If search has been stopped, we break immediately
-            if (Thread.stop)
-                break;
-
-            if (bestValue > alpha)
+            if (Thread.stop || bestValue > alpha)
                 break;
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta += delta / 2;
         }
 
 #ifndef KAGGLE
@@ -381,8 +377,9 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
-        pvStability = pv->line[0] == lastMove ? min(pvStability + 1, tm_v23) : 0;
-        lastMove    = pv->line[0];
+        averageValue = averageValue == -VALUE_INFINITE ? bestValue : (averageValue + bestValue) / 2;
+        pvStability  = pv->line[0] == lastMove ? min(pvStability + 1, tm_v23) : 0;
+        lastMove     = pv->line[0];
 
 // Do we have time for the next iteration? Can we stop searching now?
 #ifndef KAGGLE
