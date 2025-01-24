@@ -200,7 +200,8 @@ static Value stat_malus(Depth d) { return min((hm_v1 * d / 128 + hm_v2) * d - hm
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
 static void  update_continuation_histories(Stack* ss, Piece pc, Square s, int bonus);
-Value        to_corrected(Position* pos, Value unadjustedStaticEval);
+Value        correction_value(Position* pos);
+Value        to_corrected(Value v, Value cv);
 static void  update_correction_histories(const Position* pos, Depth depth, int32_t diff);
 static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int bonus);
 static void
@@ -507,6 +508,8 @@ Value search(
             return ttValue;
     }
 
+    const Value correctionValue = correction_value(pos);
+
     // Step 4. Static evaluation of the position
     if (ss->checkersBB)
     {
@@ -527,7 +530,7 @@ Value search(
         if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
             unadjustedStaticEval = evaluate(pos);
 
-        eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
+        eval = ss->staticEval = to_corrected(unadjustedStaticEval, correctionValue);
 
         // ttValue can be used as a better position evaluation
         if (ttValue != VALUE_NONE
@@ -541,7 +544,7 @@ Value search(
         else
             unadjustedStaticEval = -(ss - 1)->staticEval + tempo;
 
-        eval = ss->staticEval = to_corrected(pos, unadjustedStaticEval);
+        eval = ss->staticEval = to_corrected(unadjustedStaticEval, correctionValue);
 
         tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0,
                  unadjustedStaticEval);
@@ -788,11 +791,14 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
-        r = r * r_v1;
-
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
+            r *= r_v1;
+            r += 192;
+
+            r -= abs(512 * correctionValue / 128);
+
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2 + PvNode * r_v3;
@@ -1059,13 +1065,14 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     }
     else
     {
+        const Value correctionValue = correction_value(pos);
         if (ttHit)
         {
             // Never assume anything about values stored in TT
             if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
                 unadjustedStaticEval = evaluate(pos);
 
-            ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
+            ss->staticEval = bestValue = to_corrected(unadjustedStaticEval, correctionValue);
 
             // ttValue can be used as a better position evaluation
             if (ttValue != VALUE_NONE
@@ -1077,7 +1084,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             unadjustedStaticEval =
               (ss - 1)->currentMove != MOVE_NULL ? evaluate(pos) : -(ss - 1)->staticEval + tempo;
 
-            ss->staticEval = bestValue = to_corrected(pos, unadjustedStaticEval);
+            ss->staticEval = bestValue = to_corrected(unadjustedStaticEval, correctionValue);
         }
 
         // Stand pat. Return immediately if static value is at least beta
@@ -1234,7 +1241,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     }
 }
 
-Value to_corrected(Position* pos, Value unadjustedStaticEval) {
+Value correction_value(Position* pos) {
     Key keys[]    = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                      b_nonpawn_key(), minor_key(),     major_key()};
     int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10};
@@ -1243,8 +1250,11 @@ Value to_corrected(Position* pos, Value unadjustedStaticEval) {
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
 
-    Value v = unadjustedStaticEval + correction / 128 / ch_v2;
-    return clamp(v, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
+    return correction / 128 / ch_v2;
+}
+
+Value to_corrected(Value v, Value cv) {
+    return clamp(v + cv, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
 // Updates histories of the move pairs formed by moves
