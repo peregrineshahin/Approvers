@@ -860,7 +860,11 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
+            int fdsD = newDepth * r_v1;
+
+            fdsD += abs(correctionValue) - 192;
+
+            value = -search(pos, ss + 1, -(alpha + 1), -alpha, fdsD / 1024, !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
