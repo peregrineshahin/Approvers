@@ -80,6 +80,8 @@ PARAM(rz_v2, 351, 35.1)
 PARAM(rz_v3, 236, 23.6)
 PARAM(ft_v1, 83, 8.3)
 PARAM(ft_v2, 16, 0.5)
+PARAM(cv_v1, 30, 2.0)
+PARAM(cv_v2, 128, 10.0)
 PARAM(rd_v1, 560, 56.0)
 PARAM(rd_v2, 1264, 48.0)
 PARAM(rd_v3, 997, 99.0)
@@ -570,8 +572,10 @@ Value search(
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv && eval - futility_margin(depth, improving) >= beta && (ttCapture || !ttMove)
-        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+    if (!ss->ttPv
+        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
+             >= beta
+        && (ttCapture || !ttMove) && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
     // Step 7. Null move search
