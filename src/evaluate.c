@@ -28,11 +28,9 @@ Value evaluate(Position* pos) {
     int phase = 3 * popcount(pieces_p(KNIGHT)) + 3 * popcount(pieces_p(BISHOP))
               + 5 * popcount(pieces_p(ROOK)) + 10 * popcount(pieces_p(QUEEN));
 
-    v = v * (128 + min(phase, 64)) / 192;
+    v = v * (192 + min(phase, 64)) / 256;
 
-    v = v - v * rule50_count() / 192;
-
-    v = v / 16 * 16;
+    v = v * (200 - rule50_count()) / 200;
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }
