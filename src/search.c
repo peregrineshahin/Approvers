@@ -371,7 +371,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta += delta / 5 + asd_v1;
         }
 
 #ifndef KAGGLE
