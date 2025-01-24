@@ -73,7 +73,7 @@ PARAM(nmp_v4, 184, 4.0)
 PARAM(nmp_v5, 25277, 150.0)
 PARAM(nmp_v6, 23, 3.0)
 PARAM(nmp_v8, 88, 6.0)
-PARAM(nmp_v9, 200, 12.0)
+PARAM(nmp_v9, 204, 12.0)
 PARAM(rd_v1, 560, 60.0)
 PARAM(rd_v2, 1264, 48.0)
 PARAM(rd_v3, 997, 72.0)
@@ -572,8 +572,9 @@ Value search(
 
     // Step 7. Null move search
     if (cutNode && (ss - 1)->currentMove != MOVE_NULL && eval >= beta
-        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
-        && non_pawn_material(pos))
+        && ss->staticEval
+             >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + (ss - 1)->statScore / 1500 + nmp_v9
+        && !excludedMove && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
