@@ -30,7 +30,7 @@ Value evaluate(Position* pos) {
 
     v = v * (128 + min(phase, 64)) / 192;
 
-    v = v * (200 - rule50_count()) / 200;
+    v = v - v * rule50_count() / 192;
 
     v = v / 16 * 16;
 
