@@ -546,8 +546,12 @@ Value search(
 
         eval = ss->staticEval = to_corrected(unadjustedStaticEval, correctionValue);
 
-        tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, 0,
-                 unadjustedStaticEval);
+        if (eval >= beta)
+            tte_save(tte, posKey, eval, ss->ttPv, BOUND_LOWER, DEPTH_NONE, MOVE_NONE,
+                     unadjustedStaticEval);
+        else
+            tte_save(tte, posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, MOVE_NONE,
+                     unadjustedStaticEval);
     }
 
     improving = (ss - 2)->staticEval == VALUE_NONE
