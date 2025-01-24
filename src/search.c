@@ -687,7 +687,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r + 2 * ss->ttPv, 0);
+            int lmrDepth = max(newDepth - r + ss->ttPv, 0);
 
             if (capture || givesCheck)
             {
