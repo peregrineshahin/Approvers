@@ -566,8 +566,8 @@ Value search(
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv && eval - futility_margin(depth, improving) >= beta && (ttCapture || !ttMove)
-        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+    if (!ss->ttPv && eval - futility_margin(depth, improving) + (30 - abs(correctionValue)) >= beta
+        && (ttCapture || !ttMove) && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
     // Step 7. Null move search
