@@ -625,6 +625,12 @@ Value search(
                     value = -search(pos, ss + 1, -probCutBeta, -probCutBeta + 1, probCutDepth,
                                     !cutNode, false);
                 undo_move(pos, move);
+
+                // If a stop occurred, the return value of the search cannot be trusted, and we
+                // must return immediately without updating any histories nor the transposition table.
+                if (Thread.stop)
+                    return 0;
+
                 if (value >= probCutBeta)
                 {
                     tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
