@@ -61,7 +61,7 @@ static void score_captures(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         m->value =
-          PieceValue[piece_on(to_sq(m->move))] * 6
+          PieceValue[piece_on(to_sq(m->move))] * 12
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
