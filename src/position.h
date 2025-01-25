@@ -142,8 +142,6 @@ struct Position {
 
     // Thread-control data.
     uint64_t bestMoveChanges;
-
-    void* stackAllocation;
 };
 
 // FEN string input/output

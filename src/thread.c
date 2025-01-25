@@ -27,21 +27,14 @@ ThreadStruct   Thread = {0};
 void thread_init() {
     Thread.testPonder = 0;
 
-    Position* pos       = calloc(sizeof(Position), 1);
-    pos->mainHistory    = calloc(sizeof(ButterflyHistory), 1);
-    pos->captureHistory = calloc(sizeof(CapturePieceToHistory), 1);
-    pos->corrHists      = calloc(sizeof(CorrectionHistory), 1);
-    pos->contHist       = calloc(sizeof(ContinuationHistoryStat), 1);
-    pos->moveList       = calloc(10000 * sizeof(ExtMove), 1);
-    pos->accumulator    = _mm_malloc(sizeof(Accumulator) * (1 + MAX_PLY), 64);
-
-    // Allocate 215 Stack slots.
-    // Slots 100-200 form a circular buffer to be filled with game moves.
-    // Slots 0-99 make room for prepending the part of game history relevant
-    // for repetition detection.
-    // Slots 201-214 may be used by TB root probing.
-    pos->stackAllocation = calloc(63 + 215 * sizeof(Stack), 1);
-    pos->stack           = (Stack*) (((uintptr_t) pos->stackAllocation + 0x3f) & ~0x3f);
+    Position* pos        = calloc(sizeof(Position), 1);
+    pos->mainHistory     = calloc(sizeof(ButterflyHistory), 1);
+    pos->captureHistory  = calloc(sizeof(CapturePieceToHistory), 1);
+    pos->corrHists       = calloc(sizeof(CorrectionHistory), 1);
+    pos->contHist        = calloc(sizeof(ContinuationHistoryStat), 1);
+    pos->moveList        = calloc(10000 * sizeof(ExtMove), 1);
+    pos->accumulator     = _mm_malloc(sizeof(Accumulator) * (1 + MAX_PLY), 64);
+    pos->stack           = _mm_malloc(sizeof(Stack) * (110 + MAX_PLY), 64);
     pos->st              = pos->stack + 100;
     pos->st[-1].endMoves = pos->moveList;
 
@@ -60,10 +53,10 @@ void thread_exit() {
     Position* pos = Thread.pos;
 
     _mm_free(pos->accumulator);
+    _mm_free(pos->stack);
 
     free(pos->mainHistory);
     free(pos->captureHistory);
-    free(pos->stackAllocation);
     free(pos->moveList);
     free(pos->corrHists);
     free(pos->contHist);
