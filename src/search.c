@@ -54,11 +54,10 @@ PARAM(rd_init_v1, 3552)
 PARAM(rd_v1, 582)
 PARAM(rd_v2, 1260)
 PARAM(rd_v3, 928)
-PARAM(ttct_v1, 135)
-PARAM(ttct_v2, 126)
 PARAM(qmo_v1, 406)
 PARAM(qmo_v2, 1342)
 PARAM(qmo_v3, 960)
+PARAM(qmo_v4, 1024)
 PARAM(rz_v1, 6)
 PARAM(rz_v2, 347)
 PARAM(rz_v3, 228)
@@ -84,6 +83,14 @@ PARAM(fpp_v4, 71)
 PARAM(fpp_v5, 71)
 PARAM(sqsee_v1, 27)
 PARAM(scsee_v1, 189)
+PARAM(scsee_v2, 32)
+PARAM(scsee_v3, 200)
+PARAM(scsee_v4, 200)
+PARAM(fp_v1, 7)
+PARAM(fp_v2, 271)
+PARAM(fp_v3, 243)
+PARAM(fp_v4, 7)
+PARAM(se_v1, 5)
 PARAM(se_v2, 142)
 PARAM(se_v5, 28)
 PARAM(prb_v1, 118)
@@ -115,6 +122,7 @@ PARAM(mp_v1, 72)
 PARAM(mp_v2, 1089)
 PARAM(mp_v3, 2676)
 PARAM(pcmb_v1, 83)
+PARAM(pcmb_v2, 4)
 PARAM(pcmb_v4, 140)
 PARAM(pcmb_v5, 7)
 PARAM(pcmb_v6, 121)
@@ -123,6 +131,8 @@ PARAM(pcmb_v8, 138)
 PARAM(pcmb_v9, 233)
 PARAM(pcmb_v10, 130)
 PARAM(pcmb_v11, 127)
+PARAM(pcmb_v12, 119)
+PARAM(pcmb_v13, 83)
 PARAM(r_v2, 2091)
 PARAM(r_v3, 997)
 PARAM(r_v4, 180)
@@ -136,6 +146,14 @@ PARAM(ded_v1, 62)
 PARAM(qb_v1, 188)
 PARAM(qb_v2, 187)
 PARAM(de_v1, 6)
+PARAM(hs_v1, 1024)
+PARAM(hs_v2, 1024)
+PARAM(hs_v3, 1024)
+PARAM(hs_v4, 1024)
+PARAM(hs_v5, 1024)
+PARAM(hs_v6, 1024)
+PARAM(hs_v7, 1080)
+PARAM(hs_v8, 1008)
 PARAM(cms_v1, 29166)
 PARAM(hu_v1, 10294)
 PARAM(cpth_v1, 11627)
@@ -489,12 +507,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!capture_stage(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
+                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth) * hs_v7 / 1024);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              ttct_v2 * -stat_malus(depth + 1) / 128);
+                                              -stat_malus(depth + 1) * hs_v8 / 1024);
         }
 
         // Partial workaround for the graph history interaction problem
@@ -555,7 +573,7 @@ Value search(
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
 
     // Step 5. Razoring
@@ -696,14 +714,14 @@ moves_loop:  // When in check search starts from here.
                 int captHist =
                   (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
 
-                int seeHist = clamp(captHist / 32, -200 * depth, 200 * depth);
+                int seeHist = clamp(captHist / scsee_v2, -scsee_v3 * depth, scsee_v4 * depth);
                 if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
                     continue;
 
-                if (!givesCheck && lmrDepth < 7 && !ss->checkersBB)
+                if (!givesCheck && lmrDepth < fp_v1 && !ss->checkersBB)
                 {
-                    Value futilityValue = ss->staticEval + 271 + 243 * lmrDepth
-                                        + PieceValue[capturedPiece] + captHist / 7;
+                    Value futilityValue = ss->staticEval + fp_v2 + fp_v3 * lmrDepth
+                                        + PieceValue[capturedPiece] + captHist / fp_v4;
                     if (futilityValue <= alpha)
                         continue;
                 }
@@ -738,7 +756,7 @@ moves_loop:  // When in check search starts from here.
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
         // Recursive singular search is avoided.
-        if (depth >= 5 && move == ttMove && !rootNode && !excludedMove
+        if (depth >= se_v1 && move == ttMove && !rootNode && !excludedMove
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
@@ -948,15 +966,15 @@ moves_loop:  // When in check search starts from here.
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
-            update_quiet_stats(pos, ss, bestMove, bonus);
+            update_quiet_stats(pos, ss, bestMove, bonus * hs_v1 / 1024);
 
 #pragma clang loop unroll(disable)
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
             {
-                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
+                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus * hs_v2 / 1024);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
-                                              to_sq(quietsSearched[i]), -malus);
+                                              to_sq(quietsSearched[i]), -malus * hs_v3 / 1024);
             }
         }
 
@@ -966,14 +984,16 @@ moves_loop:  // When in check search starts from here.
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
              || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
-            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
+            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                          -stat_malus(depth + 1) * hs_v4 / 1024);
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > 4) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
-                  + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
-                  + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83);
+        int bonus =
+          pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
+          + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
+          + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
 
         // Proportional to "how much damage we have to undo"
         bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
@@ -1297,9 +1317,10 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     int   captured    = type_of_p(piece_on(to_sq(move)));
 
     if (capture_stage(pos, move))
-        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, stat_bonus(depth));
+        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured,
+                    stat_bonus(depth) * hs_v5 / 1024);
 
-    Value malus = -stat_malus(depth);
+    Value malus = -stat_malus(depth) * hs_v6 / 1024;
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
