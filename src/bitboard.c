@@ -42,9 +42,7 @@ static Bitboard sliding_attack(int dirs[], Square sq, Bitboard occupied) {
 }
 #endif
 
-#if defined(MAGIC_FANCY)
-    #include "magic-fancy.c"
-#elif defined(MAGIC_PLAIN)
+#if defined(MAGIC_PLAIN)
     #include "magic-plain.c"
 #elif defined(AVX2_BITBOARD)
     #include "avx2-bitboard.c"
