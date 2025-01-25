@@ -53,97 +53,101 @@ int       parameters_count = 0;
 PARAM(nmp_v1, 764, 0)
 PARAM(nmp_v2, 56, 0)
 PARAM(nmp_v3, 165, 0)
+PARAM(nmp_v4, 184, 0)
+PARAM(nmp_v6, 23, 0)
+PARAM(nmp_v8, 88, 0)
+PARAM(nmp_v9, 200, 0)
 PARAM(r_v1, 1056, 0)
 PARAM(cms_v1, 29166, 0)
 PARAM(hu_v1, 10294, 0)
 PARAM(cpth_v1, 11627, 0)
+PARAM(eval_scale, 93, 0)
+PARAM(mat_scale, 25855, 0)
+PARAM(mat_n, 643, 0)
+PARAM(mat_b, 750, 0)
+PARAM(mat_r, 1461, 0)
+PARAM(mat_q, 2321, 0)
+PARAM(rz_v1, 6, 0)
+PARAM(fpp_v1, 7, 0)
 
 // Search parameters
-PARAM(ttct_v1, 146, 12.0)
-PARAM(ttct_v2, 122, 12.0)
-PARAM(qmo_v1, 433, 38.0)
-PARAM(qmo_v2, 1321, 120.0)
-PARAM(qmo_v3, 936, 120.0)
-PARAM(rz_v1, 6, 0.5)
-PARAM(rz_v2, 351, 16.0)
-PARAM(rz_v3, 236, 10.0)
-PARAM(ft_v1, 83, 12.0)
+PARAM(ttct_v1, 135, 14.6)
+PARAM(ttct_v2, 126, 12.2)
+PARAM(qmo_v1, 406, 43.3)
+PARAM(qmo_v2, 1342, 132.1)
+PARAM(qmo_v3, 960, 93.6)
+PARAM(rz_v2, 347, 35.1)
+PARAM(rz_v3, 228, 23.6)
+PARAM(ft_v1, 86, 8.3)
 PARAM(ft_v2, 16, 0.5)
-PARAM(nmp_v4, 184, 4.0)
-PARAM(nmp_v5, 25277, 150.0)
-PARAM(nmp_v6, 23, 3.0)
-PARAM(nmp_v8, 88, 6.0)
-PARAM(nmp_v9, 200, 12.0)
-PARAM(rd_v1, 560, 60.0)
-PARAM(rd_v2, 1264, 48.0)
-PARAM(rd_v3, 997, 72.0)
-PARAM(rd_init_v1, 3625, 150.0)
-PARAM(d_v1, 17, 1.2)
-PARAM(cbp_v2, 0, 9.6)
-PARAM(cbp_v3, -6, 9.6)
-PARAM(cbp_v4, -10, 9.6)
-PARAM(fpp_v1, 7, 0.5)
-PARAM(fpp_v2, 243, 24.0)
-PARAM(fpp_v3, 187, 21.6)
-PARAM(fpp_v4, 66, 7.2)
-PARAM(fpp_v5, 69, 7.2)
-PARAM(sqsee_v1, 26, 2.4)
-PARAM(scsee_v1, 200, 12.0)
-PARAM(se_v2, 150, 15.0)
-PARAM(se_v5, 29, 3.6)
-PARAM(prb_v1, 119, 14.4)
-PARAM(prb_v2, 47, 4.8)
-PARAM(lmr_v3, 3825, 300.0)
-PARAM(hb_v1, 926, 70.0)
-PARAM(hb_v2, 195, 18.0)
-PARAM(hb_v3, 144, 20.0)
-PARAM(hb_v4, 2593, 180.0)
-PARAM(hm_v1, 702, 70.0)
-PARAM(hm_v2, 208, 18.0)
-PARAM(hm_v3, 128, 20.0)
-PARAM(hm_v4, 1530, 180.0)
-PARAM(cnht_v1, 1021, 80.0)
-PARAM(cnht_v2, 996, 80.0)
-PARAM(cnht_v3, 1044, 80.0)
-PARAM(cnht_v4, 943, 80.0)
+PARAM(cv_v1, 29, 2.0)
+PARAM(cv_v2, 123, 10.0)
+PARAM(rd_v1, 582, 56.0)
+PARAM(rd_v2, 1260, 48.0)
+PARAM(rd_v3, 928, 99.0)
+PARAM(rd_init_v1, 3552, 162.5)
+PARAM(d_v1, 18, 1.0)
+PARAM(cbp_v2, 3, 8.0)
+PARAM(cbp_v3, -8, 8.0)
+PARAM(cbp_v4, -7, 8.0)
+PARAM(fpp_v2, 244, 24.3)
+PARAM(fpp_v3, 182, 18.7)
+PARAM(fpp_v4, 71, 6.6)
+PARAM(fpp_v5, 71, 6.9)
+PARAM(sqsee_v1, 27, 2.6)
+PARAM(scsee_v1, 189, 16.0)
+PARAM(se_v2, 142, 15.0)
+PARAM(se_v5, 28, 2.9)
+PARAM(prb_v1, 118, 11.9)
+PARAM(prb_v2, 49, 4.7)
+PARAM(hb_v1, 959, 92.6)
+PARAM(hb_v2, 184, 19.5)
+PARAM(hb_v3, 148, 14.4)
+PARAM(hb_v4, 2613, 259.3)
+PARAM(hm_v1, 750, 70.2)
+PARAM(hm_v2, 196, 20.8)
+PARAM(hm_v3, 124, 12.8)
+PARAM(hm_v4, 1478, 153.0)
+PARAM(cnht_v1, 1028, 102.1)
+PARAM(cnht_v2, 958, 99.6)
+PARAM(cnht_v3, 967, 104.4)
+PARAM(cnht_v4, 939, 94.3)
 PARAM(asd_v1, 3, 0.5)
-PARAM(qsf_v1, 207, 18.0)
-PARAM(ch_v1, 128, 3.6)
-PARAM(ch_v2, 176, 18.0)
-PARAM(ch_v5, 146, 12.0)
-PARAM(ch_v6, 131, 12.0)
-PARAM(ch_v7, 111, 12.0)
-PARAM(ch_v8, 110, 12.0)
-PARAM(ch_v9, 126, 12.0)
-PARAM(ch_v10, 87, 12.0)
-PARAM(tempo, 42, 4.8)
-PARAM(mp_v1, 72, 3.0)
-PARAM(mp_v2, 1065, 25.0)
-PARAM(mp_v3, 2678, 180.0)
-PARAM(eval_scale, 93, 2.0)
-PARAM(mat_scale, 25855, 340.0)
-PARAM(mat_n, 643, 48.0)
-PARAM(mat_b, 750, 63.0)
-PARAM(mat_r, 1461, 96.0)
-PARAM(mat_q, 2321, 192.0)
-PARAM(pcmb_v1, 85, 12.0)
-PARAM(pcmb_v4, 151, 12.0)
-PARAM(pcmb_v5, 7, 0.5)
-PARAM(pcmb_v6, 113, 12.0)
-PARAM(pcmb_v7, 102, 12.0)
-PARAM(pcmb_v8, 134, 8.4)
-PARAM(pcmb_v9, 232, 30.0)
-PARAM(pcmb_v10, 131, 8.4)
-PARAM(pcmb_v11, 135, 8.4)
-PARAM(r_v2, 2048, 250.0)
-PARAM(r_v3, 1024, 250.0)
-PARAM(r_v6, 1321, 150.0)
-PARAM(r_v7, 1142, 150.0)
-PARAM(r_v8, 2176, 150.0)
-PARAM(r_v13, 976, 50.0)
-PARAM(ded_v1, 63, 6.0)
-PARAM(qb_v1, 182, 18.0)
-PARAM(qb_v2, 182, 18.0)
+PARAM(qsf_v1, 218, 20.7)
+PARAM(ch_v1, 126, 12.8)
+PARAM(ch_v2, 163, 14.6)
+PARAM(ch_v5, 165, 14.6)
+PARAM(ch_v6, 137, 13.1)
+PARAM(ch_v7, 104, 11.1)
+PARAM(ch_v8, 109, 11.0)
+PARAM(ch_v9, 117, 12.6)
+PARAM(ch_v10, 87, 8.7)
+PARAM(tempo, 41, 4.2)
+PARAM(mp_v1, 72, 3.6)
+PARAM(mp_v2, 1089, 53.0)
+PARAM(mp_v3, 2676, 133.0)
+PARAM(pcmb_v1, 83, 8.5)
+PARAM(pcmb_v4, 140, 15.1)
+PARAM(pcmb_v5, 7, 0.7)
+PARAM(pcmb_v6, 121, 11.3)
+PARAM(pcmb_v7, 99, 10.2)
+PARAM(pcmb_v8, 138, 13.4)
+PARAM(pcmb_v9, 233, 23.2)
+PARAM(pcmb_v10, 130, 13.1)
+PARAM(pcmb_v11, 127, 13.5)
+PARAM(r_v2, 2091, 200.0)
+PARAM(r_v3, 997, 120.0)
+PARAM(r_v4, 180, 20.0)
+PARAM(r_v5, 510, 20.0)
+PARAM(r_v6, 1348, 120.0)
+PARAM(r_v7, 1050, 120.0)
+PARAM(r_v8, 2182, 200.0)
+PARAM(r_v12, 3946, 382.5)
+PARAM(r_v13, 966, 97.6)
+PARAM(ded_v1, 62, 6.3)
+PARAM(qb_v1, 188, 18.2)
+PARAM(qb_v2, 187, 18.2)
+PARAM(de_v1, 6, 0.5)
 
 // Time management parameters
 PARAM(tm_v1, 338, 28)
@@ -554,6 +558,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
+
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -566,8 +572,10 @@ Value search(
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv && eval - futility_margin(depth, improving) >= beta && (ttCapture || !ttMove)
-        && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+    if (!ss->ttPv
+        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
+             >= beta
+        && (ttCapture || !ttMove) && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
 
     // Step 7. Null move search
@@ -753,8 +761,11 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5)
-                    extension = 2;
+                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
+                {
+                    extension       = 2;
+                    ss->dextensions = (ss - 1)->dextensions + 1;
+                }
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
@@ -801,9 +812,9 @@ moves_loop:  // When in check search starts from here.
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
             r *= r_v1;
-            r += 192;
+            r += r_v4;
 
-            r -= abs(512 * correctionValue / 128);
+            r -= abs(r_v5 * correctionValue / 128);
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
@@ -826,7 +837,7 @@ moves_loop:  // When in check search starts from here.
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
                               + (*contHist2)[movedType][to_sq(move)]
-                              + (*pos->mainHistory)[!stm()][from_to(move)] - lmr_v3;
+                              + (*pos->mainHistory)[!stm()][from_to(move)] - r_v12;
             }
 
             // Decrease/increase reduction for moves with a good/bad history.
