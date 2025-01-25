@@ -129,8 +129,6 @@ PARAM(pcmb_v6, 121)
 PARAM(pcmb_v7, 99)
 PARAM(pcmb_v8, 138)
 PARAM(pcmb_v9, 233)
-PARAM(pcmb_v10, 130)
-PARAM(pcmb_v11, 127)
 PARAM(pcmb_v12, 119)
 PARAM(pcmb_v13, 83)
 PARAM(r_v2, 2091)
@@ -154,6 +152,8 @@ PARAM(hs_v5, 1024)
 PARAM(hs_v6, 1024)
 PARAM(hs_v7, 1080)
 PARAM(hs_v8, 1008)
+PARAM(hs_v9, 252)
+PARAM(hs_v10, 258)
 PARAM(cms_v1, 29166)
 PARAM(hu_v1, 10294)
 PARAM(cpth_v1, 11627)
@@ -990,20 +990,22 @@ moves_loop:  // When in check search starts from here.
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus =
+        int bonusScale =
           pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
           + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
           + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
 
         // Proportional to "how much damage we have to undo"
-        bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
+        bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
 
-        bonus = max(bonus, 0);
-        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                      stat_bonus(depth) * bonus / pcmb_v10);
+        bonusScale = max(bonusScale, 0);
+
+        const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
+
+        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, scaledBonus * hs_v9 / 1024);
 
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
-                       stat_bonus(depth) * bonus / pcmb_v11);
+                       scaledBonus * hs_v10 / 1024);
     }
 
     // If no good move is found and the previous position was ttPv, then the
