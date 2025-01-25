@@ -650,8 +650,13 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
-        depth -= 2;
+    if ((PvNode || cutNode) && depth >= 6)
+    {
+        if (!ttMove && depth >= (1 + cutNode) * 6)
+            depth -= 2;
+        else if (tte_depth(tte) + 4 < depth)
+            depth--;
+    }
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
