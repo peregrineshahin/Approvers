@@ -65,7 +65,7 @@ struct Stack {
     Key      key;
     Bitboard checkersBB;
     Move     rootMove;
-    int      rootScore;
+    Value    rootScore;
 
     // Original search stack data
     PieceToHistory* continuationHistory;
