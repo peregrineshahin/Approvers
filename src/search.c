@@ -264,7 +264,9 @@ void mainthread_search(void) {
 
     Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
-    Thread.previousScore = pos->st->pv.score;
+
+    if (pos->st->pv.score || Thread.previousScore == -VALUE_INFINITE)
+        Thread.previousScore = pos->st->pv.score;
 
     printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
@@ -371,7 +373,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta += (delta * 220 + 6300) / 1024;
         }
 
 #ifndef KAGGLE
