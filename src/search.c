@@ -49,6 +49,23 @@ int       parameters_count = 0;
 #endif
 
 // Disabled parameters
+// Search parameters
+PARAM(rd_init_v1, 3552)
+PARAM(rd_v1, 582)
+PARAM(rd_v2, 1260)
+PARAM(rd_v3, 928)
+PARAM(ttct_v1, 135)
+PARAM(ttct_v2, 126)
+PARAM(qmo_v1, 406)
+PARAM(qmo_v2, 1342)
+PARAM(qmo_v3, 960)
+PARAM(rz_v1, 6)
+PARAM(rz_v2, 347)
+PARAM(rz_v3, 228)
+PARAM(ft_v1, 86)
+PARAM(ft_v2, 16)
+PARAM(cv_v1, 29)
+PARAM(cv_v2, 123)
 PARAM(nmp_v1, 764)
 PARAM(nmp_v2, 56)
 PARAM(nmp_v3, 165)
@@ -56,39 +73,11 @@ PARAM(nmp_v4, 184)
 PARAM(nmp_v6, 23)
 PARAM(nmp_v8, 88)
 PARAM(nmp_v9, 200)
-PARAM(r_v1, 1056)
-PARAM(cms_v1, 29166)
-PARAM(hu_v1, 10294)
-PARAM(cpth_v1, 11627)
-PARAM(eval_scale, 93)
-PARAM(mat_scale, 25855)
-PARAM(mat_n, 643)
-PARAM(mat_b, 750)
-PARAM(mat_r, 1461)
-PARAM(mat_q, 2321)
-PARAM(rz_v1, 6)
-PARAM(fpp_v1, 7)
-
-// Search parameters
-PARAM(ttct_v1, 135)
-PARAM(ttct_v2, 126)
-PARAM(qmo_v1, 406)
-PARAM(qmo_v2, 1342)
-PARAM(qmo_v3, 960)
-PARAM(rz_v2, 347)
-PARAM(rz_v3, 228)
-PARAM(ft_v1, 86)
-PARAM(ft_v2, 16)
-PARAM(cv_v1, 29)
-PARAM(cv_v2, 123)
-PARAM(rd_v1, 582)
-PARAM(rd_v2, 1260)
-PARAM(rd_v3, 928)
-PARAM(rd_init_v1, 3552)
 PARAM(d_v1, 18)
 PARAM(cbp_v2, 3)
 PARAM(cbp_v3, -8)
 PARAM(cbp_v4, -7)
+PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 244)
 PARAM(fpp_v3, 182)
 PARAM(fpp_v4, 71)
@@ -147,6 +136,9 @@ PARAM(ded_v1, 62)
 PARAM(qb_v1, 188)
 PARAM(qb_v2, 187)
 PARAM(de_v1, 6)
+PARAM(cms_v1, 29166)
+PARAM(hu_v1, 10294)
+PARAM(cpth_v1, 11627)
 
 // Time management parameters
 PARAM(tm_v1, 338)
@@ -810,7 +802,7 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            r *= r_v1;
+            r *= 1056;
             r += r_v4;
 
             r -= abs(r_v5 * correctionValue / 128);
