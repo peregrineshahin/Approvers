@@ -564,6 +564,7 @@ Value search(
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
+        bonus     = bonus > 0 ? 2 * bonus : bonus / 2;
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
     }
 
