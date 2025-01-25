@@ -1231,8 +1231,8 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
-    Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
-                  b_nonpawn_key(), minor_key(),     major_key()};
+    Key keys[] = {pawn_key(),  prev_move_key(), minor_key(),
+                  major_key(), w_nonpawn_key(), b_nonpawn_key()};
 
     int32_t newWeight  = min(ch_v1, depth * depth + 4 * depth + 4);
     int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
@@ -1248,13 +1248,20 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 }
 
 Value correction_value(Position* pos) {
-    Key keys[]    = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
-                     b_nonpawn_key(), minor_key(),     major_key()};
-    int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10};
+    Key keys[]    = {pawn_key(), prev_move_key(), minor_key(), major_key()};
+    int weights[] = {ch_v5, ch_v6, ch_v9, ch_v10};
 
     int32_t correction = 0;
-    for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
+    for (size_t i = 0; i < CORRECTION_HISTORY_NB - 2; i++)
         correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
+
+    correction +=
+      ch_v7
+      * (*pos->corrHists)[stm()][4 + stm()][pos->st->nonPawnKey[stm()] & CORRECTION_HISTORY_MASK];
+
+    correction +=
+      ch_v8
+      * (*pos->corrHists)[stm()][4 + !stm()][pos->st->nonPawnKey[!stm()] & CORRECTION_HISTORY_MASK];
 
     return correction / 128 / ch_v2;
 }
