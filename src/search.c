@@ -445,6 +445,7 @@ Value search(
         return qsearch(pos, ss, alpha, beta, 0);
 
     Move     capturesSearched[32], quietsSearched[32];
+    bool     quietsSearchedChecks[32];
     TTEntry* tte;
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
@@ -928,7 +929,10 @@ moves_loop:  // When in check search starts from here.
             if (capture)
                 capturesSearched[captureCount++] = move;
             else
-                quietsSearched[quietCount++] = move;
+            {
+                quietsSearchedChecks[quietCount] = givesCheck;
+                quietsSearched[quietCount++]     = move;
+            }
         }
     }
 
@@ -954,7 +958,8 @@ moves_loop:  // When in check search starts from here.
             {
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
-                                              to_sq(quietsSearched[i]), -malus);
+                                              to_sq(quietsSearched[i]),
+                                              -malus - 12 * quietsSearchedChecks[i]);
             }
         }
 
