@@ -834,6 +834,9 @@ moves_loop:  // When in check search starts from here.
                 if ((ss + 1)->cutoffCnt > 3)
                     r += r_v7;
 
+                if (pos->pastOptimum)
+                    r++;
+
                 ss->statScore = (*contHist0)[movedType][to_sq(move)]
                               + (*contHist1)[movedType][to_sq(move)]
                               + (*contHist2)[movedType][to_sq(move)]
@@ -1381,6 +1384,9 @@ static void check_time(void) {
     if (elapsed > time_maximum() - 10)
         Thread.stop = 1;
 #endif
+
+    if ((Thread.pos->nodes & 2047) == 0 && Thread.pos->completedDepth >= 10)
+        Thread.pos->pastOptimum = use_time_management() && elapsed > time_optimum();
 }
 
 // Prints PV information according to the UCI protocol.
@@ -1413,6 +1419,7 @@ SMALL void prepare_for_search() {
     Position* pos      = Thread.pos;
     pos->rootDepth     = 0;
     pos->nodes         = 0;
+    pos->pastOptimum   = 0;
     pos->st->pv.length = 0;
 
     const int size = max(7, pos->st->pliesFromNull);

@@ -133,6 +133,7 @@ struct Position {
     uint64_t nodes;
     Depth    rootDepth;
     Depth    completedDepth;
+    bool     pastOptimum;
 
     // Pointers to thread-specific tables.
     ButterflyHistory*        mainHistory;
