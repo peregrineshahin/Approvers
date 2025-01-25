@@ -33,6 +33,7 @@ void thread_init() {
     pos->corrHists      = calloc(sizeof(CorrectionHistory), 1);
     pos->contHist       = calloc(sizeof(ContinuationHistoryStat), 1);
     pos->moveList       = calloc(10000 * sizeof(ExtMove), 1);
+    pos->accumulator    = _mm_malloc(sizeof(Accumulator) * (1 + MAX_PLY), 64);
 
     // Allocate 215 Stack slots.
     // Slots 100-200 form a circular buffer to be filled with game moves.
@@ -57,6 +58,8 @@ void thread_init() {
 
 void thread_exit() {
     Position* pos = Thread.pos;
+
+    _mm_free(pos->accumulator);
 
     free(pos->mainHistory);
     free(pos->captureHistory);

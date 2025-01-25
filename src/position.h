@@ -100,8 +100,6 @@ struct Stack {
         };
     };
     Square ksq;
-
-    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;
@@ -134,11 +132,13 @@ struct Position {
     Depth    rootDepth;
     Depth    completedDepth;
 
-    // Pointers to thread-specific tables.
+    // Pointers to history tables.
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
+
+    Accumulator* accumulator;
 
     // Thread-control data.
     uint64_t bestMoveChanges;
