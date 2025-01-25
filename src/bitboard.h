@@ -102,9 +102,7 @@ static unsigned distance_r(Square x, Square y) {
 #define attacks_bb_queen(s, occupied) \
     (attacks_bb_bishop((s), (occupied)) | attacks_bb_rook((s), (occupied)))
 
-#if defined(MAGIC_FANCY)
-    #include "magic-fancy.h"
-#elif defined(MAGIC_PLAIN)
+#if defined(MAGIC_PLAIN)
     #include "magic-plain.h"
 #elif defined(AVX2_BITBOARD)
     #include "avx2-bitboard.h"
