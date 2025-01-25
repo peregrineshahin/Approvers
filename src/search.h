@@ -46,7 +46,7 @@ void  search_init(void);
 void  search_clear(void);
 void  start_thinking();
 void  prepare_for_search();
-Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth);
+Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, int NT);
 Value search(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, int NT);
 
 #endif
