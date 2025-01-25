@@ -72,6 +72,7 @@ SMALL void position(Position* pos, char* str) {
         {
             Move move = uci_to_move(pos, moves);
             do_move(pos, move, gives_check(pos, pos->st, move));
+            pos->accumulator--;
             pos->gamePly++;
             // Roll over if we reach 100 plies.
             if (++ply == 100)
