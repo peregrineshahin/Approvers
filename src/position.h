@@ -60,11 +60,12 @@ struct Stack {
     uint8_t castlingRights;
 
     // Not copied when making a move
-    uint8_t    capturedPiece;
-    uint8_t    epSquare;
-    Key        key;
-    Bitboard   checkersBB;
-    PVariation pv;
+    uint8_t  capturedPiece;
+    uint8_t  epSquare;
+    Key      key;
+    Bitboard checkersBB;
+    Move     rootMove;
+    int      rootScore;
 
     // Original search stack data
     PieceToHistory* continuationHistory;

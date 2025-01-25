@@ -168,11 +168,6 @@ enum {
 enum { PAWN = 1, KNIGHT, BISHOP, ROOK, QUEEN, KING };
 
 enum {
-    W_PAWN = 1, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
-    B_PAWN = 9, B_KNIGHT, B_BISHOP, B_ROOK, B_QUEEN, B_KING
-};
-
-enum {
     DEPTH_QS_CHECKS     = 0,
     DEPTH_QS_NO_CHECKS  = -1,
     DEPTH_QS_RECAPTURES = -5,
@@ -259,13 +254,6 @@ static Key make_key(uint64_t seed) {
 
 typedef struct Position   Position;
 typedef struct LimitsType LimitsType;
-typedef struct PVariation PVariation;
-
-struct PVariation {
-    int  length;
-    int  score;
-    Move line[5];
-};
 
 enum {
     CORRECTION_HISTORY_NB       = 6,

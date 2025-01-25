@@ -207,7 +207,7 @@ static void  update_quiet_stats(const Position* pos, Stack* ss, Move move, int b
 static void
 update_capture_stats(const Position* pos, Move move, Move* captures, int captureCnt, Depth depth);
 static void check_time(void);
-static void uci_print_pv(Position* pos, Depth depth);
+static void uci_print_info(Position* pos, Depth depth);
 
 SMALL double my_log(double x) {
     double result = 0.0;
@@ -257,16 +257,17 @@ SMALL void search_clear(void) {
 // It searches from the root position and outputs the "bestmove".
 void mainthread_search(void) {
     Position* pos = Thread.pos;
-    Color     us  = stm();
-    time_init(us, game_ply());
+
+    time_init(stm(), game_ply());
     tt_new_search();
-    char buf[16];
 
-    Thread.pos->bestMoveChanges = 0;
     thread_search(pos);
-    Thread.previousScore = pos->st->pv.score;
+    Thread.previousScore = pos->st->rootScore;
 
-    printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
+    const Move bestMove = pos->st->rootMove;
+
+    char buf[16];
+    printf("bestmove %s\n", uci_move(buf, bestMove));
     fflush(stdout);
 
 #ifdef KAGGLE
@@ -278,12 +279,11 @@ void mainthread_search(void) {
         return;
 
     // Start pondering right after the best move has been printed if we can
-    if (pos->st->pv.length >= 1)
+    if (bestMove)
     {
         Thread.ponder = true;
         Thread.stop   = false;
 
-        const Move bestMove = pos->st->pv.line[0];
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
 
         pos->completedDepth = 0;
@@ -339,8 +339,6 @@ void thread_search(Position* pos) {
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
-    PVariation* pv = &pos->st->pv;
-
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
     while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
@@ -352,10 +350,9 @@ void thread_search(Position* pos) {
         // Reset aspiration window starting size
         if (pos->rootDepth >= 4)
         {
-            Value previousScore = pv->score;
-            delta               = d_v1;
-            alpha               = max(previousScore - delta, -VALUE_INFINITE);
-            beta                = min(previousScore + delta, VALUE_INFINITE);
+            delta = d_v1;
+            alpha = max(ss->rootScore - delta, -VALUE_INFINITE);
+            beta  = min(ss->rootScore + delta, VALUE_INFINITE);
         }
 
         while (true)
@@ -376,14 +373,14 @@ void thread_search(Position* pos) {
 
 #ifndef KAGGLE
         if (!Thread.ponder)
-            uci_print_pv(pos, pos->rootDepth);
+            uci_print_info(pos, pos->rootDepth);
 #endif
 
         if (!Thread.stop)
             pos->completedDepth = pos->rootDepth;
 
-        pvStability = pv->line[0] == lastMove ? min(pvStability + 1, tm_v23) : 0;
-        lastMove    = pv->line[0];
+        pvStability = ss->rootMove == lastMove ? min(pvStability + 1, tm_v23) : 0;
+        lastMove    = ss->rootMove;
 
 // Do we have time for the next iteration? Can we stop searching now?
 #ifndef KAGGLE
@@ -427,8 +424,6 @@ Value search(
   Position* pos, Stack* ss, Value alpha, Value beta, Depth depth, bool cutNode, const int NT) {
     const bool PvNode   = NT == PV;
     const bool rootNode = PvNode && ss->ply == 0;
-
-    ss->pv.length = 0;
 
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
@@ -885,17 +880,14 @@ moves_loop:  // When in check search starts from here.
         if (Thread.stop)
             return 0;
 
-        if (rootNode)
+        if (rootNode && moveCount == 1 || value > alpha)
         {
-            if (moveCount == 1 || value > alpha)
-            {
-                ss->pv.score = value;
+            ss->rootScore = value;
 
-                // We record how often the best move has been changed in each
-                // iteration. This information is used for time management.
-                if (moveCount > 1)
-                    pos->bestMoveChanges++;
-            }
+            // We record how often the best move has been changed in each
+            // iteration. This information is used for time management.
+            if (moveCount > 1)
+                pos->bestMoveChanges++;
         }
 
         if (value > bestValue)
@@ -906,12 +898,8 @@ moves_loop:  // When in check search starts from here.
             {
                 bestMove = move;
 
-                if (PvNode && ss->ply < 5)
-                {
-                    ss->pv.line[0] = move;
-                    ss->pv.length  = (ss + 1)->pv.length + 1;
-                    memcpy(ss->pv.line + 1, (ss + 1)->pv.line, sizeof(Move) * (ss + 1)->pv.length);
-                }
+                if (rootNode)
+                    ss->rootMove = move;
 
                 if (value >= beta)
                 {
@@ -1373,19 +1361,15 @@ static void check_time(void) {
 }
 
 // Prints PV information according to the UCI protocol.
-static void uci_print_pv(Position* pos, Depth depth) {
-    TimePoint   elapsed        = time_elapsed() + 1;
-    PVariation* pv             = &pos->st->pv;
-    uint64_t    nodes_searched = Thread.pos->nodes;
-    char        buf[16];
+static void uci_print_info(Position* pos, Depth depth) {
+    TimePoint elapsed        = time_elapsed() + 1;
+    uint64_t  nodes_searched = Thread.pos->nodes;
 
-    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 " pv", depth,
-           uci_value(buf, pv->score), nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
-#pragma clang loop unroll(disable)
-    for (int i = 0; i < pv->length; i++)
-        printf(" %s", uci_move(buf, pv->line[i]));
-    printf("\n");
+    char  buf[16];
+    char* score = uci_value(buf, pos->st->rootScore);
 
+    printf("info depth %d score %s nodes %" PRIu64 " nps %" PRIu64 " time %" PRIi64 "\n", depth,
+           score, nodes_searched, nodes_searched * 1000 / elapsed, elapsed);
     fflush(stdout);
 }
 
@@ -1399,10 +1383,11 @@ void start_thinking() {
 SMALL void prepare_for_search() {
     Thread.stop = false;
 
-    Position* pos      = Thread.pos;
-    pos->rootDepth     = 0;
-    pos->nodes         = 0;
-    pos->st->pv.length = 0;
+    Position* pos        = Thread.pos;
+    pos->st->rootMove    = MOVE_NONE;
+    pos->bestMoveChanges = 0;
+    pos->rootDepth       = 0;
+    pos->nodes           = 0;
 
     const int size = max(7, pos->st->pliesFromNull);
 
