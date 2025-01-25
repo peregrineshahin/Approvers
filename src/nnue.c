@@ -11,9 +11,9 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t l1_weights[L1SIZE * 2];
-
 alignas(64) int16_t in_biases[L1SIZE];
+
+alignas(64) int16_t l1_weights[L1SIZE * 2];
 alignas(64) int16_t l1_bias;
 
 SMALL void nnue_init() {
@@ -43,12 +43,6 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
 
-static int reduce_add(__m256i vector) {
-    __m256i v1 = _mm256_hadd_epi32(vector, vector);
-    __m256i v2 = _mm256_hadd_epi32(v1, v1);
-    return _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
-}
-
 static Value output_transform(const Accumulator* acc, const Position* pos) {
     const __m256i min    = _mm256_setzero_si256();
     const __m256i max    = _mm256_set1_epi16(QA);
@@ -67,11 +61,14 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
         }
     }
 
-    const Value output = reduce_add(vector);
+    __m256i v1     = _mm256_hadd_epi32(vector, vector);
+    __m256i v2     = _mm256_hadd_epi32(v1, v1);
+    Value   output = _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
+
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
 
-static void build_accumulator(Accumulator* acc, const Position* pos, Color side) {
+static void refresh_accumulator(Accumulator* acc, const Position* pos, Color side) {
     const __m256i* biases                 = (__m256i*) in_biases;
     __m256i        registers[L1SIZE / 16] = {
       biases[0],
@@ -141,8 +138,8 @@ Value nnue_evaluate(Position* pos) {
 
     if (acc->needs_refresh)
     {
-        build_accumulator(acc, pos, WHITE);
-        build_accumulator(acc, pos, BLACK);
+        refresh_accumulator(acc, pos, WHITE);
+        refresh_accumulator(acc, pos, BLACK);
         acc->needs_refresh = false;
     }
 
