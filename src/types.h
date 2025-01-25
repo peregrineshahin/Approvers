@@ -60,7 +60,6 @@
 typedef struct Parameter {
     char   name[32];
     int*   value;
-    double step;
 } Parameter;
 
 typedef uint64_t Key;
