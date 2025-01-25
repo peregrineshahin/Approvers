@@ -95,6 +95,9 @@ PARAM(se_v2, 142)
 PARAM(se_v5, 28)
 PARAM(prb_v1, 118)
 PARAM(prb_v2, 49)
+PARAM(iir_v1, 6)
+PARAM(iir_v2, 12)
+PARAM(iir_v3, 2)
 PARAM(hb_v1, 959)
 PARAM(hb_v2, 184)
 PARAM(hb_v3, 148)
@@ -659,8 +662,8 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
-        depth -= 2;
+    if ((PvNode || cutNode) && depth >= (PvNode ? iir_v1 : iir_v2) && !ttMove)
+        depth -= iir_v3;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
