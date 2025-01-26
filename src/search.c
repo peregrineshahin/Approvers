@@ -1438,6 +1438,8 @@ SMALL void prepare_for_search() {
     pos->nodes         = 0;
     pos->st->pv.length = 0;
 
+    stats_clear(pos->rootHistory);
+
     const int size = max(7, pos->st->pliesFromNull);
 
 #pragma clang loop unroll(disable)
