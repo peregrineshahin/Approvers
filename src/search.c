@@ -262,6 +262,7 @@ SMALL void search_clear(void) {
 
     Position* pos = Thread.pos;
     stats_clear(pos->mainHistory);
+    stats_clear(pos->rootHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
 
@@ -973,6 +974,9 @@ moves_loop:  // When in check search starts from here.
 
             update_quiet_stats(pos, ss, bestMove, bonus * hs_v1 / 1024);
 
+            if (rootNode)
+                history_update(*pos->rootHistory, stm(), move, bonus);
+
 #pragma clang loop unroll(disable)
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
@@ -980,6 +984,9 @@ moves_loop:  // When in check search starts from here.
                 history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus * hs_v2 / 1024);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
                                               to_sq(quietsSearched[i]), -malus * hs_v3 / 1024);
+
+                if (rootNode)
+                    history_update(*pos->rootHistory, stm(), move, -malus);
             }
         }
 
