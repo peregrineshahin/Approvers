@@ -48,7 +48,6 @@ struct Stack {
     // Copied when making a move
     Key pawnKey;
     Key nonPawnKey[2];
-    Key majorKey;
     Key minorKey;
     union {
         struct {
