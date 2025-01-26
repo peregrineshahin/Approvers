@@ -344,7 +344,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
 
-    ss->accumulator.needs_refresh = 1;
+    pos->accumulator->needs_refresh = true;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
@@ -813,9 +813,6 @@ moves_loop:  // When in check search starts from here.
         // Step 13. Make the move.
         do_move(pos, move, givesCheck);
 
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
-
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
@@ -1190,9 +1187,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         // Step 7. Make and search the move
         do_move(pos, move, givesCheck);
 
-        // Speculative prefetch as early as possible
-        prefetch(tt_first_entry(key()));
-
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
@@ -1267,7 +1261,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
     {
-        int16_t* entry  = &(*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
+        int16_t* entry  = &(*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
         int32_t  update = (*entry * (1024 - newWeight) + scaledDiff * newWeight) / 1024;
 
         *entry = clamp(update, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
@@ -1281,7 +1275,7 @@ Value correction_value(Position* pos) {
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
-        correction += weights[i] * (*pos->corrHists)[stm()][i][keys[i] & CORRECTION_HISTORY_MASK];
+        correction += weights[i] * (*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
 
     return correction / 128 / ch_v2;
 }

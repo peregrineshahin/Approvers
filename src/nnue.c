@@ -134,7 +134,7 @@ void nnue_remove_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Squar
 }
 
 Value nnue_evaluate(Position* pos) {
-    Accumulator* acc = &pos->st->accumulator;
+    Accumulator* acc = pos->accumulator;
 
     if (acc->needs_refresh)
     {

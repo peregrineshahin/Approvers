@@ -472,8 +472,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateCopySize + 7) & ~7);
 
-    Accumulator* acc = &st->accumulator;
-    memcpy(acc, &(st - 1)->accumulator, sizeof(st->accumulator));
+    Accumulator* acc = ++pos->accumulator;
+    memcpy(acc, (pos->accumulator - 1), sizeof(Accumulator));
 
     // Increment ply counters. Note that rule50 will be reset to zero later
     // on in case of a capture or a pawn move.
@@ -630,6 +630,8 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
     // Update the key with the final value
     st->key = key;
+    // Speculative prefetch as early as possible
+    prefetch(tt_first_entry(key));
 
     // Calculate checkers bitboard (if move gives check)
     st->checkersBB = givesCheck ? attackers_to(square_of(them, KING)) & pieces_c(us) : 0;
@@ -644,6 +646,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
 // Unmakes a move. When it returns, the position should
 // be restored to exactly the same state as before the move was made.
 void undo_move(Position* pos, Move m) {
+    pos->accumulator--;
     pos->sideToMove = !pos->sideToMove;
 
     Color  us   = stm();
@@ -700,11 +703,8 @@ void undo_move(Position* pos, Move m) {
 // Used to do a "null move": it flips
 // the side to move without executing any move on the board.
 void do_null_move(Position* pos) {
-
     Stack* st = ++pos->st;
     memcpy(st, st - 1, (StateSize + 7) & ~7);
-
-    memcpy(&st->accumulator, &(st - 1)->accumulator, sizeof(st->accumulator));
 
     if (unlikely(st->epSquare))
     {
@@ -713,6 +713,7 @@ void do_null_move(Position* pos) {
     }
 
     st->key ^= zob.side;
+    // Speculative prefetch as early as possible
     prefetch(tt_first_entry(st->key));
 
     st->rule50++;
@@ -811,7 +812,7 @@ bool see_test(const Position* pos, Move m, int value) {
 
 // Tests whether the position is drawn by 50-move rule or by repetition.
 // It does not detect stalemates.
-SMALL bool is_draw(const Position* pos) {
+bool is_draw(const Position* pos) {
     Stack* st = pos->st;
 
     // st->pliesFromNull is reset both on null moves and on zeroing moves.

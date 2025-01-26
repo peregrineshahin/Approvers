@@ -263,7 +263,7 @@ typedef int16_t        PieceToHistory[6][64];
 typedef PieceToHistory ContinuationHistoryStat[2][6][64];
 typedef int16_t        ButterflyHistory[2][4096];
 typedef int16_t        CapturePieceToHistory[15][64][8];
-typedef int16_t        CorrectionHistory[2][CORRECTION_HISTORY_NB][CORRECTION_HISTORY_ENTRY_NB];
+typedef int16_t        CorrectionHistory[CORRECTION_HISTORY_NB][CORRECTION_HISTORY_ENTRY_NB][2];
 
 struct ExtMove {
     Move move;

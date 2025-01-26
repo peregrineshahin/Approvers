@@ -60,7 +60,7 @@ static void score_captures(const Position* pos) {
           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
 }
 
-SMALL static void score_quiets(const Position* pos) {
+static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->mainHistory;
 

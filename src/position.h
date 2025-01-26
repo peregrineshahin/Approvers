@@ -100,8 +100,6 @@ struct Stack {
         };
     };
     Square ksq;
-
-    Accumulator accumulator;
 };
 
 typedef struct Stack Stack;
@@ -129,21 +127,24 @@ struct Position {
     ExtMove* moveList;
 
     // Relevant mainly to the search of the root position.
-    Stack*   stack;
-    uint64_t nodes;
-    Depth    rootDepth;
-    Depth    completedDepth;
+    Stack*       stack;
+    Accumulator* accumulator;
+    uint64_t     nodes;
+    Depth        rootDepth;
+    Depth        completedDepth;
 
-    // Pointers to thread-specific tables.
+    // Pointers to history tables.
     ButterflyHistory*        mainHistory;
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
 
+
     // Thread-control data.
     uint64_t bestMoveChanges;
 
     void* stackAllocation;
+    void* nnueAllocation;
 };
 
 // FEN string input/output
