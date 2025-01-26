@@ -806,7 +806,8 @@ moves_loop:  // When in check search starts from here.
         else if (PieceValue[captured_piece()] > PawnValue && low_material(pos))
             extension = 1;
         // History extensions
-        else if (!rootNode && quietCount <= 4 && (*contHist0)[movedType][to_sq(move)] > 16000
+        else if (!rootNode && !excludedMove && quietCount <= 4
+                 && (*contHist0)[movedType][to_sq(move)] > 16000
                  && (*contHist1)[movedType][to_sq(move)] > 16000)
             extension = 1;
 
