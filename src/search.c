@@ -113,7 +113,7 @@ PARAM(cnht_v4, 901)
 PARAM(asd_v1, 3)
 PARAM(qsf_v1, 210)
 PARAM(ch_v1, 133)
-PARAM(ch_v2, 150)
+PARAM(ch_v2, 50)
 PARAM(ch_v5, 163)
 PARAM(ch_v6, 132)
 PARAM(ch_v7, 108)
@@ -798,7 +798,7 @@ moves_loop:  // When in check search starts from here.
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
-            else if (cutNode || ttValue >= beta)
+            else if (!PvNode)
                 extension--;
 
             // The call to search_NonPV with the same value of ss messed up our
