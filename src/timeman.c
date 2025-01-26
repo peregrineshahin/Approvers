@@ -48,10 +48,6 @@ SMALL double my_sqrt(double x) {
 // Called at the beginning of the search and calculates
 // the time bounds allowed for the current game ply.
 void time_init(Color us, int ply) {
-    // opt_scale is a percentage of available time to use for the current move.
-    // max_scale is a multiplier applied to optimumTime.
-    double opt_scale, max_scale;
-
     Time.startTime = Limits.startTime;
 
     int mtg = 50;
@@ -64,12 +60,9 @@ void time_init(Color us, int ply) {
 
     // If there is a healthy increment, timeLeft can exceed actual available
     // game time for the current move, so also cap to 20% of available game time.
-    opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
-                    tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
-    max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
+    double opt_scale = min(tm_v13 / 10000.0 + my_sqrt(ply + tm_v14 / 100.0) / (double) tm_v15,
+                           tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
 
-    // Never use more than 80% of the available time for this move
     Time.optimumTime = opt_scale * timeLeft;
-    Time.maximumTime =
-      min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
+    Time.maximumTime = min(3.04 * Time.optimumTime, 0.75 * Limits.time[us] - MoveOverhead);
 }
