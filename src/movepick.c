@@ -61,9 +61,9 @@ static void score_captures(const Position* pos) {
 }
 
 static void score_quiets(const Position* pos) {
-    Stack*            st          = pos->st;
-    ButterflyHistory* mainHistory = pos->mainHistory;
-    ButterflyHistory* rootHistory = pos->rootHistory;
+    Stack*            st            = pos->st;
+    ButterflyHistory* mainHistory   = pos->mainHistory;
+    ButterflyHistory* lowPlyHistory = pos->lowPlyHistory;
 
     PieceToHistory* contHist0 = (st - 1)->continuationHistory;
     PieceToHistory* contHist1 = (st - 2)->continuationHistory;
@@ -81,8 +81,8 @@ static void score_quiets(const Position* pos) {
 
         m->value = (*mainHistory)[c][move] * 2;
 
-        if (pos->st->ply == 0)
-            m->value += (*rootHistory)[c][move] * 8;
+        if (pos->st->ply < 4)
+            m->value += 16 * (*lowPlyHistory)[c][move] / (1 + 2 * pos->st->ply);
 
         m->value += (*contHist0)[pt][to] * 2;
         m->value += (*contHist1)[pt][to] * 2;

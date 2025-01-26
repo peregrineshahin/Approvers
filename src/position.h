@@ -135,7 +135,7 @@ struct Position {
 
     // Pointers to history tables.
     ButterflyHistory*        mainHistory;
-    ButterflyHistory*        rootHistory;
+    ButterflyHistory*        lowPlyHistory;
     CapturePieceToHistory*   captureHistory;
     CorrectionHistory*       corrHists;
     ContinuationHistoryStat* contHist;
