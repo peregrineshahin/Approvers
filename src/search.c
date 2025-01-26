@@ -602,7 +602,8 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
+        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3)
+                + (ttCapture || cutNode);
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
