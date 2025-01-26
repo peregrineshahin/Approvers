@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../quantised.bin");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t in_biases[L1SIZE];
@@ -17,15 +17,10 @@ alignas(64) int16_t l1_weights[L1SIZE * 2];
 alignas(64) int16_t l1_bias;
 
 SMALL void nnue_init() {
-    int8_t* data = (int8_t*) gNetworkData;
+    int16_t* data = (int16_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data++);
-    }
+        in_weights[i] = *(data++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
@@ -33,7 +28,7 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1SIZE * 2; i++)
         l1_weights[i] = *(data++);
 
-    l1_bias = *((int16_t*) data);
+    l1_bias = *(data);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -68,35 +63,20 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
 
-static void refresh_accumulator(Accumulator* acc, const Position* pos, Color side) {
-    const __m256i* biases                 = (__m256i*) in_biases;
-    __m256i        registers[L1SIZE / 16] = {
-      biases[0],
-      biases[1],
-      biases[2],
-      biases[3],
-    };
+static void refresh_accumulators(Accumulator* acc, const Position* pos) {
+    memcpy(acc->values[WHITE], in_biases, sizeof(in_biases));
+    memcpy(acc->values[BLACK], in_biases, sizeof(in_biases));
 
-    const Square ksq = square_of(side, KING);
+    const Square wksq = square_of(WHITE, KING);
+    const Square bksq = square_of(BLACK, KING);
+
     for (Bitboard pieces = pieces(); pieces;)
     {
         const Square sq = pop_lsb(&pieces);
         const Piece  pc = piece_on(sq);
 
-        const int      index   = make_index(type_of_p(pc), color_of(pc), sq, ksq, side);
-        const __m256i* weights = (__m256i*) &in_weights[index * L1SIZE];
-
-        registers[0] = _mm256_add_epi16(registers[0], weights[0]);
-        registers[1] = _mm256_add_epi16(registers[1], weights[1]);
-        registers[2] = _mm256_add_epi16(registers[2], weights[2]);
-        registers[3] = _mm256_add_epi16(registers[3], weights[3]);
+        nnue_add_piece(acc, pc, sq, wksq, bksq);
     }
-
-    __m256i* values = (__m256i*) &acc->values[side];
-    values[0]       = registers[0];
-    values[1]       = registers[1];
-    values[2]       = registers[2];
-    values[3]       = registers[3];
 }
 
 void nnue_add_piece(Accumulator* acc, Piece pc, Square sq, Square wksq, Square bksq) {
@@ -138,8 +118,7 @@ Value nnue_evaluate(Position* pos) {
 
     if (acc->needs_refresh)
     {
-        refresh_accumulator(acc, pos, WHITE);
-        refresh_accumulator(acc, pos, BLACK);
+        refresh_accumulators(acc, pos);
         acc->needs_refresh = false;
     }
 
