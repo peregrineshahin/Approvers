@@ -1256,7 +1256,7 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
                   b_nonpawn_key(), minor_key(),     major_key()};
 
     int32_t newWeight  = min(ch_v1, depth * depth + 4 * depth + 4);
-    int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
+    int32_t scaledDiff = clamp(diff * ch_v2, -16384, 16384);
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
