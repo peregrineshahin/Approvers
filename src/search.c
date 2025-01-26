@@ -45,7 +45,7 @@ int       parameters_count = 0;
             param->value = &Name; \
         }
 #else
-    #define PARAM(Name, Value, Step) int Name = Value;
+    #define PARAM(Name, Value) int Name = Value;
 #endif
 
 // Disabled parameters
