@@ -96,7 +96,7 @@ PARAM(se_v5, 26)
 PARAM(prb_v1, 118)
 PARAM(prb_v2, 52)
 PARAM(iir_v1, 6)
-PARAM(iir_v2, 11)
+PARAM(iir_v2, 10)
 PARAM(iir_v3, 2)
 PARAM(hb_v1, 1002)
 PARAM(hb_v2, 168)
@@ -113,7 +113,7 @@ PARAM(cnht_v4, 901)
 PARAM(asd_v1, 3)
 PARAM(qsf_v1, 210)
 PARAM(ch_v1, 133)
-PARAM(ch_v2, 150)
+PARAM(ch_v2, 50)
 PARAM(ch_v5, 163)
 PARAM(ch_v6, 132)
 PARAM(ch_v7, 108)
@@ -602,7 +602,8 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
+        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3)
+                + (ttCapture || (ttValue != VALUE_NONE && ttValue >= beta + 390));
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
@@ -798,8 +799,8 @@ moves_loop:  // When in check search starts from here.
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
-            else if (cutNode || ttValue >= beta)
-                extension--;
+            else if (cutNode || ttValue >= beta || ttValue <= alpha)
+                extension -= 1 + (ttValue >= beta && cutNode);
 
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
