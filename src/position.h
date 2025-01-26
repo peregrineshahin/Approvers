@@ -207,7 +207,6 @@ PURE bool has_game_cycle(const Position* pos, int ply);
 #define pawn_key() (pos->st->pawnKey)
 #define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
 #define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])
-#define major_key() (pos->st->majorKey)
 #define minor_key() (pos->st->minorKey)
 #define prev_move_key() (from_to((pos->st - 1)->currentMove))
 

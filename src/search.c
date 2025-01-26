@@ -119,7 +119,6 @@ PARAM(ch_v6, 132)
 PARAM(ch_v7, 108)
 PARAM(ch_v8, 116)
 PARAM(ch_v9, 121)
-PARAM(ch_v10, 83)
 PARAM(tempo, 40)
 PARAM(mp_v1, 75)
 PARAM(mp_v2, 1098)
@@ -625,7 +624,7 @@ Value search(
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
 
-        Depth probCutDepth = max(depth - 4, 0);
+        Depth probCutDepth = max(depth - 4 - cutNode, 0);
 
         while ((move = next_move(pos, 0)))
             if (move != excludedMove && is_legal(pos, move))
@@ -1252,8 +1251,7 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 
 
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
-    Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
-                  b_nonpawn_key(), minor_key(),     major_key()};
+    Key keys[] = {pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key(), minor_key()};
 
     int32_t newWeight  = min(ch_v1, depth * depth + 4 * depth + 4);
     int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
@@ -1269,9 +1267,8 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 }
 
 Value correction_value(Position* pos) {
-    Key keys[]    = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
-                     b_nonpawn_key(), minor_key(),     major_key()};
-    int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10};
+    Key keys[]    = {pawn_key(), prev_move_key(), w_nonpawn_key(), b_nonpawn_key(), minor_key()};
+    int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
