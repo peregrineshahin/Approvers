@@ -24,11 +24,6 @@
 extern int mp_v1;
 extern int mp_v2;
 extern int mp_v3;
-extern int mp_v4;
-extern int mp_v5;
-extern int mp_v6;
-extern int mp_v7;
-extern int mp_v8;
 
 #define LIMIT (-(1 << 30))
 

@@ -269,14 +269,12 @@ SMALL void uci_loop(int argc, char** argv) {
         {
             for (int i = 0; i < parameters_count; i++)
             {
-                if (parameters[i].step == 0)
-                    continue;
+                const int v   = *parameters[i].value;
+                const int min = (v > 0) ? 1 : v * 2;
+                const int max = (v > 0) ? v * 2 : -1;
 
-                const int min = (int) (*parameters[i].value - 10 * parameters[i].step);
-                const int max = (int) (*parameters[i].value + 10 * parameters[i].step);
-
-                printf("%s, int, %d, %d, %d, %.1f, 0.002\n", parameters[i].name,
-                       *parameters[i].value, min, max, parameters[i].step);
+                printf("%s, int, %d, %d, %d, %.2f, 0.002\n", parameters[i].name, v, min, max,
+                       (double) (max - min) / 20.0);
             }
         }
         else if (strcmp(token, "nnparams") == 0)

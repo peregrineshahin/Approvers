@@ -37,138 +37,150 @@ Parameter parameters[255];
 int       parameters_count = 0;
 
     #define STRINGIFY(x) #x
-    #define PARAM(Name, Value, Step) \
+    #define PARAM(Name, Value) \
         int                                               Name = Value; \
         __attribute__((constructor(__LINE__ + 100))) void ctor_##Name(void) { \
             Parameter* param = &parameters[parameters_count++]; \
             strncpy(param->name, STRINGIFY(Name), sizeof(param->name)); \
             param->value = &Name; \
-            param->step  = Step; \
         }
 #else
     #define PARAM(Name, Value, Step) int Name = Value;
 #endif
 
 // Disabled parameters
-PARAM(nmp_v1, 764, 0)
-PARAM(nmp_v2, 56, 0)
-PARAM(nmp_v3, 165, 0)
-PARAM(nmp_v4, 184, 0)
-PARAM(nmp_v6, 23, 0)
-PARAM(nmp_v8, 88, 0)
-PARAM(nmp_v9, 200, 0)
-PARAM(r_v1, 1056, 0)
-PARAM(cms_v1, 29166, 0)
-PARAM(hu_v1, 10294, 0)
-PARAM(cpth_v1, 11627, 0)
-PARAM(eval_scale, 93, 0)
-PARAM(mat_scale, 25855, 0)
-PARAM(mat_n, 643, 0)
-PARAM(mat_b, 750, 0)
-PARAM(mat_r, 1461, 0)
-PARAM(mat_q, 2321, 0)
-PARAM(rz_v1, 6, 0)
-PARAM(fpp_v1, 7, 0)
-
 // Search parameters
-PARAM(ttct_v1, 135, 14.6)
-PARAM(ttct_v2, 126, 12.2)
-PARAM(qmo_v1, 406, 43.3)
-PARAM(qmo_v2, 1342, 132.1)
-PARAM(qmo_v3, 960, 93.6)
-PARAM(rz_v2, 347, 35.1)
-PARAM(rz_v3, 228, 23.6)
-PARAM(ft_v1, 86, 8.3)
-PARAM(ft_v2, 16, 0.5)
-PARAM(cv_v1, 29, 2.0)
-PARAM(cv_v2, 123, 10.0)
-PARAM(rd_v1, 582, 56.0)
-PARAM(rd_v2, 1260, 48.0)
-PARAM(rd_v3, 928, 99.0)
-PARAM(rd_init_v1, 3552, 162.5)
-PARAM(d_v1, 18, 1.0)
-PARAM(cbp_v2, 3, 8.0)
-PARAM(cbp_v3, -8, 8.0)
-PARAM(cbp_v4, -7, 8.0)
-PARAM(fpp_v2, 244, 24.3)
-PARAM(fpp_v3, 182, 18.7)
-PARAM(fpp_v4, 71, 6.6)
-PARAM(fpp_v5, 71, 6.9)
-PARAM(sqsee_v1, 27, 2.6)
-PARAM(scsee_v1, 189, 16.0)
-PARAM(se_v2, 142, 15.0)
-PARAM(se_v5, 28, 2.9)
-PARAM(prb_v1, 118, 11.9)
-PARAM(prb_v2, 49, 4.7)
-PARAM(hb_v1, 959, 92.6)
-PARAM(hb_v2, 184, 19.5)
-PARAM(hb_v3, 148, 14.4)
-PARAM(hb_v4, 2613, 259.3)
-PARAM(hm_v1, 750, 70.2)
-PARAM(hm_v2, 196, 20.8)
-PARAM(hm_v3, 124, 12.8)
-PARAM(hm_v4, 1478, 153.0)
-PARAM(cnht_v1, 1028, 102.1)
-PARAM(cnht_v2, 958, 99.6)
-PARAM(cnht_v3, 967, 104.4)
-PARAM(cnht_v4, 939, 94.3)
-PARAM(asd_v1, 3, 0.5)
-PARAM(qsf_v1, 218, 20.7)
-PARAM(ch_v1, 126, 12.8)
-PARAM(ch_v2, 163, 14.6)
-PARAM(ch_v5, 165, 14.6)
-PARAM(ch_v6, 137, 13.1)
-PARAM(ch_v7, 104, 11.1)
-PARAM(ch_v8, 109, 11.0)
-PARAM(ch_v9, 117, 12.6)
-PARAM(ch_v10, 87, 8.7)
-PARAM(tempo, 41, 4.2)
-PARAM(mp_v1, 72, 3.6)
-PARAM(mp_v2, 1089, 53.0)
-PARAM(mp_v3, 2676, 133.0)
-PARAM(pcmb_v1, 83, 8.5)
-PARAM(pcmb_v4, 140, 15.1)
-PARAM(pcmb_v5, 7, 0.7)
-PARAM(pcmb_v6, 121, 11.3)
-PARAM(pcmb_v7, 99, 10.2)
-PARAM(pcmb_v8, 138, 13.4)
-PARAM(pcmb_v9, 233, 23.2)
-PARAM(pcmb_v10, 130, 13.1)
-PARAM(pcmb_v11, 127, 13.5)
-PARAM(r_v2, 2091, 200.0)
-PARAM(r_v3, 997, 120.0)
-PARAM(r_v4, 180, 20.0)
-PARAM(r_v5, 510, 20.0)
-PARAM(r_v6, 1348, 120.0)
-PARAM(r_v7, 1050, 120.0)
-PARAM(r_v8, 2182, 200.0)
-PARAM(r_v12, 3946, 382.5)
-PARAM(r_v13, 966, 97.6)
-PARAM(ded_v1, 62, 6.3)
-PARAM(qb_v1, 188, 18.2)
-PARAM(qb_v2, 187, 18.2)
-PARAM(de_v1, 6, 0.5)
+PARAM(rd_init_v1, 3486)
+PARAM(rd_v1, 569)
+PARAM(rd_v2, 1196)
+PARAM(rd_v3, 988)
+PARAM(qmo_v1, 379)
+PARAM(qmo_v2, 1296)
+PARAM(qmo_v3, 949)
+PARAM(qmo_v4, 1026)
+PARAM(rz_v1, 6)
+PARAM(rz_v2, 325)
+PARAM(rz_v3, 239)
+PARAM(ft_v1, 82)
+PARAM(ft_v2, 17)
+PARAM(cv_v1, 29)
+PARAM(cv_v2, 117)
+PARAM(nmp_v1, 739)
+PARAM(nmp_v2, 55)
+PARAM(nmp_v3, 156)
+PARAM(nmp_v4, 170)
+PARAM(nmp_v6, 23)
+PARAM(nmp_v8, 87)
+PARAM(nmp_v9, 196)
+PARAM(d_v1, 18)
+PARAM(cbp_v2, 3)
+PARAM(cbp_v3, -8)
+PARAM(cbp_v4, -7)
+PARAM(fpp_v1, 7)
+PARAM(fpp_v2, 243)
+PARAM(fpp_v3, 173)
+PARAM(fpp_v4, 68)
+PARAM(fpp_v5, 66)
+PARAM(sqsee_v1, 27)
+PARAM(scsee_v1, 192)
+PARAM(scsee_v2, 30)
+PARAM(scsee_v3, 205)
+PARAM(scsee_v4, 204)
+PARAM(fp_v1, 6)
+PARAM(fp_v2, 286)
+PARAM(fp_v3, 259)
+PARAM(fp_v4, 7)
+PARAM(se_v1, 5)
+PARAM(se_v2, 131)
+PARAM(se_v5, 26)
+PARAM(prb_v1, 118)
+PARAM(prb_v2, 52)
+PARAM(iir_v1, 6)
+PARAM(iir_v2, 11)
+PARAM(iir_v3, 2)
+PARAM(hb_v1, 1002)
+PARAM(hb_v2, 168)
+PARAM(hb_v3, 146)
+PARAM(hb_v4, 2832)
+PARAM(hm_v1, 728)
+PARAM(hm_v2, 193)
+PARAM(hm_v3, 126)
+PARAM(hm_v4, 1470)
+PARAM(cnht_v1, 1031)
+PARAM(cnht_v2, 991)
+PARAM(cnht_v3, 955)
+PARAM(cnht_v4, 901)
+PARAM(asd_v1, 3)
+PARAM(qsf_v1, 210)
+PARAM(ch_v1, 133)
+PARAM(ch_v2, 150)
+PARAM(ch_v5, 163)
+PARAM(ch_v6, 132)
+PARAM(ch_v7, 108)
+PARAM(ch_v8, 116)
+PARAM(ch_v9, 121)
+PARAM(ch_v10, 83)
+PARAM(tempo, 40)
+PARAM(mp_v1, 75)
+PARAM(mp_v2, 1098)
+PARAM(mp_v3, 2561)
+PARAM(pcmb_v1, 86)
+PARAM(pcmb_v2, 4)
+PARAM(pcmb_v4, 146)
+PARAM(pcmb_v5, 7)
+PARAM(pcmb_v6, 128)
+PARAM(pcmb_v7, 96)
+PARAM(pcmb_v8, 130)
+PARAM(pcmb_v9, 225)
+PARAM(pcmb_v12, 120)
+PARAM(pcmb_v13, 79)
+PARAM(r_v2, 1990)
+PARAM(r_v3, 1047)
+PARAM(r_v4, 177)
+PARAM(r_v5, 524)
+PARAM(r_v6, 1353)
+PARAM(r_v7, 1036)
+PARAM(r_v8, 2102)
+PARAM(r_v12, 3962)
+PARAM(r_v13, 908)
+PARAM(ded_v1, 62)
+PARAM(qb_v1, 183)
+PARAM(qb_v2, 190)
+PARAM(de_v1, 6)
+PARAM(hs_v1, 1046)
+PARAM(hs_v2, 1074)
+PARAM(hs_v3, 1006)
+PARAM(hs_v4, 1004)
+PARAM(hs_v5, 941)
+PARAM(hs_v6, 1053)
+PARAM(hs_v7, 1076)
+PARAM(hs_v8, 946)
+PARAM(hs_v9, 257)
+PARAM(hs_v10, 254)
+PARAM(cms_v1, 29498)
+PARAM(hu_v1, 10961)
+PARAM(cpth_v1, 11755)
 
 // Time management parameters
-PARAM(tm_v1, 338, 28)
-PARAM(tm_v2, 564, 63)
-PARAM(tm_v3, 674, 63)
-PARAM(tm_v4, 804, 40)
-PARAM(tm_v5, 54, 7)
-PARAM(tm_v6, 155, 7)
-PARAM(tm_v13, 88, 4)
-PARAM(tm_v14, 295, 14)
-PARAM(tm_v15, 243, 14)
-PARAM(tm_v16, 22, 2)
-PARAM(tm_v17, 660, 29)
-PARAM(tm_v18, 422, 14)
-PARAM(tm_v19, 1192, 14)
-PARAM(tm_v20, 801, 14)
-PARAM(tm_v21, 102, 4)
-PARAM(tm_v22, 168, 7)
-PARAM(tm_v23, 8, 0.5)
-PARAM(tm_v24, 121, 2)
-PARAM(tm_v25, 51, 1)
+PARAM(tm_v1, 338)
+PARAM(tm_v2, 564)
+PARAM(tm_v3, 674)
+PARAM(tm_v4, 804)
+PARAM(tm_v5, 54)
+PARAM(tm_v6, 155)
+PARAM(tm_v13, 88)
+PARAM(tm_v14, 295)
+PARAM(tm_v15, 243)
+PARAM(tm_v16, 22)
+PARAM(tm_v17, 660)
+PARAM(tm_v18, 422)
+PARAM(tm_v19, 1192)
+PARAM(tm_v20, 801)
+PARAM(tm_v21, 102)
+PARAM(tm_v22, 168)
+PARAM(tm_v23, 8)
+PARAM(tm_v24, 121)
+PARAM(tm_v25, 51)
 
 LimitsType Limits;
 
@@ -498,12 +510,12 @@ Value search(
         if (ttMove && ttValue >= beta)
         {
             if (!capture_stage(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, ttct_v1 * stat_bonus(depth) / 128);
+                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth) * hs_v7 / 1024);
 
             // Extra penalty for early quiet moves of the previous ply
             if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              ttct_v2 * -stat_malus(depth + 1) / 128);
+                                              -stat_malus(depth + 1) * hs_v8 / 1024);
         }
 
         // Partial workaround for the graph history interaction problem
@@ -564,7 +576,7 @@ Value search(
     {
         int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, bonus);
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
 
     // Step 5. Razoring
@@ -650,8 +662,8 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if ((PvNode || cutNode) && depth >= (1 + cutNode) * 6 && !ttMove)
-        depth -= 2;
+    if ((PvNode || cutNode) && depth >= (PvNode ? iir_v1 : iir_v2) && !ttMove)
+        depth -= iir_v3;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
@@ -705,14 +717,14 @@ moves_loop:  // When in check search starts from here.
                 int captHist =
                   (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
 
-                int seeHist = clamp(captHist / 32, -200 * depth, 200 * depth);
+                int seeHist = clamp(captHist / scsee_v2, -scsee_v3 * depth, scsee_v4 * depth);
                 if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
                     continue;
 
-                if (!givesCheck && lmrDepth < 7 && !ss->checkersBB)
+                if (!givesCheck && lmrDepth < fp_v1 && !ss->checkersBB)
                 {
-                    Value futilityValue = ss->staticEval + 271 + 243 * lmrDepth
-                                        + PieceValue[capturedPiece] + captHist / 7;
+                    Value futilityValue = ss->staticEval + fp_v2 + fp_v3 * lmrDepth
+                                        + PieceValue[capturedPiece] + captHist / fp_v4;
                     if (futilityValue <= alpha)
                         continue;
                 }
@@ -747,7 +759,7 @@ moves_loop:  // When in check search starts from here.
         // reduced search on all the other moves but the ttMove and if the
         // result is lower than ttValue minus a margin, then we extend the ttMove.
         // Recursive singular search is avoided.
-        if (depth >= 5 && move == ttMove && !rootNode && !excludedMove
+        if (depth >= se_v1 && move == ttMove && !rootNode && !excludedMove
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
             && tte_depth(tte) >= depth - 3)
         {
@@ -811,7 +823,7 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            r *= r_v1;
+            r *= 1056;
             r += r_v4;
 
             r -= abs(r_v5 * correctionValue / 128);
@@ -957,15 +969,15 @@ moves_loop:  // When in check search starts from here.
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
             int malus = stat_malus(depth + (bestValue > beta + qb_v2));
 
-            update_quiet_stats(pos, ss, bestMove, bonus);
+            update_quiet_stats(pos, ss, bestMove, bonus * hs_v1 / 1024);
 
 #pragma clang loop unroll(disable)
             // Decrease all the other played quiet moves
             for (int i = 0; i < quietCount; i++)
             {
-                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus);
+                history_update(*pos->mainHistory, stm(), quietsSearched[i], -malus * hs_v2 / 1024);
                 update_continuation_histories(ss, moved_piece(quietsSearched[i]),
-                                              to_sq(quietsSearched[i]), -malus);
+                                              to_sq(quietsSearched[i]), -malus * hs_v3 / 1024);
             }
         }
 
@@ -975,24 +987,28 @@ moves_loop:  // When in check search starts from here.
         if ((prevSq != SQ_NONE && (ss - 1)->moveCount == 1
              || (ss - 1)->currentMove == (ss - 1)->killers[0])
             && !captured_piece())
-            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, -stat_malus(depth + 1));
+            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                          -stat_malus(depth + 1) * hs_v4 / 1024);
     }
     // Bonus for prior countermove that caused the fail low
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
-        int bonus = pcmb_v1 * (depth > 4) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
-                  + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
-                  + 119 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 83);
+        int bonusScale =
+          pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
+          + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
+          + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
 
         // Proportional to "how much damage we have to undo"
-        bonus += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
+        bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
 
-        bonus = max(bonus, 0);
-        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                      stat_bonus(depth) * bonus / pcmb_v10);
+        bonusScale = max(bonusScale, 0);
+
+        const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
+
+        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, scaledBonus * hs_v9 / 1024);
 
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
-                       stat_bonus(depth) * bonus / pcmb_v11);
+                       scaledBonus * hs_v10 / 1024);
     }
 
     // If no good move is found and the previous position was ttPv, then the
@@ -1306,9 +1322,10 @@ update_capture_stats(const Position* pos, Move move, Move* captures, int capture
     int   captured    = type_of_p(piece_on(to_sq(move)));
 
     if (capture_stage(pos, move))
-        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured, stat_bonus(depth));
+        cpth_update(*pos->captureHistory, moved_piece, to_sq(move), captured,
+                    stat_bonus(depth) * hs_v5 / 1024);
 
-    Value malus = -stat_malus(depth);
+    Value malus = -stat_malus(depth) * hs_v6 / 1024;
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i < captureCnt; i++)
