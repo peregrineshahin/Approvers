@@ -82,7 +82,7 @@ static void score_quiets(const Position* pos) {
         m->value = (*mainHistory)[c][move] * 2;
 
         if (pos->st->ply == 0)
-            m->value += (*rootHistory)[c][move] * 8;
+            m->value += (*rootHistory)[c][move] * 4;
 
         m->value += (*contHist0)[pt][to] * 2;
         m->value += (*contHist1)[pt][to] * 2;
