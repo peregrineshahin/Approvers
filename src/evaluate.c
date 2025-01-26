@@ -37,7 +37,7 @@ Value evaluate(Position* pos) {
     int non_pawn_material = mat_n * popcount(pieces_p(KNIGHT)) + mat_b * popcount(pieces_p(BISHOP))
                           + mat_r * popcount(pieces_p(ROOK)) + mat_q * popcount(pieces_p(QUEEN));
 
-    v = v * (mat_scale + non_pawn_material) / 32768;
+    v = v * (mat_scale + non_pawn_material) / 32768 + 32 * (bool) can_castle_c(stm());
 
     // Damp down the evaluation linearly when shuffling
     v = v * (100 - rule50_count()) / 100;
