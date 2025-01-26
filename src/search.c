@@ -306,6 +306,7 @@ void mainthread_search(void) {
 
         const Move bestMove = pos->st->pv.line[0];
         do_move(pos, bestMove, gives_check(pos, pos->st, bestMove));
+        pos->accumulator--;
 
         pos->completedDepth = 0;
         pos->rootDepth      = 0;
