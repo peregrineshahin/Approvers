@@ -8,29 +8,24 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../pairwise-05.bin");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t in_biases[L1SIZE];
 
-alignas(64) int16_t l1_weights[L1SIZE * 2];
+alignas(64) int16_t l1_weights[L1SIZE];
 alignas(64) int16_t l1_bias;
 
 SMALL void nnue_init() {
-    int8_t* data = (int8_t*) gNetworkData;
+    int16_t* data = (int16_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data++);
-    }
+        in_weights[i] = *(data++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
 
-    for (int i = 0; i < L1SIZE * 2; i++)
+    for (int i = 0; i < L1SIZE; i++)
         l1_weights[i] = *(data++);
 
     l1_bias = *((int16_t*) data);
@@ -44,26 +39,22 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
 }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
-    const __m256i min    = _mm256_setzero_si256();
-    const __m256i max    = _mm256_set1_epi16(QA);
-    __m256i       vector = _mm256_setzero_si256();
+    int halfWidth = L1SIZE / 2;
+    int output    = 0;
 
     for (int flip = 0; flip <= 1; flip++)
     {
-        __m256i* input   = (__m256i*) acc->values[pos->sideToMove ^ flip];
-        __m256i* weights = (__m256i*) &l1_weights[flip * L1SIZE];
+        int16_t* input   = acc->values[pos->sideToMove ^ flip];
+        int16_t* weights = &l1_weights[flip * halfWidth];
 
-        for (int i = 0; i < L1SIZE / 16; ++i)
+        for (int i = 0; i < halfWidth; i++)
         {
-            __m256i v = _mm256_min_epi16(_mm256_max_epi16(input[i], min), max);
-            __m256i w = _mm256_mullo_epi16(v, weights[i]);
-            vector    = _mm256_add_epi32(vector, _mm256_madd_epi16(w, v));
+            int32_t v1 = clamp(input[i], 0, QA);
+            int32_t v2 = clamp(input[i + halfWidth], 0, QA);
+
+            output += v1 * v2 * weights[i];
         }
     }
-
-    __m256i v1     = _mm256_hadd_epi32(vector, vector);
-    __m256i v2     = _mm256_hadd_epi32(v1, v1);
-    Value   output = _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
 
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
