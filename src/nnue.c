@@ -39,22 +39,29 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
 }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
-    int halfWidth = L1SIZE / 2;
-    int output    = 0;
+    int           halfWidth = L1SIZE / 2;
+    const __m256i min       = _mm256_setzero_si256();
+    const __m256i max       = _mm256_set1_epi16(QA);
+    __m256i       vector    = _mm256_setzero_si256();
 
     for (int flip = 0; flip <= 1; flip++)
     {
-        int16_t* input   = acc->values[pos->sideToMove ^ flip];
-        int16_t* weights = &l1_weights[flip * halfWidth];
+        __m256i* input   = (__m256i*) acc->values[pos->sideToMove ^ flip];
+        __m256i* weights = (__m256i*) &l1_weights[flip * halfWidth];
 
-        for (int i = 0; i < halfWidth; i++)
+        for (int i = 0; i < (halfWidth / 16); i++)
         {
-            int32_t v1 = clamp(input[i], 0, QA);
-            int32_t v2 = clamp(input[i + halfWidth], 0, QA);
+            __m256i left  = _mm256_min_epi16(_mm256_max_epi16(input[i], min), max);
+            __m256i right = _mm256_min_epi16(_mm256_max_epi16(input[i + halfWidth / 16], min), max);
 
-            output += v1 * v2 * weights[i];
+            vector = _mm256_add_epi32(
+              vector, _mm256_madd_epi16(_mm256_mullo_epi16(left, weights[i]), right));
         }
     }
+
+    __m256i v1     = _mm256_hadd_epi32(vector, vector);
+    __m256i v2     = _mm256_hadd_epi32(v1, v1);
+    Value   output = _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
 
     return (output / QA + l1_bias) * SCALE / (QA * QB);
 }
