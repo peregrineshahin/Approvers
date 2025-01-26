@@ -120,6 +120,11 @@ PARAM(ch_v7, 108)
 PARAM(ch_v8, 116)
 PARAM(ch_v9, 121)
 PARAM(ch_v10, 83)
+PARAM(ch_v11, 128)
+PARAM(ch_v12, 512)
+PARAM(ch_v13, 512)
+PARAM(ch_v14, 32768)
+PARAM(ch_v15, 32768)
 PARAM(tempo, 40)
 PARAM(mp_v1, 75)
 PARAM(mp_v2, 1098)
@@ -1255,8 +1260,8 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
 
-    int32_t newWeight  = min(ch_v1, depth * depth + 4 * depth + 4);
-    int32_t scaledDiff = clamp(diff * ch_v2, -32768, 32768);
+    int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 128);
+    int32_t scaledDiff = clamp(diff * ch_v2, -ch_v14, ch_v15);
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
