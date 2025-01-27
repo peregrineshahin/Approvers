@@ -80,7 +80,7 @@ PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 243)
 PARAM(fpp_v3, 173)
 PARAM(fpp_v4, 68)
-PARAM(fpp_v5, 66)
+PARAM(fpp_v5, -300)
 PARAM(sqsee_v1, 27)
 PARAM(scsee_v1, 192)
 PARAM(scsee_v2, 30)
@@ -745,9 +745,7 @@ moves_loop:  // When in check search starts from here.
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !ss->checkersBB
-                    && ss->staticEval + (bestValue < ss->staticEval - fpp_v4 ? fpp_v2 : fpp_v5)
-                           + fpp_v3 * lmrDepth
-                         <= alpha)
+                    && ss->staticEval + (bestMove ? fpp_v5 : fpp_v2) + fpp_v3 * lmrDepth <= alpha)
                     continue;
 
                 // Prune moves with negative SEE at low depths and below a decreasing
