@@ -738,8 +738,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 // Countermoves based pruning
-                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedType][to_sq(move)] < cbp_v3
+                if (lmrDepth < 3 && (*contHist0)[movedType][to_sq(move)] < cbp_v3
                     && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
                     continue;
 
