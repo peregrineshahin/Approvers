@@ -8,7 +8,7 @@
 #define INSIZE 768
 #define L1SIZE 64
 
-#define QA 128
+#define QA 192
 #define QB 64
 #define SCALE 400
 
