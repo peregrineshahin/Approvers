@@ -668,7 +668,14 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if ((PvNode || cutNode) && depth >= (PvNode ? iir_v1 : iir_v2) && !ttMove)
+    if (PvNode && !ttMove)
+        depth -= depth >= 9 ? 2 : 1;
+
+    // Dive into quiescence search when the depth reaches zero
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0);
+
+    if (cutNode && depth >= iir_v2 && !ttMove)
         depth -= iir_v3;
 
 moves_loop:  // When in check search starts from here.
