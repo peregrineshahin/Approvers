@@ -73,6 +73,7 @@ PARAM(nmp_v6, 23)
 PARAM(nmp_v8, 87)
 PARAM(nmp_v9, 196)
 PARAM(d_v1, 18)
+PARAM(cbp_v1, 3)
 PARAM(cbp_v2, 3)
 PARAM(cbp_v3, -8)
 PARAM(cbp_v4, -7)
@@ -95,6 +96,7 @@ PARAM(se_v2, 131)
 PARAM(se_v5, 26)
 PARAM(prb_v1, 118)
 PARAM(prb_v2, 52)
+PARAM(prb_v3, 0)
 PARAM(iir_v1, 6)
 PARAM(iir_v2, 11)
 PARAM(iir_v3, 2)
@@ -113,19 +115,21 @@ PARAM(cnht_v3, 955)
 PARAM(cnht_v4, 901)
 PARAM(asd_v1, 3)
 PARAM(qsf_v1, 210)
+PARAM(qss_v1, 0)
 PARAM(ch_v1, 133)
 PARAM(ch_v2, 150)
-PARAM(ch_v5, 163)
-PARAM(ch_v6, 132)
-PARAM(ch_v7, 108)
-PARAM(ch_v8, 116)
-PARAM(ch_v9, 121)
-PARAM(ch_v10, 83)
-PARAM(ch_v11, 128)
-PARAM(ch_v12, 512)
-PARAM(ch_v13, 512)
+PARAM(ch_v5, 1304)
+PARAM(ch_v6, 1056)
+PARAM(ch_v7, 864)
+PARAM(ch_v8, 928)
+PARAM(ch_v9, 968)
+PARAM(ch_v10, 664)
+PARAM(ch_v11, 1024)
+PARAM(ch_v12, 4096)
+PARAM(ch_v13, 4096)
 PARAM(ch_v14, 32768)
 PARAM(ch_v15, 32768)
+PARAM(ch_v16, 150)
 PARAM(tempo, 40)
 PARAM(mp_v1, 75)
 PARAM(mp_v2, 1098)
@@ -140,15 +144,19 @@ PARAM(pcmb_v8, 130)
 PARAM(pcmb_v9, 225)
 PARAM(pcmb_v12, 120)
 PARAM(pcmb_v13, 79)
+PARAM(lce_v1, 201)
 PARAM(r_v2, 1990)
 PARAM(r_v3, 1047)
 PARAM(r_v4, 177)
-PARAM(r_v5, 524)
+PARAM(r_v5, 4192)
 PARAM(r_v6, 1353)
 PARAM(r_v7, 1036)
 PARAM(r_v8, 2102)
 PARAM(r_v12, 3962)
 PARAM(r_v13, 908)
+PARAM(r_v14, 1960)
+PARAM(r_v15, 2111)
+PARAM(r_v16, 3444)
 PARAM(ded_v1, 62)
 PARAM(qb_v1, 183)
 PARAM(qb_v2, 190)
@@ -163,6 +171,11 @@ PARAM(hs_v7, 1076)
 PARAM(hs_v8, 946)
 PARAM(hs_v9, 257)
 PARAM(hs_v10, 254)
+PARAM(hs_v11, 1024)
+PARAM(hs_v12, 1024)
+PARAM(ttpv_v1, 3)
+PARAM(fh_v1, 768)
+PARAM(fh_v2, 256)
 PARAM(cms_v1, 29498)
 PARAM(hu_v1, 10961)
 PARAM(cpth_v1, 11755)
@@ -630,7 +643,7 @@ Value search(
             && capture_stage(pos, ttMove))
             return probCutBeta;
 
-        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
+        mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval - prb_v3);
 
         Depth probCutDepth = max(depth - 4, 0);
 
@@ -742,7 +755,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 // Countermoves based pruning
-                if (lmrDepth < 3 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
+                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
                     && (*contHist0)[movedType][to_sq(move)] < cbp_v3
                     && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
                     continue;
@@ -814,7 +827,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         // Last capture extension
-        else if (PieceValue[captured_piece()] > PawnValue && low_material(pos))
+        else if (PieceValue[captured_piece()] > lce_v1 && low_material(pos))
             extension = 1;
 
         // Add extension to new depth
@@ -830,7 +843,7 @@ moves_loop:  // When in check search starts from here.
         r *= 1056;
         r += r_v4;
 
-        r -= abs(r_v5 * correctionValue / 128);
+        r -= abs(r_v5 * correctionValue / 1024);
 
         // Decrease reduction if position is or has been on the PV
         if (ss->ttPv)
@@ -857,7 +870,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         if (move == ttMove && (ss + 1)->cutoffCnt <= 3)
-            r -= 1960;
+            r -= r_v14;
 
         // Decrease/increase reduction for moves with a good/bad history.
         r -= ss->statScore * r_v13 / 16384;
@@ -882,8 +895,8 @@ moves_loop:  // When in check search starts from here.
 
                 if (!capture)
                 {
-                    int bonus = value >= beta  ? stat_bonus(newDepth)
-                              : value <= alpha ? -stat_malus(newDepth)
+                    int bonus = value >= beta  ? stat_bonus(newDepth) * hs_v11 / 1024
+                              : value <= alpha ? -stat_malus(newDepth) * hs_v12 / 1024
                                                : 0;
                     update_continuation_histories(ss, make_piece(0, movedType + 1), to_sq(move),
                                                   bonus);
@@ -895,10 +908,10 @@ moves_loop:  // When in check search starts from here.
         {
             // Increase reduction if ttMove is not present (~6 Elo)
             if (!ttMove)
-                r += 2111;
+                r += r_v15;
 
             value =
-              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > 3444), !cutNode, false);
+              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > r_v16), !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
@@ -1030,7 +1043,7 @@ moves_loop:  // When in check search starts from here.
     // previous opponent move is probably good and the new position is added
     // to the search tree
     if (bestValue <= alpha)
-        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > 3);
+        ss->ttPv = ss->ttPv || ((ss - 1)->ttPv && depth > ttpv_v1);
 
     // Write gathered information in transposition table. Note that the
     // static evaluation is saved as it was before correction history.
@@ -1196,7 +1209,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             }
 
             // Do not search moves with negative SEE values
-            if (!see_test(pos, move, 0))
+            if (!see_test(pos, move, qss_v1))
                 continue;
         }
 
@@ -1235,7 +1248,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         return mated_in(ss->ply);  // Plies to mate from the root
 
     if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
-        bestValue = (3 * bestValue + beta) / 4;
+        bestValue = (fh_v1 * bestValue + fh_v2 * beta) / 1024;
 
     // Save gathered info in transposition table. The static evaluation
     // is saved as it was before adjustment by correction history.
@@ -1273,8 +1286,8 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
 
-    int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 128);
-    int32_t scaledDiff = clamp(diff * ch_v2, -ch_v14, ch_v15);
+    int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 1024);
+    int32_t scaledDiff = clamp(diff * ch_v16, -ch_v14, ch_v15);
 
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
@@ -1295,7 +1308,7 @@ Value correction_value(Position* pos) {
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
 
-    return correction / 128 / ch_v2;
+    return correction / 1024 / ch_v2;
 }
 
 Value to_corrected(Value v, Value cv) {
