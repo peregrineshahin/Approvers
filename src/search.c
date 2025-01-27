@@ -824,7 +824,7 @@ moves_loop:  // When in check search starts from here.
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
         // Step 14. Late move reductions (LMR)
-        if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
+        if (depth >= 2 && moveCount > 1)
         {
             r *= 1056;
             r += r_v4;
@@ -858,7 +858,8 @@ moves_loop:  // When in check search starts from here.
             // Decrease/increase reduction for moves with a good/bad history.
             r -= ss->statScore * r_v13 / 16384;
 
-            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1,
+                            newDepth + !(PvNode || cutNode) + (PvNode && !bestMove));
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
