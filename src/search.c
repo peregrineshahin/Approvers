@@ -831,6 +831,9 @@ moves_loop:  // When in check search starts from here.
 
             r -= abs(r_v5 * correctionValue / 128);
 
+            if (givesCheck && movedType == QUEEN)
+                r -= 1024;
+
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
                 r -= r_v2 + PvNode * r_v3;
