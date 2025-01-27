@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../pytorch.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t in_biases[L1SIZE];
@@ -17,15 +17,10 @@ alignas(64) int16_t l1_weights[L1SIZE * 2];
 alignas(64) int16_t l1_bias;
 
 SMALL void nnue_init() {
-    int8_t* data = (int8_t*) gNetworkData;
+    int16_t* data = (int16_t*) gNetworkData;
 
     for (int i = 0; i < INSIZE * L1SIZE; i++)
-    {
-        int x = i / L1SIZE;
-        if (!(x < 8 || (56 <= x && x < 64) || (384 <= x && x < 392) || (440 <= x && x < 448)
-              || (320 <= x && x < 384 && (x - 320) % 8 > 3)))
-            in_weights[i] = *(data++);
-    }
+        in_weights[i] = *(data++);
 
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
@@ -37,8 +32,8 @@ SMALL void nnue_init() {
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
-    if (ksq & 4)
-        sq ^= 7;
+    // if (ksq & 4)
+    //     sq ^= 7;
 
     return 384 * (c != side) + 64 * (pt - 1) + (side == WHITE ? sq : sq ^ 56);
 }
