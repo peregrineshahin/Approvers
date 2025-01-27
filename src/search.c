@@ -833,7 +833,10 @@ moves_loop:  // When in check search starts from here.
 
             // Decrease reduction if position is or has been on the PV
             if (ss->ttPv)
-                r -= r_v2 + PvNode * r_v3;
+                r -= r_v2;
+
+            if (PvNode && !bestMove)
+                r -= r_v3;
 
             if (cutNode && move != ss->killers[0])
                 r += r_v8;
