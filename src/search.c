@@ -618,16 +618,16 @@ Value search(
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
+    if (tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta && ttMove
+        && capture_stage(pos, ttMove))
+        return probCutBeta;
+
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
     if (depth >= 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
         && !(tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue < probCutBeta))
     {
-
-        if (tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta && ttMove
-            && capture_stage(pos, ttMove))
-            return probCutBeta;
 
         mp_init_pc(pos, ttMove, probCutBeta - ss->staticEval);
 
