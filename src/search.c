@@ -130,6 +130,14 @@ PARAM(ch_v13, 4078)
 PARAM(ch_v14, 33417)
 PARAM(ch_v15, 37025)
 PARAM(ch_v16, 159)
+PARAM(ch_v17, 768)
+PARAM(ch_v18, 768)
+PARAM(ch_v19, 768)
+PARAM(ch_v20, 768)
+PARAM(ch_v21, 768)
+PARAM(ch_v22, 768)
+PARAM(ch_v23, 768)
+PARAM(ch_v24, 768)
 PARAM(tempo, 40)
 PARAM(mp_v1, 74)
 PARAM(mp_v2, 1065)
@@ -1334,8 +1342,8 @@ Value correction_value(Position* pos) {
       k[KING] ^ k[ROOK] ^ k[QUEEN],
     };
 
-    const int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, 768, 768, 768,
-                           768,   ch_v9, 768,   768,   768, 768, ch_v10};
+    const int weights[] = {ch_v5,  ch_v6, ch_v7,  ch_v8,  ch_v17, ch_v18, ch_v19,
+                           ch_v20, ch_v9, ch_v21, ch_v22, ch_v23, ch_v24, ch_v10};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
