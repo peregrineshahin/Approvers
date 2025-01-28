@@ -1268,7 +1268,15 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
       prev_move_key(),
       w_nonpawn_key(),
       b_nonpawn_key(),
+      k[KING] ^ k[PAWN] ^ k[KNIGHT],
+      k[KING] ^ k[PAWN] ^ k[BISHOP],
+      k[KING] ^ k[PAWN] ^ k[ROOK],
+      k[KING] ^ k[PAWN] ^ k[QUEEN],
       k[KING] ^ k[KNIGHT] ^ k[BISHOP],
+      k[KING] ^ k[KNIGHT] ^ k[ROOK],
+      k[KING] ^ k[KNIGHT] ^ k[QUEEN],
+      k[KING] ^ k[BISHOP] ^ k[ROOK],
+      k[KING] ^ k[BISHOP] ^ k[QUEEN],
       k[KING] ^ k[ROOK] ^ k[QUEEN],
     };
 
@@ -1292,11 +1300,20 @@ Value correction_value(Position* pos) {
       prev_move_key(),
       w_nonpawn_key(),
       b_nonpawn_key(),
+      k[KING] ^ k[PAWN] ^ k[KNIGHT],
+      k[KING] ^ k[PAWN] ^ k[BISHOP],
+      k[KING] ^ k[PAWN] ^ k[ROOK],
+      k[KING] ^ k[PAWN] ^ k[QUEEN],
       k[KING] ^ k[KNIGHT] ^ k[BISHOP],
+      k[KING] ^ k[KNIGHT] ^ k[ROOK],
+      k[KING] ^ k[KNIGHT] ^ k[QUEEN],
+      k[KING] ^ k[BISHOP] ^ k[ROOK],
+      k[KING] ^ k[BISHOP] ^ k[QUEEN],
       k[KING] ^ k[ROOK] ^ k[QUEEN],
     };
 
-    const int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10};
+    const int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, 96, 96, 96,
+                           96,    ch_v9, 96,    96,    96, 96, ch_v10};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
