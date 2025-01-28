@@ -204,9 +204,10 @@ SMALL void pos_set(Position* pos, char* fen) {
 // The function is only used when a new position is set up.
 SMALL static void set_state(Position* pos, Stack* st) {
     st->key               = 0;
-    st->pawnKey           = zob.noPawns;
     st->nonPawnKey[WHITE] = st->nonPawnKey[BLACK] = 0;
+
     memset(st->ptKeys, 0, sizeof(st->ptKeys));
+    st->ptKeys[PAWN] = zob.noPawns;
 
     st->checkersBB = attackers_to(square_of(stm(), KING)) & pieces_c(!stm());
 
@@ -219,14 +220,10 @@ SMALL static void set_state(Position* pos, Stack* st) {
         PieceType pt = type_of_p(pc);
 
         st->key ^= zob.psq[pc][s];
+        st->ptKeys[pt] ^= zob.psq[pc][s];
 
-        if (pt == PAWN)
-            st->pawnKey ^= zob.psq[piece_on(s)][s];
-        else
-        {
+        if (pt != PAWN)
             st->nonPawnKey[color_of(pc)] ^= zob.psq[pc][s];
-            st->ptKeys[pt] ^= zob.psq[pc][s];
-        }
     }
 
     if (st->epSquare != 0)
@@ -522,7 +519,7 @@ void do_move(Position* pos, Move m, int givesCheck) {
             if (unlikely(type_of_m(m) == ENPASSANT))
                 capsq ^= 8;
 
-            st->pawnKey ^= zob.psq[captured][capsq];
+            st->ptKeys[PAWN] ^= zob.psq[captured][capsq];
         }
         else
         {
@@ -591,12 +588,12 @@ void do_move(Position* pos, Move m, int givesCheck) {
 
             // Update hash keys
             key ^= zob.psq[piece][to] ^ zob.psq[promotion][to];
-            st->pawnKey ^= zob.psq[piece][to];
             st->ptKeys[type_of_p(promotion)] ^= zob.psq[promotion][to];
+            st->ptKeys[PAWN] ^= zob.psq[piece][to];
         }
 
         // Update pawn hash key
-        st->pawnKey ^= zob.psq[piece][from] ^ zob.psq[piece][to];
+        st->ptKeys[PAWN] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
 
         // Reset ply counters.
         st->plyCounters = 0;
