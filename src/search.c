@@ -554,7 +554,8 @@ Value search(
         if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
             unadjustedStaticEval = evaluate(pos);
 
-        eval = ss->staticEval = to_corrected(unadjustedStaticEval, correctionValue);
+        eval = ss->staticEval =
+          ttMove ? unadjustedStaticEval : to_corrected(unadjustedStaticEval, correctionValue);
 
         // ttValue can be used as a better position evaluation
         if (ttValue != VALUE_NONE
@@ -1113,7 +1114,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             if ((unadjustedStaticEval = tte_eval(tte)) == VALUE_NONE)
                 unadjustedStaticEval = evaluate(pos);
 
-            ss->staticEval = bestValue = to_corrected(unadjustedStaticEval, correctionValue);
+            ss->staticEval = bestValue =
+              ttMove ? unadjustedStaticEval : to_corrected(unadjustedStaticEval, correctionValue);
 
             // ttValue can be used as a better position evaluation
             if (ttValue != VALUE_NONE
