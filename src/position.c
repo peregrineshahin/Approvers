@@ -518,14 +518,11 @@ void do_move(Position* pos, Move m, int givesCheck) {
         {
             if (unlikely(type_of_m(m) == ENPASSANT))
                 capsq ^= 8;
-
-            st->ptKeys[PAWN] ^= zob.psq[captured][capsq];
         }
         else
-        {
             st->nonPawnKey[them] ^= zob.psq[captured][capsq];
-            st->ptKeys[type_of_p(captured)] ^= zob.psq[captured][capsq];
-        }
+
+        st->ptKeys[type_of_p(captured)] ^= zob.psq[captured][capsq];
 
         nnue_remove_piece(acc, captured, capsq, wksq, bksq);
 
@@ -592,17 +589,13 @@ void do_move(Position* pos, Move m, int givesCheck) {
             st->ptKeys[PAWN] ^= zob.psq[piece][to];
         }
 
-        // Update pawn hash key
-        st->ptKeys[PAWN] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-
         // Reset ply counters.
         st->plyCounters = 0;
     }
     else
-    {
         st->nonPawnKey[us] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-        st->ptKeys[type_of_p(piece)] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
-    }
+
+    st->ptKeys[type_of_p(piece)] ^= zob.psq[piece][from] ^ zob.psq[piece][to];
 
     // Update the key with the final value
     st->key = key;
