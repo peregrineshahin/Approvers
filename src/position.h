@@ -46,10 +46,8 @@ void zob_init(void);
 // its previous state when we retract a move.
 struct Stack {
     // Copied when making a move
-    Key pawnKey;
     Key nonPawnKey[2];
-    Key majorKey;
-    Key minorKey;
+    Key ptKeys[7];
     union {
         struct {
             uint8_t pliesFromNull;
@@ -204,11 +202,9 @@ PURE bool has_game_cycle(const Position* pos, int ply);
 
 // Accessing hash keys
 #define key() (pos->st->key)
-#define pawn_key() (pos->st->pawnKey)
+#define pawn_key() (pos->st->ptKeys[PAWN])
 #define w_nonpawn_key() (pos->st->nonPawnKey[WHITE])
 #define b_nonpawn_key() (pos->st->nonPawnKey[BLACK])
-#define major_key() (pos->st->majorKey)
-#define minor_key() (pos->st->minorKey)
 #define prev_move_key() (from_to((pos->st - 1)->currentMove))
 
 // Other properties of the position
