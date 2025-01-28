@@ -265,6 +265,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->mainHistory);
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
+    stats_clear(pos->corrHists);
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 6; pc++)
