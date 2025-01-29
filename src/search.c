@@ -130,14 +130,6 @@ PARAM(ch_v13, 4078)
 PARAM(ch_v14, 33417)
 PARAM(ch_v15, 37025)
 PARAM(ch_v16, 159)
-PARAM(ch_v17, 1024)
-PARAM(ch_v18, 1024)
-PARAM(ch_v19, 1024)
-PARAM(ch_v20, 768)
-PARAM(ch_v21, 768)
-PARAM(ch_v22, 768)
-PARAM(ch_v23, 768)
-PARAM(ch_v24, 1024)
 PARAM(tempo, 40)
 PARAM(mp_v1, 74)
 PARAM(mp_v2, 1065)
@@ -1298,16 +1290,9 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
       prev_move_key(),
       w_nonpawn_key(),
       b_nonpawn_key(),
-      k[KING] ^ k[PAWN] ^ k[KNIGHT],
-      k[KING] ^ k[PAWN] ^ k[BISHOP],
-      k[KING] ^ k[PAWN] ^ k[ROOK],
-      k[KING] ^ k[PAWN] ^ k[QUEEN],
-      k[KING] ^ k[KNIGHT] ^ k[BISHOP],
-      k[KING] ^ k[KNIGHT] ^ k[ROOK],
-      k[KING] ^ k[KNIGHT] ^ k[QUEEN],
-      k[KING] ^ k[BISHOP] ^ k[ROOK],
-      k[KING] ^ k[BISHOP] ^ k[QUEEN],
-      k[KING] ^ k[ROOK] ^ k[QUEEN],
+      k[KING] ^ k[KNIGHT] ^ k[BISHOP],  // minor
+      k[KING] ^ k[ROOK] ^ k[QUEEN],     // major
+      k[KING] ^ k[PAWN] ^ k[ROOK],      // endgame
     };
 
     int32_t newWeight  = min(ch_v1, (ch_v11 * depth * depth + ch_v12 * depth + ch_v13) / 1024);
@@ -1330,20 +1315,12 @@ Value correction_value(Position* pos) {
       prev_move_key(),
       w_nonpawn_key(),
       b_nonpawn_key(),
-      k[KING] ^ k[PAWN] ^ k[KNIGHT],
-      k[KING] ^ k[PAWN] ^ k[BISHOP],
-      k[KING] ^ k[PAWN] ^ k[ROOK],
-      k[KING] ^ k[PAWN] ^ k[QUEEN],
-      k[KING] ^ k[KNIGHT] ^ k[BISHOP],
-      k[KING] ^ k[KNIGHT] ^ k[ROOK],
-      k[KING] ^ k[KNIGHT] ^ k[QUEEN],
-      k[KING] ^ k[BISHOP] ^ k[ROOK],
-      k[KING] ^ k[BISHOP] ^ k[QUEEN],
-      k[KING] ^ k[ROOK] ^ k[QUEEN],
+      k[KING] ^ k[KNIGHT] ^ k[BISHOP],  // minor
+      k[KING] ^ k[ROOK] ^ k[QUEEN],     // major
+      k[KING] ^ k[PAWN] ^ k[ROOK],      // endgame
     };
 
-    const int weights[] = {ch_v5,  ch_v6, ch_v7,  ch_v8,  ch_v17, ch_v18, ch_v19,
-                           ch_v20, ch_v9, ch_v21, ch_v22, ch_v23, ch_v24, ch_v10};
+    const int weights[] = {ch_v5, ch_v6, ch_v7, ch_v8, ch_v9, ch_v10, 1024};
 
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
