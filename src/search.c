@@ -591,6 +591,9 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    bool iir1 = PvNode && depth >= iir_v1 && !ttMove;
+    bool iir2 = cutNode && depth >= iir_v2 && !ttMove;
+
     ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
@@ -617,7 +620,7 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
+        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture + (iir1 || iir2);
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
@@ -683,10 +686,10 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if (PvNode && depth >= iir_v1 && !ttMove)
+    if (iir1)
         depth -= iir_v3;
 
-    if (cutNode && depth >= iir_v2 && !ttMove)
+    if (iir2)
         depth -= iir_v4;
 
 moves_loop:  // When in check search starts from here.
