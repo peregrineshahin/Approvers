@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../expt-17-finetune.nnue");
+INCBIN(Network, "../expt-17-stage3.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t in_biases[L1SIZE];
@@ -30,9 +30,9 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
 
-    for (int i = 0; i < BUCKETS; i++)
-        for (int j = 0; j < L1SIZE * 2; j++)
-            l1_weights[i][j] = *(data++);
+    for (int i = 0; i < L1SIZE * 2; i++)
+        for (int j = 0; j < BUCKETS; j++)
+            l1_weights[j][i] = *(data++);
 
     int16_t* data16 = (int16_t*) data;
 
