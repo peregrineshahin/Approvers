@@ -163,20 +163,25 @@ top:
         if (!skipQuiets)
         {
             st->cur      = st->endBadCaptures;
-            st->endMoves = generate(pos, st->cur, QUIETS);
+            st->endMoves = st->beginBadQuiets = generate(pos, st->cur, QUIETS);
             score_quiets(pos);
             partial_insertion_sort(st->cur, st->endMoves, -mp_v3 * st->depth);
         }
         st->stage++;
         /* fallthrough */
 
-    case ST_QUIET :
+    case ST_GOOD_QUIET :
         if (!skipQuiets)
             while (st->cur < st->endMoves)
             {
                 move = (st->cur++)->move;
                 if (move != st->ttMove)
-                    return move;
+                {
+                    if ((st->cur - 1)->value > -8000 || (st->cur - 1)->value <= -mp_v3 * st->depth)
+                        return move;
+
+                    st->beginBadQuiets = st->cur - 1;
+                }
             }
         // Return to bad captures.
         st->cur = (st - 1)->endMoves;
@@ -186,6 +191,19 @@ top:
     case ST_BAD_CAPTURES :
         if (st->cur < st->endBadCaptures)
             return (st->cur++)->move;
+
+        st->cur = st->beginBadQuiets;
+        st->stage++;
+        /* fallthrough */
+
+    case ST_BAD_QUIET :
+        if (!skipQuiets)
+            while (st->cur < st->endMoves)
+            {
+                move = (st->cur++)->move;
+                if (move != st->ttMove)
+                    return move;
+            }
         break;
 
     case ST_EVASIONS_INIT :

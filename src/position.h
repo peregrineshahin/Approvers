@@ -86,7 +86,7 @@ struct Stack {
     Move     ttMove;
     Value    threshold;
     Move     mpKillers[2];
-    ExtMove *cur, *endMoves, *endBadCaptures;
+    ExtMove *cur, *endMoves, *endBadCaptures, *beginBadQuiets;
 
     // CheckInfo data
     Bitboard blockersForKing[2];
