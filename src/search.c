@@ -1312,16 +1312,15 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
         update_correction_history(entry, newWeight, scaledDiff);
     }
 
-    Stack* ss   = pos->st;
-    Move   move = (ss - 1)->currentMove;
+    Stack*    ss   = pos->st;
+    Move      move = (ss - 1)->currentMove;
+    PieceType pt   = type_of_p(piece_on(to_sq(move)));
 
     if (move_is_ok((ss - 2)->currentMove))
-        update_correction_history(&(*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
+        update_correction_history(&(*(ss - 2)->contCorrHistory)[pt][to_sq(move)], depth, diff);
 
     if (move_is_ok((ss - 3)->currentMove))
-        update_correction_history(&(*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)],
-                                  depth, diff);
+        update_correction_history(&(*(ss - 3)->contCorrHistory)[pt][to_sq(move)], depth, diff);
 }
 
 Value correction_value(Position* pos) {
@@ -1333,14 +1332,15 @@ Value correction_value(Position* pos) {
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
 
-    Stack* ss   = pos->st;
-    Move   move = (ss - 1)->currentMove;
+    Stack*    ss   = pos->st;
+    Move      move = (ss - 1)->currentMove;
+    PieceType pt   = type_of_p(piece_on(to_sq(move)));
 
     if (move_is_ok((ss - 2)->currentMove))
-        correction += 1024 * (*(ss - 2)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+        correction += 1024 * (*(ss - 2)->contCorrHistory)[pt][to_sq(move)];
 
     if (move_is_ok((ss - 3)->currentMove))
-        correction += 1024 * (*(ss - 3)->contCorrHistory)[piece_on(to_sq(move))][to_sq(move)];
+        correction += 1024 * (*(ss - 3)->contCorrHistory)[pt][to_sq(move)];
 
     return correction / 1024 / ch_v2;
 }
