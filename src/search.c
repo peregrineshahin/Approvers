@@ -208,7 +208,8 @@ enum {
     PV
 };
 
-static PieceToHistory Sentinel;
+static PieceToHistory Sentinel1;
+static PieceToHistory Sentinel2;
 
 // Reductions lookup tables, initialized at startup
 static int Reductions[MAX_MOVES];  // [depth or moveNumber]
@@ -285,10 +286,7 @@ SMALL void search_clear(void) {
     for (int pc = 0; pc < 6; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-        {
-            Sentinel[pc][sq]                   = -1;
-            (*pos->contCorrHist)[0][0][pc][sq] = -1;
-        }
+            Sentinel1[pc][sq] = Sentinel2[pc][sq] = -1;
 
     Thread.previousScore = VALUE_INFINITE;
 }
@@ -360,8 +358,8 @@ void thread_search(Position* pos) {
 #pragma clang loop unroll(disable)
     for (int i = -7; i < 0; i++)
     {
-        ss[i].continuationHistory = &Sentinel;
-        ss[i].contCorrHistory     = &(*pos->contCorrHist)[0][0];
+        ss[i].continuationHistory = &Sentinel1;
+        ss[i].contCorrHistory     = &Sentinel2;
         ss[i].currentMove         = MOVE_NONE;
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
@@ -626,8 +624,8 @@ Value search(
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
-        ss->continuationHistory = &Sentinel;
-        ss->contCorrHistory     = &(*pos->contCorrHist)[0][0];
+        ss->continuationHistory = &Sentinel1;
+        ss->contCorrHistory     = &Sentinel2;
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -662,7 +660,7 @@ Value search(
                 ss->continuationHistory =
                   &(*pos->contHist)[stm()][type_of_p(moved_piece(move)) - 1][to_sq(move)];
                 ss->contCorrHistory =
-                  &(*pos->contCorrHist)[type_of_p(moved_piece(move))][to_sq(move)];
+                  &(*pos->contCorrHist)[type_of_p(moved_piece(move)) - 1][to_sq(move)];
 
                 givesCheck = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
@@ -1174,8 +1172,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         futilityBase = ss->staticEval + qsf_v1;
     }
 
-    ss->continuationHistory = &Sentinel;
-    ss->contCorrHistory     = &(*pos->contCorrHist)[0][0];
+    ss->continuationHistory = &Sentinel1;
+    ss->contCorrHistory     = &Sentinel2;
 
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
@@ -1314,13 +1312,22 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 
     Stack*    ss   = pos->st;
     Move      move = (ss - 1)->currentMove;
-    PieceType pt   = type_of_p(piece_on(to_sq(move)));
+    PieceType pt   = type_of_p(piece_on(to_sq(move))) - 1;
 
-    if (move_is_ok((ss - 2)->currentMove))
-        update_correction_history(&(*(ss - 2)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+    if (pt <= KING)
+    {
+        if (move_is_ok((ss - 2)->currentMove))
+            update_correction_history(&(*(ss - 2)->contCorrHistory)[pt][to_sq(move)], depth, diff);
 
-    if (move_is_ok((ss - 3)->currentMove))
-        update_correction_history(&(*(ss - 3)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+        if (move_is_ok((ss - 3)->currentMove))
+            update_correction_history(&(*(ss - 3)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+
+        if (move_is_ok((ss - 4)->currentMove))
+            update_correction_history(&(*(ss - 4)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+
+        if (move_is_ok((ss - 5)->currentMove))
+            update_correction_history(&(*(ss - 5)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+    }
 }
 
 Value correction_value(Position* pos) {
@@ -1334,13 +1341,22 @@ Value correction_value(Position* pos) {
 
     Stack*    ss   = pos->st;
     Move      move = (ss - 1)->currentMove;
-    PieceType pt   = type_of_p(piece_on(to_sq(move)));
+    PieceType pt   = type_of_p(piece_on(to_sq(move))) - 1;
 
-    if (move_is_ok((ss - 2)->currentMove))
-        correction += 1024 * (*(ss - 2)->contCorrHistory)[pt][to_sq(move)];
+    if (pt <= KING)
+    {
+        if (move_is_ok((ss - 2)->currentMove))
+            correction += 1024 * (*(ss - 2)->contCorrHistory)[pt][to_sq(move)];
 
-    if (move_is_ok((ss - 3)->currentMove))
-        correction += 1024 * (*(ss - 3)->contCorrHistory)[pt][to_sq(move)];
+        if (move_is_ok((ss - 3)->currentMove))
+            correction += 1024 * (*(ss - 3)->contCorrHistory)[pt][to_sq(move)];
+
+        if (move_is_ok((ss - 4)->currentMove))
+            correction += 1024 * (*(ss - 4)->contCorrHistory)[pt][to_sq(move)];
+
+        if (move_is_ok((ss - 5)->currentMove))
+            correction += 1024 * (*(ss - 5)->contCorrHistory)[pt][to_sq(move)];
+    }
 
     return correction / 1024 / ch_v2;
 }
