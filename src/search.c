@@ -539,10 +539,7 @@ Value search(
                                               -stat_malus(depth + 1) * hs_v8 / 1024);
         }
 
-        // Partial workaround for the graph history interaction problem
-        // For high rule50 counts don't produce transposition table cutoffs.
-        if (rule50_count() < 90)
-            return ttValue;
+        return ttValue;
     }
 
     const Value correctionValue = correction_value(pos);
@@ -608,7 +605,7 @@ Value search(
     if (!ss->ttPv
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
              >= beta
-        && (ttCapture || !ttMove) && eval < VALUE_MATE_IN_MAX_PLY && beta > -VALUE_MATE_IN_MAX_PLY)
+        && (ttCapture || !ttMove))
         return eval;
 
     // Step 7. Null move search
@@ -628,7 +625,7 @@ Value search(
         undo_null_move(pos);
 
         if (nullValue >= beta)
-            return nullValue > VALUE_MATE_IN_MAX_PLY ? beta : nullValue;
+            return nullValue;
     }
 
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
@@ -636,7 +633,7 @@ Value search(
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
-    if (depth >= 3 && abs(beta) < VALUE_MATE_IN_MAX_PLY
+    if (depth >= 3
         && !(tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue < probCutBeta))
     {
 
@@ -676,8 +673,7 @@ Value search(
                 {
                     tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
                              probCutDepth + 1, move, unadjustedStaticEval);
-                    if (abs(value) < VALUE_MATE_IN_MAX_PLY)
-                        return value - (probCutBeta - beta);
+                    return value - (probCutBeta - beta);
                 }
             }
     }
@@ -784,8 +780,7 @@ moves_loop:  // When in check search starts from here.
         // result is lower than ttValue minus a margin, then we extend the ttMove.
         // Recursive singular search is avoided.
         if (depth >= se_v1 && move == ttMove && !rootNode && !excludedMove
-            && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && (tte_bound(tte) & BOUND_LOWER)
-            && tte_depth(tte) >= depth - 3)
+            && (tte_bound(tte) & BOUND_LOWER) && tte_depth(tte) >= depth - 3)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 128;
             Depth singularDepth = newDepth / 2;
@@ -1089,18 +1084,6 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     if ((Thread.stop || is_draw(pos) || ss->ply >= MAX_PLY))
         return ss->ply >= MAX_PLY && !ss->checkersBB ? evaluate(pos) : VALUE_DRAW;
 
-    // Step 3. Mate distance pruning. Even if we mate at the next move our score
-    // would be at best mate_in(ss->ply+1), but if alpha is already bigger because
-    // a shorter mate was found upward in the tree then there is no need to search
-    // because we will never beat the current alpha. Same logic but with reversed
-    // signs apply also in the opposite condition of being mated instead of giving
-    // mate. In this case, return a fail-high score.
-    alpha = max(mated_in(ss->ply), alpha);
-    beta  = min(mate_in(ss->ply + 1), beta);
-    if (alpha >= beta)
-        return alpha;
-
-
     // Decide whether to include checks: this fixes also the type of
     // TT entry depth that we are going to use. Note that in qsearch we use
     // only two types of depth in TT: DEPTH_QS_CHECKS or DEPTH_QS_NO_CHECKS.
@@ -1247,7 +1230,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     if (ss->checkersBB && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
-    if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
+    if (bestValue >= beta)
         bestValue = (fh_v1 * bestValue + fh_v2 * beta) / 1024;
 
     // Save gathered info in transposition table. The static evaluation
