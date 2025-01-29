@@ -230,7 +230,9 @@ static int futility_move_count(bool improving, Depth depth) {
 static Value stat_bonus(Depth d) { return min((hb_v1 * d / 128 + hb_v2) * d - hb_v3, hb_v4); }
 
 // History and stats update malus, based on depth
-static Value stat_malus(Depth d) { return min((hm_v1 * d / 128 + hm_v2) * d - hm_v3, hm_v4); }
+static Value stat_malus(Depth d) {
+    return min((hm_v1 * d / 128 + hm_v2) * d - hm_v3, hm_v4) / (d <= 5 ? 2 : 1);
+}
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
