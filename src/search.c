@@ -488,7 +488,7 @@ Value search(
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     ttHit, givesCheck, improving;
-    bool     capture, moveCountPruning;
+    bool     capture, moveCountPruning, singularQuietLMR;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
 
@@ -699,6 +699,7 @@ moves_loop:  // When in check search starts from here.
 
     value            = bestValue;
     moveCountPruning = false;
+    singularQuietLMR = false;
 
     // Step 10. Loop through all pseudo-legal moves until no moves remain or a beta cutoff occurs
     while ((move = next_move(pos, moveCountPruning)))
@@ -796,7 +797,8 @@ moves_loop:  // When in check search starts from here.
 
             if (value < singularBeta)
             {
-                extension = 1;
+                singularQuietLMR = !ttCapture;
+                extension        = 1;
                 if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
                 {
                     extension       = 2;
@@ -852,6 +854,9 @@ moves_loop:  // When in check search starts from here.
 
         if (cutNode && move != ss->killers[0])
             r += r_v8;
+
+        if (singularQuietLMR)
+            r -= 1024;
 
         if (capture)
             ss->statScore = 0;
