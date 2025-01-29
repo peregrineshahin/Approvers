@@ -1256,10 +1256,10 @@ static Value value_to_tt(Value v, int ply) {
 // to "plies to mate/be mated from the root".
 static Value value_from_tt(Value v, int ply, int r50c) {
     if (v >= VALUE_MATE_IN_MAX_PLY)
-        return (VALUE_MATE - v > 99 - r50c) ? VALUE_MATE_IN_MAX_PLY - 1 : v - ply;
+        return v - ply;
 
     if (v <= VALUE_MATED_IN_MAX_PLY)
-        return (VALUE_MATE + v > 99 - r50c) ? VALUE_MATED_IN_MAX_PLY + 1 : v + ply;
+        return v + ply;
 
     return v;
 }
