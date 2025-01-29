@@ -486,13 +486,14 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
+    Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta, initialAlpha;
     bool     ttHit, givesCheck, improving;
     bool     capture, moveCountPruning;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
+    initialAlpha = alpha;
     moveCount = captureCount = quietCount = ss->moveCount = 0;
     bestValue                                             = -VALUE_INFINITE;
 
@@ -970,7 +971,10 @@ moves_loop:  // When in check search starts from here.
                     break;
                 }
 
-                alpha = value;
+                if (beta < VALUE_INFINITE && initialAlpha > -VALUE_INFINITE)
+                    alpha = max(value, (beta - 1 + initialAlpha) / 2);
+                else
+                    alpha = value;
             }
         }
 
