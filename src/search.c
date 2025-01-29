@@ -874,7 +874,7 @@ moves_loop:  // When in check search starts from here.
             r -= r_v14;
 
         // Decrease/increase reduction for moves with a good/bad history.
-        r -= ss->statScore * r_v13 / 16384;
+        r -= ss->statScore * (r_v13 - 384 * (depth >= 10)) / 16384;
 
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
