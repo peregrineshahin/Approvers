@@ -1181,6 +1181,12 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         if (!is_legal(pos, move))
             continue;
 
+        if (!ss->checkersBB && capture_stage(pos, move)
+            && PieceValue[piece_on(to_sq(move))] - PieceValue[piece_on(from_sq(move))] * 2
+                   + ss->staticEval
+                 > beta + 300)
+            return beta;
+
         givesCheck = gives_check(pos, ss, move);
         moveCount++;
 
