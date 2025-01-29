@@ -844,7 +844,8 @@ moves_loop:  // When in check search starts from here.
         r *= 1056;
         r += r_v4;
 
-        r -= abs(r_v5 * correctionValue / 1024);
+        if (!ss->checkersBB)
+            r -= abs(r_v5 * correctionValue / 1024);
 
         // Decrease reduction if position is or has been on the PV
         if (ss->ttPv)
