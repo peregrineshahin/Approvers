@@ -150,7 +150,7 @@ PARAM(r_v3, 1051)
 PARAM(r_v4, 180)
 PARAM(r_v5, 3724)
 PARAM(r_v6, 1318)
-PARAM(r_v7, 1122)
+PARAM(r_v7, 1024)
 PARAM(r_v8, 2182)
 PARAM(r_v12, 3828)
 PARAM(r_v13, 935)
@@ -868,7 +868,7 @@ moves_loop:  // When in check search starts from here.
         }
 
         if ((ss + 1)->cutoffCnt > 3)
-            r += r_v7;
+            r += r_v7 + 1024 * !(PvNode || cutNode);
         else if (move == ttMove)
             r -= r_v14;
 
