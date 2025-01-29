@@ -8,13 +8,13 @@
 #include "bitboard.h"
 #include "position.h"
 
-INCBIN(Network, "../default.nnue");
+INCBIN(Network, "../expt-17.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
 alignas(64) int16_t in_biases[L1SIZE];
 
-alignas(64) int16_t l1_weights[L1SIZE * 2];
-alignas(64) int16_t l1_bias;
+alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
+alignas(64) int16_t l1_biases[BUCKETS];
 
 SMALL void nnue_init() {
     int8_t* data = (int8_t*) gNetworkData;
@@ -30,10 +30,14 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
 
-    for (int i = 0; i < L1SIZE * 2; i++)
-        l1_weights[i] = *(data++);
+    for (int i = 0; i < BUCKETS; i++)
+        for (int j = 0; j < L1SIZE * 2; j++)
+            l1_weights[i][j] = *(data++);
 
-    l1_bias = *((int16_t*) data);
+    int16_t* data16 = (int16_t*) data;
+
+    for (int i = 0; i < BUCKETS; i++)
+        l1_biases[i] = *(data16++);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
@@ -44,6 +48,8 @@ static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) 
 }
 
 static Value output_transform(const Accumulator* acc, const Position* pos) {
+    const int bucket = (popcount(pieces()) - 2) / 4;
+
     const __m256i min    = _mm256_setzero_si256();
     const __m256i max    = _mm256_set1_epi16(QA);
     __m256i       vector = _mm256_setzero_si256();
@@ -51,7 +57,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     for (int flip = 0; flip <= 1; flip++)
     {
         __m256i* input   = (__m256i*) acc->values[pos->sideToMove ^ flip];
-        __m256i* weights = (__m256i*) &l1_weights[flip * L1SIZE];
+        __m256i* weights = (__m256i*) &l1_weights[bucket][flip * L1SIZE];
 
         for (int i = 0; i < L1SIZE / 16; ++i)
         {
@@ -65,7 +71,7 @@ static Value output_transform(const Accumulator* acc, const Position* pos) {
     __m256i v2     = _mm256_hadd_epi32(v1, v1);
     Value   output = _mm256_extract_epi32(v2, 0) + _mm256_extract_epi32(v2, 4);
 
-    return (output / QA + l1_bias) * SCALE / (QA * QB);
+    return (output / QA + l1_biases[bucket]) * SCALE / (QA * QB);
 }
 
 static void refresh_accumulator(Accumulator* acc, const Position* pos, Color side) {
