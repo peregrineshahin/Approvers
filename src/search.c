@@ -826,9 +826,10 @@ moves_loop:  // When in check search starts from here.
             ss->mpKillers[0] = k1;
             ss->mpKillers[1] = k2;
         }
-
         // Last capture extension
         else if (PieceValue[captured_piece()] > lce_v1 && low_material(pos))
+            extension = 1;
+        else if (givesCheck && depth > 6 && popcount(pieces() & ~pieces_p(PAWN)) <= 7)
             extension = 1;
 
         // Add extension to new depth
