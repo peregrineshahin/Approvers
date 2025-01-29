@@ -966,11 +966,17 @@ moves_loop:  // When in check search starts from here.
 
                 if (value >= beta)
                 {
-                    ss->cutoffCnt += !ttMove + (extension < 2);
+                    ss->cutoffCnt += (extension < 2);
                     break;
                 }
+                else
+                {
+                    if (depth > 1 && depth < 7 && beta < VALUE_MATE_IN_MAX_PLY
+                        && alpha > -VALUE_MATE_IN_MAX_PLY)
+                        depth -= 1;
 
-                alpha = value;
+                    alpha = value;
+                }
             }
         }
 
