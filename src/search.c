@@ -792,7 +792,7 @@ moves_loop:  // When in check search starts from here.
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
                 {
-                    extension       = 2;
+                    extension       = 2 + (!ttCapture && value < singularBeta - 200);
                     ss->dextensions = (ss - 1)->dextensions + 1;
                 }
             }
