@@ -28,6 +28,7 @@
 #include "timeman.h"
 #include "thread.h"
 #include "tt.h"
+#include "types.h"
 #include "uci.h"
 
 extern char KagglePosition[4096];
@@ -1130,6 +1131,8 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         // Stand pat. Return immediately if static value is at least beta
         if (bestValue >= beta)
         {
+            if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY)
+                bestValue = (bestValue + beta) / 2;
             if (!ttHit)
                 tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), false, BOUND_LOWER,
                          DEPTH_NONE, 0, unadjustedStaticEval);
