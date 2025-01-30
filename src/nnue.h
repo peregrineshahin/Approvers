@@ -7,6 +7,7 @@
 
 #define INSIZE 768
 #define L1SIZE 64
+#define BUCKETS 8
 
 #define QA 192
 #define QB 64
