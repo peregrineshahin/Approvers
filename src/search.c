@@ -103,14 +103,12 @@ PARAM(iir_v1, 6)
 PARAM(iir_v2, 11)
 PARAM(iir_v3, 2)
 PARAM(iir_v4, 2)
-PARAM(hb_v1, 1039)
-PARAM(hb_v2, 155)
-PARAM(hb_v3, 148)
-PARAM(hb_v4, 2776)
-PARAM(hm_v1, 748)
-PARAM(hm_v2, 191)
-PARAM(hm_v3, 123)
-PARAM(hm_v4, 1387)
+PARAM(hb_v1, 256)
+PARAM(hb_v2, 378)
+PARAM(hb_v3, 2776)
+PARAM(hm_v1, 226)
+PARAM(hm_v2, 162)
+PARAM(hm_v3, 1387)
 PARAM(cnht_v1, 1029)
 PARAM(cnht_v2, 939)
 PARAM(cnht_v3, 1023)
@@ -227,10 +225,10 @@ static int futility_move_count(bool improving, Depth depth) {
 }
 
 // History and stats update bonus, based on depth
-static Value stat_bonus(Depth d) { return min((hb_v1 * d / 128 + hb_v2) * d - hb_v3, hb_v4); }
+static Value stat_bonus(Depth d) { return min(hb_v1 * d - hb_v2, hb_v3); }
 
 // History and stats update malus, based on depth
-static Value stat_malus(Depth d) { return min((hm_v1 * d / 128 + hm_v2) * d - hm_v3, hm_v4); }
+static Value stat_malus(Depth d) { return min(hm_v1 * d - hm_v2, hm_v3); }
 
 static Value value_to_tt(Value v, int ply);
 static Value value_from_tt(Value v, int ply, int r50c);
