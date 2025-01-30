@@ -477,7 +477,7 @@ Value search(
     }
 
     // Dive into quiescence search when the depth reaches zero
-    if (depth <= 0)
+    if (depth <= (!PvNode && !cutNode))
         return qsearch(pos, ss, alpha, beta, 0);
 
     Move     capturesSearched[32], quietsSearched[32];
