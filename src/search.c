@@ -95,6 +95,7 @@ PARAM(fp_v4, 7)
 PARAM(se_v1, 5)
 PARAM(se_v2, 128)
 PARAM(se_v5, 24)
+PARAM(se_v6, 200)
 PARAM(prb_v1, 120)
 PARAM(prb_v2, 51)
 PARAM(prb_v3, -2)
@@ -794,7 +795,7 @@ moves_loop:  // When in check search starts from here.
                 extension = 1;
                 if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
                 {
-                    extension       = 2;
+                    extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
                     ss->dextensions = (ss - 1)->dextensions + 1;
                 }
             }
