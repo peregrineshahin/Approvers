@@ -20,8 +20,6 @@
 
 #include "bitboard.h"
 
-uint8_t SquareDistance[64][64];
-
 #ifndef AVX2_BITBOARD
 static int RookDirs[]   = {NORTH, EAST, SOUTH, WEST};
 static int BishopDirs[] = {NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NORTH_WEST};
@@ -50,21 +48,12 @@ static Bitboard sliding_attack(int dirs[], Square sq, Bitboard occupied) {
 
 Bitboard BetweenBB[64][64];
 Bitboard LineBB[64][64];
-Bitboard DistanceRingBB[64][8];
 Bitboard PseudoAttacks[8][64];
 Bitboard PawnAttacks[2][64];
 
 // Initializes various bitboard tables. It is called at startup
 // and relies on global objects to be already zero-initialized.
 SMALL void bitboards_init(void) {
-    for (Square s1 = 0; s1 < 64; s1++)
-        for (Square s2 = 0; s2 < 64; s2++)
-            if (s1 != s2)
-            {
-                SquareDistance[s1][s2] = max(distance_f(s1, s2), distance_r(s1, s2));
-                DistanceRingBB[s1][SquareDistance[s1][s2]] |= sq_bb(s2);
-            }
-
     int steps[][5] = {{0}, {7, 9}, {6, 10, 15, 17}, {0}, {0}, {0}, {1, 7, 8, 9}};
 
     for (int c = 0; c < 2; c++)
