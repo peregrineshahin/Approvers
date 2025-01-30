@@ -505,7 +505,7 @@ Value search(
 
     (ss + 1)->ttPv         = false;
     (ss + 1)->excludedMove = bestMove = 0;
-    (ss + 2)->killers[0] = (ss + 2)->killers[1] = 0;
+    (ss + 1)->killers[0] = (ss + 1)->killers[1] = 0;
     (ss + 2)->cutoffCnt                         = 0;
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
     ss->statScore = 0;
