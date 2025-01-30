@@ -73,8 +73,7 @@ PARAM(nmp_v6, 22)
 PARAM(nmp_v8, 95)
 PARAM(nmp_v9, 208)
 PARAM(d_v1, 18)
-PARAM(cbp_v1, 3)
-PARAM(cbp_v2, 3)
+PARAM(cbp_v1, 4)
 PARAM(cbp_v3, -8)
 PARAM(cbp_v4, -7)
 PARAM(fpp_v1, 7)
@@ -737,7 +736,7 @@ moves_loop:  // When in check search starts from here.
                 int captHist =
                   (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
 
-                int seeHist = clamp(captHist / scsee_v2, -scsee_v3 * depth, scsee_v4 * depth);
+                int seeHist = clamp(captHist / scsee_v2, -scsee_v3, scsee_v4);
                 if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
                     continue;
 
@@ -752,8 +751,7 @@ moves_loop:  // When in check search starts from here.
             else
             {
                 // Countermoves based pruning
-                if (lmrDepth < cbp_v1 + ((ss - 1)->statScore > cbp_v2 || (ss - 1)->moveCount == 1)
-                    && (*contHist0)[movedType][to_sq(move)] < cbp_v3
+                if (lmrDepth < cbp_v1 && (*contHist0)[movedType][to_sq(move)] < cbp_v3
                     && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
                     continue;
 
