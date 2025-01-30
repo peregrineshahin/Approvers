@@ -794,6 +794,7 @@ moves_loop:  // When in check search starts from here.
                 {
                     extension       = 2;
                     ss->dextensions = (ss - 1)->dextensions + 1;
+                    depth += depth < 10;
                 }
             }
 
