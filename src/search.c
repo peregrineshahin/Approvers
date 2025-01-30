@@ -962,6 +962,9 @@ moves_loop:  // When in check search starts from here.
                 }
 
                 alpha = value;
+
+                if (depth > 4 && depth < 10)
+                    depth--;
             }
         }
 
