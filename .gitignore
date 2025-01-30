@@ -5,7 +5,7 @@
 *.swp
 *.tar
 *.tar.gz
-cfish*
+approvers*
 TODO
 
 # Prerequisites

@@ -31,7 +31,7 @@ LDFLAGS = -Wl,--gc-sections -Wl,--strip-all
 OBJ     = benchmark.o bitboard.o evaluate.o main.o misc.o movegen.o   \
           movepick.o nnue.o position.o search.o thread.o timeman.o    \
           tt.o uci.o
-EXE     = cfish
+EXE     = approvers
 
 all: build
 

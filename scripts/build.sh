@@ -5,11 +5,11 @@ mkdir -p ../build
 cd ../src || exit
 make clean
 make kaggle
-strip cfish
-chmod +x cfish
+strip approvers
+chmod +x approvers
 
 cd ../build || exit
 
-tar --transform 's/.*\///' -cf submission.tar ../src/cfish ../scripts/main.py
+tar --transform 's/.*\///' -cf submission.tar ../src/approvers ../scripts/main.py
 zopfli submission.tar
 ls -l
