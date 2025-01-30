@@ -802,10 +802,8 @@ moves_loop:  // When in check search starts from here.
             // assume that this expected cut-node is not singular, i.e. multiple
             // moves fail high. We therefore prune the whole subtree by returning
             // a soft bound.
-            else if (singularBeta >= beta)
-            {
-                return singularBeta;
-            }
+            else if (value >= beta)
+                return value;
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
