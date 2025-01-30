@@ -807,8 +807,10 @@ moves_loop:  // When in check search starts from here.
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
-            else if (cutNode || ttValue >= beta)
-                extension--;
+            else if (ttValue >= beta)
+                extension = -3;
+            else if (cutNode)
+                extension = -1;
 
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
