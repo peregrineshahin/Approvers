@@ -1,16 +1,13 @@
 cmake_minimum_required(VERSION 3.30)
-project(Peregrine C)
+project(Approvers C)
 
 set(CMAKE_C_STANDARD 11)
-
-# Enable this to use the Kaggle environment
-# add_definitions(-DKAGGLE)
 
 add_compile_options(-mavx2)
 
 include_directories(src)
 
-add_executable(Peregrine
+add_executable(Approvers
         src/benchmark.c
         src/bitboard.c
         src/bitboard.h
