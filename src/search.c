@@ -750,7 +750,7 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
-                // Countermoves based pruning
+                // Continuation history based pruning
                 if (lmrDepth < cbp_v1
                     && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
                          < -cbp_v2 * depth + cbp_v3)
