@@ -525,7 +525,8 @@ Value search(
     // At non-PV nodes we check for an early TT cutoff
     if (!PvNode && !excludedMove && ttValue != VALUE_NONE
         && tte_depth(tte) > depth - (ttValue <= beta)
-        && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
+        && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER)
+        && (cutNode == (ttValue >= beta) || depth > 9))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
         if (ttMove && ttValue >= beta)
