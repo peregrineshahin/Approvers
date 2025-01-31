@@ -67,8 +67,10 @@ void time_init(Color us, int ply) {
                     tm_v16 / 100.0 * Limits.time[us] / (double) timeLeft);
     max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
 
+    int delay = Limits.time[us] < 1300 ? 0 : Limits.inc[us];
+
     // Never use more than 80% of the available time for this move
-    Time.optimumTime = opt_scale * timeLeft;
+    Time.optimumTime = delay + opt_scale * timeLeft;
     Time.maximumTime =
       min(tm_v20 / 1000.0 * Limits.time[us] - MoveOverhead, max_scale * Time.optimumTime);
 }
