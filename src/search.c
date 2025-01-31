@@ -93,7 +93,7 @@ PARAM(fp_v4, 7)
 PARAM(se_v1, 5)
 PARAM(se_v2, 128)
 PARAM(se_v5, 24)
-PARAM(prb_v1, 120)
+PARAM(prb_v1, 150)
 PARAM(prb_v2, 51)
 PARAM(prb_v3, -2)
 PARAM(iir_v1, 6)
@@ -486,7 +486,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, opponentWorsening;
     bool     capture, moveCountPruning;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
@@ -548,7 +548,7 @@ Value search(
     {
         // Skip early pruning when in check
         unadjustedStaticEval = ss->staticEval = VALUE_NONE;
-        improving                             = false;
+        improving = opponentWorsening = false;
         goto moves_loop;
     }
     else if (excludedMove)
@@ -586,6 +586,8 @@ Value search(
     improving = (ss - 2)->staticEval == VALUE_NONE
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
+
+    opponentWorsening = ss->staticEval + (ss - 1)->staticEval > 2;
 
     ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
@@ -627,7 +629,7 @@ Value search(
             return nullValue;
     }
 
-    probCutBeta = beta + prb_v1 - prb_v2 * improving;
+    probCutBeta = beta + prb_v1 - prb_v2 * improving - 30 * opponentWorsening;
 
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
