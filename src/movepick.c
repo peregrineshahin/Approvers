@@ -56,8 +56,9 @@ static void score_captures(const Position* pos) {
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
         m->value =
-          PieceValue[piece_on(to_sq(m->move))] * 6
-          + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))];
+          (7 * PieceValue[piece_on(to_sq(m->move))]
+           + (*history)[moved_piece(m->move)][to_sq(m->move)][type_of_p(piece_on(to_sq(m->move)))])
+          / 16;
 }
 
 static void score_quiets(const Position* pos) {
@@ -149,7 +150,7 @@ top:
             move = (st->cur++)->move;
             if (move != st->ttMove)
             {
-                if (see_test(pos, move, -mp_v1 * (st->cur - 1)->value / mp_v2))
+                if (see_test(pos, move, -(st->cur - 1)->value))
                     return move;
 
                 // Losing capture, move it to the beginning of the array.
