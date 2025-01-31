@@ -538,7 +538,10 @@ Value search(
                                               -stat_malus(depth + 1) * hs_v8 / 1024);
         }
 
-        return ttValue;
+        if (ttValue >= beta)
+            return (fh_v1 * ttValue + fh_v2 * beta) / 1024;
+        else
+            return ttValue;
     }
 
     const Value correctionValue = correction_value(pos);
