@@ -217,8 +217,8 @@ static Depth reduction(int i, Depth d, int mn) {
     return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
 }
 
-static int futility_margin(Depth d, bool improving) {
-    return ft_v1 * (d - improving) + ft_v2 * d * d;
+static int futility_margin(Depth d, bool improving, bool opponentWorsening) {
+    return ft_v1 * (d - improving) + ft_v2 * d * d - 30 * opponentWorsening;
 }
 
 static int futility_move_count(bool improving, Depth depth) {
@@ -486,7 +486,7 @@ Value search(
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
-    bool     ttHit, givesCheck, improving;
+    bool     ttHit, givesCheck, improving, opponentWorsening;
     bool     capture, moveCountPruning;
     bool     ttCapture;
     int      moveCount, captureCount, quietCount;
@@ -587,6 +587,8 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
+    opponentWorsening = ss->staticEval + (ss - 1)->staticEval > 2;
+
     ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
@@ -602,7 +604,8 @@ Value search(
 
     // Step 6. Futility pruning: child node
     if (!ss->ttPv
-        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
+        && eval - futility_margin(depth, improving, opponentWorsening)
+               + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
              >= beta
         && (ttCapture || !ttMove))
         return eval;
