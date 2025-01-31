@@ -301,6 +301,9 @@ void mainthread_search(void) {
     thread_search(pos);
     Thread.previousScore = pos->st->pv.score;
 
+    while (time_elapsed() < Limits.inc[us])
+    {}
+
     printf("bestmove %s\n", uci_move(buf, pos->st->pv.line[0]));
     fflush(stdout);
 
