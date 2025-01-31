@@ -864,6 +864,9 @@ moves_loop:  // When in check search starts from here.
         else if (move == ttMove)
             r -= r_v14;
 
+        if (abs(ttValue) < VALUE_MATE_IN_MAX_PLY && ss->staticEval != VALUE_NONE)
+            ss->statScore += 2 * abs(ttValue - ss->staticEval);
+
         // Decrease/increase reduction for moves with a good/bad history.
         r -= ss->statScore * r_v13 / 16384;
 
