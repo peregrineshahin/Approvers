@@ -796,8 +796,7 @@ bool see_test(const Position* pos, Move m, int value) {
         }
         else if ((bb = stmAttackers & pieces_p(QUEEN)))
         {
-            if ((swap = QueenValue - swap) < res)
-                break;
+            swap = QueenValue - swap;
             occ ^= bb & -bb;
             attackers |= (attacks_bb_bishop(to, occ) & pieces_pp(BISHOP, QUEEN))
                        | (attacks_bb_rook(to, occ) & pieces_pp(ROOK, QUEEN));
