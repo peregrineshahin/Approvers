@@ -74,8 +74,8 @@ PARAM(nmp_v8, 95)
 PARAM(nmp_v9, 208)
 PARAM(d_v1, 18)
 PARAM(cbp_v1, 4)
-PARAM(cbp_v3, -8)
-PARAM(cbp_v4, -7)
+PARAM(cbp_v2, 500)
+PARAM(cbp_v3, 500)
 PARAM(fpp_v1, 7)
 PARAM(fpp_v2, 263)
 PARAM(fpp_v3, 160)
@@ -750,9 +750,10 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
-                // Countermoves based pruning
-                if (lmrDepth < cbp_v1 && (*contHist0)[movedType][to_sq(move)] < cbp_v3
-                    && (*contHist1)[movedType][to_sq(move)] < cbp_v4)
+                // Continuation history based pruning
+                if (lmrDepth < cbp_v1
+                    && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
+                         < -cbp_v2 * depth + cbp_v3)
                     continue;
 
                 // Futility pruning: parent node
