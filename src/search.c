@@ -263,7 +263,7 @@ SMALL double my_log(double x) {
 // Called during startup to initialize various lookup tables
 SMALL void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
-        Reductions[i] = (int) (rd_init_v1 / 128.0 * my_log(i));
+        Reductions[i] = (int) (rd_init_v1 / 128.0 * my_log(i + 0.25 * my_log(i)));
 }
 
 
