@@ -725,16 +725,11 @@ moves_loop:  // When in check search starts from here.
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
-            int history =
-              (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
-              + (*contHist2)[movedType][to_sq(move)] + (*pos->mainHistory)[stm()][from_to(move)];
-
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0) + history / 8192;
+            int lmrDepth = max(newDepth - r, 0);
 
             if (capture || givesCheck)
             {
-
                 Piece capturedPiece = piece_on(to_sq(move));
 
                 int captHist =
@@ -754,11 +749,15 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
+                int history =
+                  (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)];
+
                 // Continuation history based pruning
-                if (lmrDepth < cbp_v1
-                    && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
-                         < -cbp_v2 * depth + cbp_v3)
+                if (lmrDepth < cbp_v1 && history < -cbp_v2 * depth + cbp_v3)
                     continue;
+
+                lmrDepth += history / 1500;
+                lmrDepth = max(lmrDepth, 0);
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !ss->checkersBB
