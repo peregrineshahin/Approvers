@@ -725,8 +725,12 @@ moves_loop:  // When in check search starts from here.
             // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
+            int history =
+              (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
+              + (*contHist2)[movedType][to_sq(move)] + (*pos->mainHistory)[stm()][from_to(move)];
+
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r, 0) + history / 8192;
 
             if (capture || givesCheck)
             {
