@@ -523,22 +523,27 @@ Value search(
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff
-    if (!PvNode && ttValue != VALUE_NONE && tte_depth(tte) >= depth && !excludedMove
-        && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
+    if (!PvNode && ttValue != VALUE_NONE && tte_depth(tte) >= depth && !excludedMove)
     {
-        // If ttMove is quiet, update move sorting heuristics on TT hit
-        if (ttMove && ttValue >= beta)
+        if (tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
         {
-            if (!capture_stage(pos, ttMove))
-                update_quiet_stats(pos, ss, ttMove, stat_bonus(depth) * hs_v7 / 1024);
+            // If ttMove is quiet, update move sorting heuristics on TT hit
+            if (ttMove && ttValue >= beta)
+            {
+                if (!capture_stage(pos, ttMove))
+                    update_quiet_stats(pos, ss, ttMove, stat_bonus(depth) * hs_v7 / 1024);
 
-            // Extra penalty for early quiet moves of the previous ply
-            if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
-                update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
-                                              -stat_malus(depth + 1) * hs_v8 / 1024);
+                // Extra penalty for early quiet moves of the previous ply
+                if ((ss - 1)->moveCount <= 2 && !captured_piece() && prevSq != SQ_NONE)
+                    update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                                  -stat_malus(depth + 1) * hs_v8 / 1024);
+            }
+
+            return ttValue;
         }
 
-        return ttValue;
+        if (depth <= 6)
+            depth++;
     }
 
     const Value correctionValue = correction_value(pos);
