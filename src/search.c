@@ -756,7 +756,7 @@ moves_loop:  // When in check search starts from here.
                 if (lmrDepth < cbp_v1 && history < -cbp_v2 * depth + cbp_v3)
                     continue;
 
-                lmrDepth += history / 1500;
+                lmrDepth += history / 5000;
                 lmrDepth = max(lmrDepth, 0);
 
                 // Futility pruning: parent node
