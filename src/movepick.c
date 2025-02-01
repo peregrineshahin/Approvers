@@ -61,16 +61,55 @@ static void score_captures(const Position* pos) {
           / 16;
 }
 
+static Bitboard threatsByPawn(const Position* pos, Color c) {
+    Bitboard bb = pieces_cp(c, PAWN);
+
+    return c == WHITE ? shift_bb(NORTH_WEST, bb) | shift_bb(NORTH_EAST, bb)
+                      : shift_bb(SOUTH_WEST, bb) | shift_bb(SOUTH_EAST, bb);
+}
+
+static Bitboard threatsByMinor(const Position* pos, Color c) {
+    Bitboard our     = pieces_cpp(c, KNIGHT, BISHOP);
+    Bitboard threats = 0;
+    while (our)
+    {
+        Square s = pop_lsb(&our);
+        if (type_of_p(piece_on(s)) == KNIGHT)
+            threats |= attacks_bb(KNIGHT, s, pieces());
+        else
+            threats |= attacks_bb(BISHOP, s, pieces());
+    }
+    return threats;
+}
+
+static Bitboard threatsByRook(const Position* pos, Color c) {
+    Bitboard our     = pieces_cp(c, ROOK);
+    Bitboard threats = 0;
+    while (our)
+    {
+        Square s = pop_lsb(&our);
+        threats |= attacks_bb(ROOK, s, pieces());
+    }
+    return threats;
+}
+
 static void score_quiets(const Position* pos) {
     Stack*            st      = pos->st;
     ButterflyHistory* history = pos->mainHistory;
+    Color             stm     = stm();
 
     PieceToHistory* contHist0 = (st - 1)->continuationHistory;
     PieceToHistory* contHist1 = (st - 2)->continuationHistory;
     PieceToHistory* contHist2 = (st - 4)->continuationHistory;
     PieceToHistory* contHist3 = (st - 6)->continuationHistory;
 
-    Color c = stm();
+    Bitboard threatenedByPawn  = threatsByPawn(pos, !stm);
+    Bitboard threatenedByMinor = threatsByMinor(pos, !stm) | threatenedByPawn;
+    Bitboard threatenedByRook  = threatsByRook(pos, !stm) | threatenedByMinor;
+
+    Bitboard threatened = (pieces_cp(stm, QUEEN) & threatenedByRook)
+                        | (pieces_cp(stm, ROOK) & threatenedByMinor)
+                        | (pieces_cpp(stm, KNIGHT, BISHOP) & threatenedByPawn);
 
     for (ExtMove* m = st->cur; m < st->endMoves; m++)
     {
@@ -79,7 +118,7 @@ static void score_quiets(const Position* pos) {
         Square    from = move >> 6;
         PieceType pt   = type_of_p(piece_on(from)) - 1;
 
-        m->value = (*history)[c][move] * 2;
+        m->value = (*history)[stm][move] * 2;
 
         m->value += (*contHist0)[pt][to] * 2;
         m->value += (*contHist1)[pt][to] * 2;
@@ -87,6 +126,14 @@ static void score_quiets(const Position* pos) {
         m->value += (*contHist3)[pt][to];
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
+
+        m->value +=
+          threatened & sq_bb(from)
+            ? (type_of_p(piece_on(from)) == QUEEN && !(sq_bb(to) & threatenedByRook)   ? 50000
+               : type_of_p(piece_on(from)) == ROOK && !(sq_bb(to) & threatenedByMinor) ? 25000
+               : !(sq_bb(to) & threatenedByPawn)                                       ? 15000
+                                                                                       : 0)
+            : 0;
     }
 }
 
