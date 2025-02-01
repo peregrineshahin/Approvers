@@ -63,6 +63,8 @@ PARAM(rz_v2, 304)
 PARAM(rz_v3, 231)
 PARAM(ft_v1, 87)
 PARAM(ft_v2, 17)
+PARAM(ft_v3, 1024)
+PARAM(ft_v4, 0)
 PARAM(cv_v1, 29)
 PARAM(cv_v2, 116)
 PARAM(nmp_v1, 743)
@@ -604,7 +606,7 @@ Value search(
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
              >= beta
         && (ttCapture || !ttMove))
-        return eval;
+        return (ft_v3 * eval + ft_v4 * beta) / 1024;
 
     // Step 7. Null move search
     if (cutNode && eval >= beta
