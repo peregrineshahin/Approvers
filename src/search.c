@@ -631,10 +631,8 @@ Value search(
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
     // much above beta, we can (almost) safely prune the previous move
-    if (depth >= 3
-        && !(tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue < probCutBeta))
+    if (depth >= 3 && !(ttValue != VALUE_NONE && ttValue < probCutBeta))
     {
-
         if (tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta && ttMove
             && capture_stage(pos, ttMove))
             return probCutBeta;
