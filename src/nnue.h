@@ -9,9 +9,9 @@
 #define L1SIZE 64
 #define BUCKETS 8
 
-#define QA 192
+#define QA 160
 #define QB 64
-#define SCALE 400
+#define SCALE 500
 
 typedef struct Accumulator Accumulator;
 
