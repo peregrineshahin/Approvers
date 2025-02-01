@@ -729,16 +729,11 @@ moves_loop:  // When in check search starts from here.
 
             if (capture || givesCheck)
             {
-
                 Piece capturedPiece = piece_on(to_sq(move));
-
-                int captHist =
+                int   captHist =
                   (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
 
-                int seeHist = clamp(captHist / scsee_v2, -scsee_v3, scsee_v4);
-                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
-                    continue;
-
+                // Futility pruning for captures
                 if (!givesCheck && lmrDepth < fp_v1 && !ss->checkersBB)
                 {
                     Value futilityValue = ss->staticEval + fp_v2 + fp_v3 * lmrDepth
@@ -746,6 +741,11 @@ moves_loop:  // When in check search starts from here.
                     if (futilityValue <= alpha)
                         continue;
                 }
+
+                // SEE based pruning for captures and checks
+                int seeHist = clamp(captHist / scsee_v2, -scsee_v3, scsee_v4);
+                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
+                    continue;
             }
             else
             {
