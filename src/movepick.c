@@ -116,9 +116,9 @@ static void score_quiets(const Position* pos) {
 
         m->value +=
           threatened & sq_bb(from)
-            ? (type_of_p(piece_on(from)) == QUEEN && !(sq_bb(to) & threatenedByRook)   ? 50000
-               : type_of_p(piece_on(from)) == ROOK && !(sq_bb(to) & threatenedByMinor) ? 25000
-               : !(sq_bb(to) & threatenedByPawn)                                       ? 15000
+            ? (type_of_p(piece_on(from)) == QUEEN && !(sq_bb(to) & threatenedByRook)   ? 25000
+               : type_of_p(piece_on(from)) == ROOK && !(sq_bb(to) & threatenedByMinor) ? 12500
+               : !(sq_bb(to) & threatenedByPawn)                                       ? 7500
                                                                                        : 0)
             : 0;
     }
