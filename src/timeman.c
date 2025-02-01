@@ -69,7 +69,7 @@ void time_init(Color us, int ply) {
     max_scale = min(tm_v17 / 100.0, tm_v18 / 100.0 + ply / (tm_v19 / 100.0));
 
 #ifdef KAGGLE
-    int delay = Limits.time[us] > 2000 ? 50 : 0;
+    int delay = Limits.time[us] > 2000 ? 75 : 0;
 #else
     int delay = 0;
 #endif
