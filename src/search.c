@@ -48,13 +48,12 @@ int       parameters_count = 0;
     #define PARAM(Name, Value) int Name = Value;
 #endif
 
-// Disabled parameters
 // Search parameters
-PARAM(rd_init_v1, 3681)
+PARAM(rd_init_v1, 29448)
 PARAM(rd_v1, 579)
 PARAM(rd_v2, 1156)
 PARAM(rd_v3, 1003)
-PARAM(qmo_v1, 380)
+PARAM(qmo_v1, 3040)
 PARAM(qmo_v2, 1373)
 PARAM(qmo_v3, 916)
 PARAM(qmo_v4, 1039)
@@ -66,7 +65,7 @@ PARAM(ft_v2, 17)
 PARAM(ft_v3, 1024)
 PARAM(ft_v4, 0)
 PARAM(cv_v1, 29)
-PARAM(cv_v2, 116)
+PARAM(cv_v2, 928)
 PARAM(nmp_v1, 743)
 PARAM(nmp_v2, 56)
 PARAM(nmp_v3, 160)
@@ -93,7 +92,7 @@ PARAM(fp_v2, 269)
 PARAM(fp_v3, 271)
 PARAM(fp_v4, 7)
 PARAM(se_v1, 5)
-PARAM(se_v2, 128)
+PARAM(se_v2, 1024)
 PARAM(se_v5, 24)
 PARAM(se_v6, 200)
 PARAM(prb_v1, 120)
@@ -262,7 +261,7 @@ SMALL double my_log(double x) {
 // Called during startup to initialize various lookup tables
 SMALL void search_init(void) {
     for (int i = 1; i < MAX_MOVES; i++)
-        Reductions[i] = (int) (rd_init_v1 / 128.0 * my_log(i));
+        Reductions[i] = (int) (rd_init_v1 / 1024.0 * my_log(i));
 }
 
 
@@ -591,7 +590,7 @@ Value search(
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus = clamp(-depth * qmo_v1 / 128 * ((ss - 1)->staticEval + ss->staticEval - tempo),
+        int bonus = clamp(-depth * qmo_v1 / 1024 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
@@ -602,7 +601,7 @@ Value search(
 
     // Step 6. Futility pruning: child node
     if (!ss->ttPv
-        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 128)
+        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
              >= beta
         && (ttCapture || !ttMove))
         return (ft_v3 * eval + ft_v4 * beta) / 1024;
@@ -781,7 +780,7 @@ moves_loop:  // When in check search starts from here.
         if (depth >= se_v1 && move == ttMove && !rootNode && !excludedMove
             && (tte_bound(tte) & BOUND_LOWER) && tte_depth(tte) >= depth - 3)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 128;
+            Value singularBeta  = ttValue - se_v2 * depth / 1024;
             Depth singularDepth = newDepth / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
