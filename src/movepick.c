@@ -61,36 +61,22 @@ static void score_captures(const Position* pos) {
           / 16;
 }
 
-static Bitboard threatsByPawn(const Position* pos, Color c) {
-    Bitboard bb = pieces_cp(c, PAWN);
-
-    return c == WHITE ? shift_bb(NORTH_WEST, bb) | shift_bb(NORTH_EAST, bb)
-                      : shift_bb(SOUTH_WEST, bb) | shift_bb(SOUTH_EAST, bb);
+static Bitboard pawn_attacks_bb(Color c, Bitboard b) {
+    return c == WHITE ? shift_bb(NORTH_WEST, b) | shift_bb(NORTH_EAST, b)
+                      : shift_bb(SOUTH_WEST, b) | shift_bb(SOUTH_EAST, b);
 }
 
-static Bitboard threatsByMinor(const Position* pos, Color c) {
-    Bitboard our     = pieces_cpp(c, KNIGHT, BISHOP);
-    Bitboard threats = 0;
-    while (our)
+static Bitboard attacks_by(const Position* pos, PieceType pt, Color c) {
+    if (pt == PAWN)
+        return pawn_attacks_bb(c, pieces_cp(c, PAWN));
+    else
     {
-        Square s = pop_lsb(&our);
-        if (type_of_p(piece_on(s)) == KNIGHT)
-            threats |= attacks_bb(KNIGHT, s, pieces());
-        else
-            threats |= attacks_bb(BISHOP, s, pieces());
+        Bitboard threats   = 0;
+        Bitboard attackers = pieces_cp(c, pt);
+        while (attackers)
+            threats |= attacks_bb(pt, pop_lsb(&attackers), pieces());
+        return threats;
     }
-    return threats;
-}
-
-static Bitboard threatsByRook(const Position* pos, Color c) {
-    Bitboard our     = pieces_cp(c, ROOK);
-    Bitboard threats = 0;
-    while (our)
-    {
-        Square s = pop_lsb(&our);
-        threats |= attacks_bb(ROOK, s, pieces());
-    }
-    return threats;
 }
 
 static void score_quiets(const Position* pos) {
@@ -103,9 +89,10 @@ static void score_quiets(const Position* pos) {
     PieceToHistory* contHist2 = (st - 4)->continuationHistory;
     PieceToHistory* contHist3 = (st - 6)->continuationHistory;
 
-    Bitboard threatenedByPawn  = threatsByPawn(pos, !stm);
-    Bitboard threatenedByMinor = threatsByMinor(pos, !stm) | threatenedByPawn;
-    Bitboard threatenedByRook  = threatsByRook(pos, !stm) | threatenedByMinor;
+    Bitboard threatenedByPawn = attacks_by(pos, PAWN, !stm);
+    Bitboard threatenedByMinor =
+      attacks_by(pos, KNIGHT, !stm) | attacks_by(pos, BISHOP, !stm) | threatenedByPawn;
+    Bitboard threatenedByRook = attacks_by(pos, ROOK, !stm) | threatenedByMinor;
 
     Bitboard threatened = (pieces_cp(stm, QUEEN) & threatenedByRook)
                         | (pieces_cp(stm, ROOK) & threatenedByMinor)
