@@ -523,7 +523,8 @@ Value search(
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
     // At non-PV nodes we check for an early TT cutoff
-    if (!PvNode && ttValue != VALUE_NONE && tte_depth(tte) >= depth && !excludedMove
+    if (!PvNode && !excludedMove && ttValue != VALUE_NONE
+        && tte_depth(tte) > depth - (ttValue <= beta)
         && tte_bound(tte) & (ttValue >= beta ? BOUND_LOWER : BOUND_UPPER))
     {
         // If ttMove is quiet, update move sorting heuristics on TT hit
