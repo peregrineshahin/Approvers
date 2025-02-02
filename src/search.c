@@ -465,22 +465,22 @@ Value search(
 
     ss->pv.length = 0;
 
+    // Dive into quiescence search when the depth reaches zero
+    if (depth <= 0)
+        return qsearch(pos, ss, alpha, beta, 0);
+
     // Limit the depth if extensions made it too large
     depth = min(depth, MAX_PLY - 1);
 
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
-    if (pos->st->pliesFromNull >= 3 && alpha < VALUE_DRAW && !rootNode
-        && has_game_cycle(pos, ss->ply))
+    if (alpha < VALUE_DRAW && !rootNode && has_game_cycle(pos, ss->ply))
     {
         alpha = VALUE_DRAW;
         if (alpha >= beta)
             return alpha;
     }
 
-    // Dive into quiescence search when the depth reaches zero
-    if (depth <= 0)
-        return qsearch(pos, ss, alpha, beta, 0);
 
     Move     capturesSearched[32], quietsSearched[32];
     TTEntry* tte;
@@ -1072,9 +1072,18 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     int      moveCount;
 
     // Step 1. Initialize node
-    bestMove  = 0;
-    moveCount = 0;
+    bestMove      = 0;
+    moveCount     = 0;
+    ss->pv.length = 0;
 
+    // Check if we have an upcoming move which draws by repetition, or if the
+    // opponent had an alternative move earlier to this position.
+    if (alpha < VALUE_DRAW && has_game_cycle(pos, ss->ply))
+    {
+        alpha = VALUE_DRAW;
+        if (alpha >= beta)
+            return alpha;
+    }
 
     // Check for the available remaining time
     if (pos->completedDepth >= 1 && (pos->nodes & 1023) == 0)
