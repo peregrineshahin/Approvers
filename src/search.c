@@ -994,7 +994,7 @@ moves_loop:  // When in check search starts from here.
         if (!capture_stage(pos, bestMove))
         {
             int bonus = stat_bonus(depth + (bestValue > beta + qb_v1));
-            int malus = stat_malus(depth + (bestValue > beta + qb_v2));
+            int malus = max(48, stat_malus(depth + (bestValue > beta + qb_v2)) - 26 * (moveCount - 1));
 
             update_quiet_stats(pos, ss, bestMove, bonus * hs_v1 / 1024);
 
