@@ -1121,7 +1121,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
             // ttValue can be used as a better position evaluation
             if (ttValue != VALUE_NONE
                 && tte_bound(tte) & (ttValue > bestValue ? BOUND_LOWER : BOUND_UPPER))
-                bestValue = ttValue;
+                return ttValue;
         }
         else
         {
