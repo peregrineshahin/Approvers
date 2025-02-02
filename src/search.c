@@ -143,7 +143,7 @@ PARAM(pcmb_v9, 256)
 PARAM(pcmb_v12, 135)
 PARAM(pcmb_v13, 79)
 PARAM(lce_v1, 194)
-PARAM(r_v2, 2033)
+PARAM(r_v2, 4145)
 PARAM(r_v3, 1106)
 PARAM(r_v4, 175)
 PARAM(r_v5, 3765)
@@ -718,6 +718,9 @@ moves_loop:  // When in check search starts from here.
         newDepth = depth - 1;
 
         Depth r = reduction(improving, depth, moveCount);
+
+        if (ss->ttPv)
+            r += 2;
 
         // Step 11. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
