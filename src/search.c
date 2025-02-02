@@ -465,6 +465,9 @@ Value search(
 
     ss->pv.length = 0;
 
+    // Limit the depth if extensions made it too large
+    depth = min(depth, MAX_PLY - 1);
+
     // Check if we have an upcoming move which draws by repetition, or if the
     // opponent had an alternative move earlier to this position.
     if (pos->st->pliesFromNull >= 3 && alpha < VALUE_DRAW && !rootNode
