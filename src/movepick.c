@@ -23,7 +23,6 @@
 
 extern int mp_v1;
 extern int mp_v2;
-extern int mp_v3;
 
 #define LIMIT (-(1 << 30))
 
@@ -86,7 +85,7 @@ static void score_quiets(const Position* pos) {
         m->value += (*contHist2)[pt][to] * 2;
         m->value += (*contHist3)[pt][to];
 
-        m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * 65536;
+        m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * mp_v2;
     }
 }
 
@@ -166,7 +165,7 @@ top:
             st->cur      = st->endBadCaptures;
             st->endMoves = generate(pos, st->cur, QUIETS);
             score_quiets(pos);
-            partial_insertion_sort(st->cur, st->endMoves, -mp_v3 * st->depth);
+            partial_insertion_sort(st->cur, st->endMoves, -mp_v1 * st->depth);
         }
         st->stage++;
         /* fallthrough */
