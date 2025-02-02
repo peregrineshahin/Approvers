@@ -686,6 +686,13 @@ Value search(
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
+
+    // Step 12. A small Probcut idea
+    probCutBeta = beta + 250;
+    if ((tte_bound(tte) & BOUND_LOWER) && tte_depth(tte) >= depth - 4 && ttValue != VALUE_NONE
+        && ttValue >= probCutBeta)
+        return probCutBeta;
+
     PieceToHistory* contHist0 = (ss - 1)->continuationHistory;
     PieceToHistory* contHist1 = (ss - 2)->continuationHistory;
     PieceToHistory* contHist2 = (ss - 4)->continuationHistory;
