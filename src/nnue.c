@@ -30,8 +30,8 @@ SMALL void nnue_init() {
     for (int i = 0; i < L1SIZE; i++)
         in_biases[i] = *(data++);
 
-    for (int i = 0; i < BUCKETS; i++)
-        for (int j = 0; j < L1SIZE * 2; j++)
+    for (int j = 0; j < L1SIZE * 2; j++)
+        for (int i = 0; i < BUCKETS; i++)
             l1_weights[i][j] = *(data++);
 
     int16_t* data16 = (int16_t*) data;
