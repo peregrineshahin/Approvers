@@ -11,7 +11,7 @@
 
 #define QA 160
 #define QB 64
-#define SCALE 400
+#define SCALE 450
 
 typedef struct Accumulator Accumulator;
 
