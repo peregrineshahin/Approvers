@@ -66,9 +66,6 @@ PARAM(ft_v3, 950)
 PARAM(ft_v4, 23)
 PARAM(cv_v1, 33)
 PARAM(cv_v2, 944)
-PARAM(nmp_v1, 698)
-PARAM(nmp_v2, 59)
-PARAM(nmp_v3, 158)
 PARAM(nmp_v4, 164)
 PARAM(nmp_v6, 21)
 PARAM(nmp_v8, 99)
@@ -613,7 +610,7 @@ Value search(
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
-        Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
+        Depth R = 5 + depth / 3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
