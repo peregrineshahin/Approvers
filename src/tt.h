@@ -72,17 +72,25 @@ struct TranspositionTable {
     uint8_t  generation8;  // Size must be not bigger than TTEntry::genBound8
 };
 
+#define GENERATION_BITS 3                                // Number of bits reserved for other things
+#define GENERATION_DELTA (1 << GENERATION_BITS)          // Increment for generation field
+#define GENERATION_CYCLE (255 + (1 << GENERATION_BITS))  // Cycle length
+#define GENERATION_MASK ((0xFF << GENERATION_BITS) & 0xFF)  // Mask to pull out generation number
+
 typedef struct TranspositionTable TranspositionTable;
 
 extern TranspositionTable TT;
+
+uint8_t relative_age(TTEntry* tte, const uint8_t generation8);
 
 static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
     // Preserve any existing move for the same position
     if (m || (uint16_t) k != tte->key16)
         tte->move16 = (uint16_t) m;
 
-    // Don't overwrite more valuable entries
-    if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4 || b == BOUND_EXACT)
+    // Overwrite less valuable entries (cheapest checks first)
+    if (b == BOUND_EXACT || (uint16_t) k != tte->key16
+        || d - DEPTH_OFFSET + 2 * pv > tte->depth8 - 4 || relative_age(tte, TT.generation8))
     {
 
         tte->key16     = (uint16_t) k;
@@ -108,7 +116,7 @@ static int tte_bound(TTEntry* tte) { return tte->genBound8 & 0x3; }
 void tt_free(void);
 
 static void tt_new_search(void) {
-    TT.generation8 += 8;  // Lower 3 bits are used by PvNode and Bound
+    TT.generation8 += GENERATION_DELTA;  // Lower bits are used for other things
 }
 
 static TTEntry* tt_first_entry(Key key) {

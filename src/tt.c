@@ -71,6 +71,14 @@ void tt_clear(void) {
     }
 }
 
+uint8_t relative_age(TTEntry* tte, const uint8_t generation8) {
+    // Due to our packed storage format for generation and its cyclic
+    // nature we add GENERATION_CYCLE (256 is the modulus, plus what
+    // is needed to keep the unrelated lowest n bits from affecting
+    // the result) to calculate the entry age correctly even after
+    // generation8 overflows into the next cycle.
+    return (GENERATION_CYCLE + generation8 - tte->genBound8) & GENERATION_MASK;
+}
 
 // Looks up the current position in the transposition table.
 // It returns true and a pointer to the TTEntry if the position is found.
@@ -86,9 +94,7 @@ TTEntry* tt_probe(Key key, bool* found) {
     for (int i = 0; i < ClusterSize; i++)
         if (tte[i].key16 == key16 || !tte[i].depth8)
         {
-            //      if ((tte[i].genBound8 & 0xF8) != TT.generation8 && tte[i].key16)
-            tte[i].genBound8 = TT.generation8 | (tte[i].genBound8 & 0x7);  // Refresh
-            *found           = tte[i].depth8;
+            *found                  = tte[i].depth8;
             return &tte[i];
         }
 
@@ -99,8 +105,9 @@ TTEntry* tt_probe(Key key, bool* found) {
         // nature we add 263 (256 is the modulus plus 7 to keep the unrelated
         // lowest three bits from affecting the result) to calculate the entry
         // age correctly even after generation8 overflows into the next cycle.
-        if (replace->depth8 - ((263 + TT.generation8 - replace->genBound8) & 0xF8)
-            > tte[i].depth8 - ((263 + TT.generation8 - tte[i].genBound8) & 0xF8))
+
+        if (replace->depth8 - relative_age(replace, TT.generation8)
+            > tte[i].depth8 - relative_age(&tte[i], TT.generation8))
             replace = &tte[i];
 
     *found = false;
