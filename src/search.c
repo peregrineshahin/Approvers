@@ -370,7 +370,7 @@ void thread_search(Position* pos) {
     pos->completedDepth       = 0;
 
     int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
-#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(disable)
     for (int i = 0; i < 4; i++)
         Thread.iterValue[i] = value;
 
