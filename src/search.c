@@ -590,8 +590,6 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
-
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
         int bonus = clamp(-depth * qmo_v1 / 1024 * ((ss - 1)->staticEval + ss->staticEval - tempo),
@@ -600,14 +598,11 @@ Value search(
     }
 
     // Step 5. Razoring
-    if (!PvNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
+    if (depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv
-        && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
-             >= beta
-        && (ttCapture || !ttMove))
+    if (!PvNode && eval - futility_margin(depth, improving) >= beta)
         return (ft_v3 * eval + ft_v4 * beta) / 1024;
 
     // Step 7. Null move search
@@ -681,9 +676,6 @@ Value search(
     }
 
     // Step 9. Internal iterative reductions
-    if (PvNode && depth >= iir_v1 && !ttMove)
-        depth -= iir_v3;
-
     if (cutNode && depth >= iir_v2 && !ttMove)
         depth -= iir_v4;
 
@@ -795,11 +787,8 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
-                {
-                    extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
-                    ss->dextensions = (ss - 1)->dextensions + 1;
-                }
+                if (!PvNode && value < singularBeta - se_v5)
+                    extension = 2 + (!ttCapture && value < singularBeta - se_v6);
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
@@ -812,7 +801,7 @@ moves_loop:  // When in check search starts from here.
 
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
-            else if (cutNode || ttValue >= beta)
+            else if (cutNode)
                 extension--;
 
             // The call to search_NonPV with the same value of ss messed up our
@@ -837,48 +826,47 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
-        r *= 1056;
-        r += r_v4;
-
-        r -= abs(r_v5 * correctionValue / 1024);
-
-        // Decrease reduction if position is or has been on the PV
-        if (ss->ttPv)
-            r -= r_v2 + PvNode * r_v3;
-
-        if (cutNode && move != ss->killers[0])
-            r += r_v8;
-
-        if (capture)
-            ss->statScore = 0;
-        else
-        {
-            // Increase reduction if ttMove is a capture
-            if (ttCapture)
-                r += r_v6;
-
-            ss->statScore = (*contHist0)[movedType][to_sq(move)]
-                          + (*contHist1)[movedType][to_sq(move)]
-                          + (*contHist2)[movedType][to_sq(move)]
-                          + (*pos->mainHistory)[!stm()][from_to(move)] - r_v12;
-        }
-
-        if ((ss + 1)->cutoffCnt > 3)
-            r += r_v7;
-        else if (move == ttMove)
-            r -= r_v14;
-
-        // Decrease/increase reduction for moves with a good/bad history.
-        r -= ss->statScore * r_v13 / 16384;
-
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
+            r *= 1056;
+            r += r_v4;
+
+            r -= abs(r_v5 * correctionValue / 1024);
+
+            // Decrease reduction if position is or has been on the PV
+            if (ss->ttPv)
+                r -= r_v2 + PvNode * r_v3;
+
+            if (cutNode && move != ss->killers[0])
+                r += r_v8;
+
+            if (capture)
+                ss->statScore = 0;
+            else
+            {
+                // Increase reduction if ttMove is a capture
+                if (ttCapture)
+                    r += r_v6;
+
+                ss->statScore = (*contHist0)[movedType][to_sq(move)]
+                              + (*contHist1)[movedType][to_sq(move)]
+                              + (*contHist2)[movedType][to_sq(move)]
+                              + (*pos->mainHistory)[!stm()][from_to(move)] - r_v12;
+            }
+
+            if ((ss + 1)->cutoffCnt > 3)
+                r += r_v7;
+
+            // Decrease/increase reduction for moves with a good/bad history.
+            r -= ss->statScore * r_v13 / 16384;
+
             Depth d = clamp(newDepth - r / 1024, 1, newDepth);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
             {
+
                 // Adjust full-depth search based on LMR results - if the result was
                 // good enough search deeper, if it was bad enough search shallower.
                 const bool doDeeperSearch    = value > bestValue + ded_v1;
@@ -902,12 +890,7 @@ moves_loop:  // When in check search starts from here.
         // Step 15. Full-depth search when LMR is skipped or fails high.
         else if (!PvNode || moveCount > 1)
         {
-            // Increase reduction if ttMove is not present (~6 Elo)
-            if (!ttMove)
-                r += r_v15;
-
-            value =
-              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > r_v16), !cutNode, false);
+            value = -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
@@ -916,7 +899,7 @@ moves_loop:  // When in check search starts from here.
         if (PvNode && (moveCount == 1 || value > alpha))
         {
             // Extend move from transposition table if we are about to dive into qsearch.
-            if (move == ttMove && ss->ply <= pos->rootDepth * 2)
+            if (move == ttMove)
                 newDepth = max(newDepth, 1);
 
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
@@ -962,7 +945,7 @@ moves_loop:  // When in check search starts from here.
 
                 if (value >= beta)
                 {
-                    ss->cutoffCnt += !ttMove + (extension < 2);
+                    ss->cutoffCnt += extension < 2;
                     break;
                 }
 
