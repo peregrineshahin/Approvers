@@ -93,8 +93,8 @@ PARAM(fp_v3, 250)
 PARAM(fp_v4, 7)
 PARAM(se_v1, 5)
 PARAM(se_v2, 1075)
-PARAM(se_v5, 23)
-PARAM(se_v6, 102)
+PARAM(se_v5, 2)
+PARAM(se_v6, 50)
 PARAM(prb_v1, 123)
 PARAM(prb_v2, 51)
 PARAM(prb_v3, -2)
@@ -590,7 +590,6 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -795,11 +794,8 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
-                {
+                if (!PvNode && value < singularBeta - se_v5)
                     extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
-                    ss->dextensions = (ss - 1)->dextensions + 1;
-                }
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
