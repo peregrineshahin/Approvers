@@ -154,7 +154,7 @@ PARAM(r_v12, 3664)
 PARAM(r_v13, 1030)
 PARAM(r_v14, 1934)
 PARAM(r_v15, 1956)
-PARAM(r_v16, 2948)
+PARAM(r_v16, 3500)
 PARAM(ded_v1, 58)
 PARAM(qb_v1, 197)
 PARAM(qb_v2, 189)
@@ -909,8 +909,8 @@ moves_loop:  // When in check search starts from here.
             if (!ttMove)
                 r += r_v15;
 
-            value = -search(pos, ss + 1, -(alpha + 1), -alpha,
-                            newDepth - (r > r_v16) - (r > 7588 && newDepth > 2), !cutNode, false);
+            value =
+              -search(pos, ss + 1, -(alpha + 1), -alpha, newDepth - (r > r_v16), !cutNode, false);
         }
 
         // For PV nodes only, do a full PV search on the first move or after a fail
