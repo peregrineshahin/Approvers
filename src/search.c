@@ -607,8 +607,8 @@ Value search(
     if (!ss->ttPv
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
              >= beta
-        && (ttCapture || !ttMove))
-        return (ft_v3 * eval + ft_v4 * beta) / 1024;
+        && (ttCapture || !ttMove) && beta > -VALUE_MATE_IN_MAX_PLY)
+        return eval < VALUE_MATE_IN_MAX_PLY ? (ft_v3 * eval + ft_v4 * beta) / 1024 : eval;
 
     // Step 7. Null move search
     if (cutNode && eval >= beta
@@ -675,7 +675,10 @@ Value search(
                 {
                     tte_save(tte, posKey, value_to_tt(value, ss->ply), ss->ttPv, BOUND_LOWER,
                              probCutDepth + 1, move, unadjustedStaticEval);
-                    return value - (probCutBeta - beta);
+                    if (abs(value) < VALUE_MATE_IN_MAX_PLY)
+                        return value - (probCutBeta - beta);
+                    else
+                        return value;
                 }
             }
     }
@@ -1231,7 +1234,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     if (ss->checkersBB && bestValue == -VALUE_INFINITE)
         return mated_in(ss->ply);  // Plies to mate from the root
 
-    if (bestValue >= beta)
+    if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
         bestValue = (fh_v1 * bestValue + fh_v2 * beta) / 1024;
 
     // Save gathered info in transposition table. The static evaluation
