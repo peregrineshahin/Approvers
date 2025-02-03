@@ -788,7 +788,7 @@ moves_loop:  // When in check search starts from here.
             && tte_bound(tte) & BOUND_LOWER && tte_depth(tte) >= depth - 3
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 1024;
+            Value singularBeta  = ttValue - (1 + (ss->ttPv && !PvNode)) * depth;
             Depth singularDepth = newDepth / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
@@ -798,9 +798,10 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
+                if (!PvNode && !ttCapture && value < singularBeta - se_v5
+                    && ss->dextensions <= de_v1)
                 {
-                    extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
+                    extension       = 2 + (value < singularBeta - se_v6);
                     ss->dextensions = (ss - 1)->dextensions + 1;
                 }
             }
