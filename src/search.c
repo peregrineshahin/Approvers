@@ -142,7 +142,6 @@ PARAM(pcmb_v8, 121)
 PARAM(pcmb_v9, 235)
 PARAM(pcmb_v12, 142)
 PARAM(pcmb_v13, 78)
-PARAM(lce_v1, 202)
 PARAM(r_v2, 1981)
 PARAM(r_v3, 1112)
 PARAM(r_v4, 173)
@@ -825,10 +824,6 @@ moves_loop:  // When in check search starts from here.
             ss->mpKillers[0] = k1;
             ss->mpKillers[1] = k2;
         }
-
-        // Last capture extension
-        else if (PieceValue[captured_piece()] > lce_v1 && low_material(pos))
-            extension = 1;
 
         // Add extension to new depth
         newDepth += extension;
