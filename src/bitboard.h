@@ -42,8 +42,6 @@ void bitboards_init(void);
 #define Rank7BB (Rank1BB << (8 * 6))
 #define Rank8BB (Rank1BB << (8 * 7))
 
-extern uint8_t SquareDistance[64][64];
-
 extern Bitboard BetweenBB[64][64];
 extern Bitboard LineBB[64][64];
 extern Bitboard PseudoAttacks[8][64];
@@ -84,11 +82,6 @@ static Bitboard between_bb(Square s1, Square s2) { return BetweenBB[s1][s2]; }
 // on a straight or on a diagonal line.
 static uint64_t aligned(Move m, Square s) { return ((Bitboard*) LineBB)[m & 4095] & sq_bb(s); }
 
-
-// Returns the distance between x and y, defined as the number of steps
-// for a king in x to reach y. Works with squares, ranks, files.
-static int distance(Square x, Square y) { return SquareDistance[x][y]; }
-
 static unsigned distance_f(Square x, Square y) {
     unsigned f1 = file_of(x), f2 = file_of(y);
     return f1 < f2 ? f2 - f1 : f1 - f2;
@@ -98,6 +91,10 @@ static unsigned distance_r(Square x, Square y) {
     unsigned r1 = rank_of(x), r2 = rank_of(y);
     return r1 < r2 ? r2 - r1 : r1 - r2;
 }
+
+// Returns the distance between x and y, defined as the number of steps
+// for a king in x to reach y. Works with squares, ranks, files.
+static int distance(Square x, Square y) { return max(distance_f(x, y), distance_r(x, y)); }
 
 #define attacks_bb_queen(s, occupied) \
     (attacks_bb_bishop((s), (occupied)) | attacks_bb_rook((s), (occupied)))
