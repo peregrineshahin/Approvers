@@ -751,7 +751,12 @@ moves_loop:  // When in check search starts from here.
                     Value futilityValue = ss->staticEval + fp_v2 + fp_v3 * lmrDepth
                                         + PieceValue[capturedPiece] + captHist / fp_v4;
                     if (futilityValue <= alpha)
+                    {
+                        if (bestValue <= futilityValue && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
+                            && futilityValue < VALUE_MATE_IN_MAX_PLY)
+                            bestValue = (bestValue + futilityValue * 3) / 4;
                         continue;
+                    }
                 }
             }
             else
@@ -771,7 +776,7 @@ moves_loop:  // When in check search starts from here.
                 {
                     if (bestValue <= futilityValue && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
                         && futilityValue < VALUE_MATE_IN_MAX_PLY)
-                        bestValue = futilityValue;
+                        bestValue = (bestValue + futilityValue * 3) / 4;
 
                     continue;
                 }
