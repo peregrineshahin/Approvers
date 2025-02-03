@@ -97,6 +97,8 @@ PARAM(fv_v3, 1024)
 PARAM(fv_v4, 3072)
 PARAM(se_v1, 5)
 PARAM(se_v2, 1075)
+PARAM(se_v3, 1024)
+PARAM(se_v4, 1024)
 PARAM(se_v5, 23)
 PARAM(se_v6, 102)
 PARAM(prb_v1, 123)
@@ -804,7 +806,7 @@ moves_loop:  // When in check search starts from here.
             && tte_bound(tte) & BOUND_LOWER && tte_depth(tte) >= depth - 3
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY)
         {
-            Value singularBeta  = ttValue - se_v2 * depth / 1024;
+            Value singularBeta  = ttValue - (se_v3 + se_v4 * (ss->ttPv && !PvNode)) * depth / 1024;
             Depth singularDepth = newDepth / 2;
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
