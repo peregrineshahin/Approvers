@@ -149,6 +149,7 @@ PARAM(r_v5, 3767)
 PARAM(r_v6, 1327)
 PARAM(r_v7, 1051)
 PARAM(r_v8, 2259)
+PARAM(r_v9, 1024)
 PARAM(r_v12, 3664)
 PARAM(r_v13, 1030)
 PARAM(r_v14, 1934)
@@ -863,6 +864,9 @@ moves_loop:  // When in check search starts from here.
             ss->statScore = 0;
         else
         {
+            if ((ss - 1)->ttPv && ss->ttPv && ss->checkersBB)
+                r += r_v9;
+
             // Increase reduction if ttMove is a capture
             if (ttCapture)
                 r += r_v6;
