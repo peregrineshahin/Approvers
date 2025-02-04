@@ -72,6 +72,7 @@ struct Stack {
     Move            excludedMove;
     Move            killers[2];
     Value           staticEval;
+    int             distanceFromPv;
     Value           statScore;
     int             cutoffCnt;
     int             moveCount;

@@ -495,6 +495,7 @@ Value search(
 
     // Step 1. Initialize node
     moveCount = captureCount = quietCount = ss->moveCount = 0;
+    ss->distanceFromPv                                    = (PvNode ? 0 : ss->distanceFromPv);
     bestValue                                             = -VALUE_INFINITE;
 
     // Check for the available remaining time
@@ -836,6 +837,7 @@ moves_loop:  // When in check search starts from here.
         // Step 13. Make the move.
         do_move(pos, move, givesCheck);
 
+        (ss + 1)->distanceFromPv = ss->distanceFromPv + moveCount - 1;
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
@@ -877,7 +879,7 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1, newDepth + ((ss + 1)->distanceFromPv <= 4));
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
