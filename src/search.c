@@ -364,11 +364,15 @@ void thread_search(Position* pos) {
         ss[i].continuationHistory = &Sentinel;
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
+        ss[i].reduction           = 0;
     }
 
 #pragma clang loop unroll(disable)
     for (int i = 0; i <= MAX_PLY; i++)
-        ss[i].ply = i;
+    {
+        ss[i].ply       = i;
+        ss[i].reduction = 0;
+    }
 
     pos->accumulator->needs_refresh = true;
 
@@ -528,6 +532,9 @@ Value search(
     ttMove       = ttHit ? tte_move(tte) : 0;
     ttCapture    = ttMove && capture_stage(pos, ttMove);
 
+    int priorReduction  = (ss - 1)->reduction;
+    (ss - 1)->reduction = 0;
+
     if (!excludedMove)
         ss->ttPv = PvNode || (ttHit && tte_is_pv(tte));
 
@@ -605,6 +612,9 @@ Value search(
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
+
+    if (priorReduction >= 1 && !(ss - 1)->checkersBB && ss->staticEval + (ss - 1)->staticEval > 200)
+        depth--;
 
     // Step 5. Razoring
     if (!PvNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
@@ -884,8 +894,10 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
-            value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+            Depth d       = clamp(newDepth - r / 1024, 1, newDepth);
+            ss->reduction = newDepth - d;
+            value         = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
+            ss->reduction = newDepth - d;
 
             if (value > alpha && d < newDepth)
             {
