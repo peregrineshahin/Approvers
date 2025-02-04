@@ -24,6 +24,7 @@
 
 int eval_scale = 93;
 int mat_scale  = 25855;
+int mat_p      = 200;
 int mat_n      = 643;
 int mat_b      = 750;
 int mat_r      = 1461;
@@ -34,8 +35,9 @@ Value evaluate(Position* pos) {
 
     v = eval_scale * v / 100;
 
-    int non_pawn_material = mat_n * popcount(pieces_p(KNIGHT)) + mat_b * popcount(pieces_p(BISHOP))
-                          + mat_r * popcount(pieces_p(ROOK)) + mat_q * popcount(pieces_p(QUEEN));
+    int non_pawn_material = mat_p * popcount(pieces_p(PAWN)) + mat_n * popcount(pieces_p(KNIGHT))
+                          + mat_b * popcount(pieces_p(BISHOP)) + mat_r * popcount(pieces_p(ROOK))
+                          + mat_q * popcount(pieces_p(QUEEN));
 
     v = v * (mat_scale + non_pawn_material) / 32768;
 
