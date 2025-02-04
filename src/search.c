@@ -179,8 +179,7 @@ PARAM(cpth_v1, 12324)
 
 // Time management parameters
 PARAM(tm_v1, 377)
-PARAM(tm_v2, 669)
-PARAM(tm_v3, 648)
+PARAM(tm_v2, 1200)
 PARAM(tm_v4, 688)
 PARAM(tm_v5, 47)
 PARAM(tm_v6, 151)
@@ -340,7 +339,6 @@ void thread_search(Position* pos) {
     Move   lastMove           = MOVE_NONE;
     Depth  pvStability        = 0;
     double totBestMoveChanges = 0;
-    int    iterIdx            = 0;
 
     Stack* ss = pos->st;  // At least the seventh element of the allocated array.
 #pragma clang loop unroll(disable)
@@ -367,11 +365,6 @@ void thread_search(Position* pos) {
     bestValue = delta = alpha = -VALUE_INFINITE;
     beta                      = VALUE_INFINITE;
     pos->completedDepth       = 0;
-
-    int value = Thread.previousScore == VALUE_INFINITE ? VALUE_ZERO : Thread.previousScore;
-#pragma clang loop unroll(disable)
-    for (int i = 0; i < 4; i++)
-        Thread.iterValue[i] = value;
 
     PVariation* pv = &pos->st->pv;
 
@@ -426,9 +419,9 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
 #endif
         {
-            double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
-                                  + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
-                               / (double) tm_v4;
+            double fallingEval =
+              (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)) / (double) tm_v4;
+
             fallingEval = clamp(fallingEval, tm_v5 / 100.0, tm_v6 / 100.0);
 
             double pvFactor = (tm_v24 / 100.0) - (tm_v25 / 1000.0) * pvStability;
@@ -450,9 +443,6 @@ void thread_search(Position* pos) {
                     Thread.stop = true;
             }
         }
-
-        Thread.iterValue[iterIdx] = bestValue;
-        iterIdx                   = (iterIdx + 1) & 3;
     }
 }
 
