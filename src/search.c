@@ -91,6 +91,10 @@ PARAM(fp_v1, 6)
 PARAM(fp_v2, 311)
 PARAM(fp_v3, 250)
 PARAM(fp_v4, 7)
+PARAM(fv_v1, 1024)
+PARAM(fv_v2, 3072)
+PARAM(fv_v3, 1024)
+PARAM(fv_v4, 3072)
 PARAM(se_v1, 5)
 PARAM(se_v2, 1075)
 PARAM(se_v5, 11)
@@ -754,7 +758,7 @@ moves_loop:  // When in check search starts from here.
                     {
                         if (bestValue <= futilityValue && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
                             && futilityValue < VALUE_MATE_IN_MAX_PLY)
-                            bestValue = (bestValue + futilityValue * 3) / 4;
+                            bestValue = (fv_v1 * bestValue + fv_v2 * futilityValue) / 4096;
                         continue;
                     }
                 }
@@ -776,7 +780,7 @@ moves_loop:  // When in check search starts from here.
                 {
                     if (bestValue <= futilityValue && abs(bestValue) < VALUE_MATE_IN_MAX_PLY
                         && futilityValue < VALUE_MATE_IN_MAX_PLY)
-                        bestValue = (bestValue + futilityValue * 3) / 4;
+                        bestValue = (fv_v3 * bestValue + fv_v4 * futilityValue) / 4096;
 
                     continue;
                 }
