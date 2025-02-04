@@ -36,7 +36,9 @@ EXE     = approvers
 all: build
 
 build: clean $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXE) $(LDFLAGS)
+	$(CC) $(CFLAGS) -fprofile-instr-generate -fcoverage-mapping $(OBJ) -o $(EXE) $(LDFLAGS)
+	./$(EXE) bench
+	$(CC) $(CFLAGS) -fprofile-instr-use=default.profdata $(OBJ) -o $(EXE) $(LDFLAGS)
 
 kaggle: CFLAGS += -DKAGGLE
 kaggle: clean $(OBJ)
