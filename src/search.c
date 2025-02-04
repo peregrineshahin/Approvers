@@ -377,7 +377,7 @@ void thread_search(Position* pos) {
 
     // Iterative deepening loop until requested to stop or the target depth
     // is reached.
-    while ((pos->rootDepth += 2) < MAX_PLY && !Thread.stop
+    while ((pos->rootDepth += 3) < MAX_PLY && !Thread.stop
            && !(Limits.depth && pos->rootDepth > Limits.depth))
     {
         // Age out PV variability metric
@@ -405,7 +405,7 @@ void thread_search(Position* pos) {
 
             beta  = (alpha + beta) / 2;
             alpha = max(bestValue - delta, -VALUE_INFINITE);
-            delta += delta / 4 + asd_v1;
+            delta += delta / 2 + asd_v1;
         }
 
 #ifndef KAGGLE
