@@ -219,7 +219,7 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+    return ((r + rd_v1) / rd_v2 + (!i && r > rd_v3)) * 1056;
 }
 
 static int futility_margin(Depth d, bool improving) {
@@ -731,6 +731,8 @@ moves_loop:  // When in check search starts from here.
 
         Depth r = reduction(improving, depth, moveCount);
 
+        r -= 32 * moveCount;
+
         // Step 11. Pruning at shallow depth
         if (!rootNode && non_pawn_material(pos) && bestValue > VALUE_MATED_IN_MAX_PLY)
         {
@@ -738,7 +740,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / 1024, 0);
 
             if (capture || givesCheck)
             {
@@ -842,7 +844,6 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
-        r *= 1056;
         r += r_v4;
 
         r -= abs(r_v5 * correctionValue / 1024);
