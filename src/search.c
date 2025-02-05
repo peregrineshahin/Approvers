@@ -1027,11 +1027,6 @@ moves_loop:  // When in check search starts from here.
           + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
           + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
 
-        // Proportional to "how much damage we have to undo"
-        bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
-
-        bonusScale = max(bonusScale, 0);
-
         const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
 
         update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, scaledBonus * hs_v9 / 1024);
