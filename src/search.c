@@ -614,7 +614,7 @@ Value search(
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
              >= beta
         && (ttCapture || !ttMove) && beta > -VALUE_MATE_IN_MAX_PLY)
-        return eval < VALUE_MATE_IN_MAX_PLY ? (ft_v3 * eval + ft_v4 * beta) / 1024 : eval;
+        return eval;
 
     // Step 7. Null move search
     if (cutNode && eval >= beta
