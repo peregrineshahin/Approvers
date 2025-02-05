@@ -644,7 +644,6 @@ Value search(
     if (depth >= 3
         && !(tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue < probCutBeta))
     {
-
         if (tte_depth(tte) >= depth - 3 && ttValue != VALUE_NONE && ttValue >= probCutBeta && ttMove
             && capture_stage(pos, ttMove))
             return probCutBeta;
@@ -762,11 +761,14 @@ moves_loop:  // When in check search starts from here.
             }
             else
             {
+                int history =
+                  (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)];
+
                 // Continuation history based pruning
-                if (lmrDepth < cbp_v1
-                    && (*contHist0)[movedType][to_sq(move)] + (*contHist1)[movedType][to_sq(move)]
-                         < -cbp_v2 * depth + cbp_v3)
+                if (lmrDepth < cbp_v1 && history < -cbp_v2 * depth + cbp_v3)
                     continue;
+
+                lmrDepth += history / 3000;
 
                 // Futility pruning: parent node
                 if (lmrDepth < fpp_v1 && !ss->checkersBB
@@ -774,6 +776,8 @@ moves_loop:  // When in check search starts from here.
                            + fpp_v3 * lmrDepth
                          <= alpha)
                     continue;
+
+                lmrDepth = max(lmrDepth, 0);
 
                 // Prune moves with negative SEE at low depths and below a decreasing
                 // threshold at higher depths
