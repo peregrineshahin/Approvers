@@ -596,7 +596,7 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
+    ss->multipleExtensions = rootNode ? 0 : (ss - 1)->multipleExtensions;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -804,11 +804,14 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
+                if (!PvNode && value < singularBeta - se_v5 && ss->multipleExtensions <= de_v1)
                 {
                     extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
-                    ss->dextensions = (ss - 1)->dextensions + 1;
+                    ss->multipleExtensions = (ss - 1)->multipleExtensions + 1;
                 }
+                if (PvNode && !ttCapture && ss->multipleExtensions <= 5
+                    && value < singularBeta - 38)
+                    extension = 2;
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
