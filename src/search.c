@@ -493,7 +493,7 @@ Value search(
     Key      posKey;
     Move     ttMove, move, excludedMove, bestMove;
     Depth    extension, newDepth;
-    Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
+    Value    bestValue, value, ttValue, eval, probCutBeta;
     bool     ttHit, givesCheck, improving;
     bool     capture, moveCountPruning;
     bool     ttCapture;
@@ -550,14 +550,15 @@ Value search(
         return ttValue;
     }
 
-    const Value correctionValue = correction_value(pos);
+    Value correctionValue      = correction_value(pos);
+    Value unadjustedStaticEval = VALUE_NONE;
 
     // Step 4. Static evaluation of the position
     if (ss->checkersBB)
     {
         // Skip early pruning when in check
-        unadjustedStaticEval = ss->staticEval = VALUE_NONE;
-        improving                             = false;
+        eval = ss->staticEval = (ss - 2)->staticEval;
+        improving             = false;
         goto moves_loop;
     }
     else if (excludedMove)
@@ -592,9 +593,7 @@ Value search(
                  unadjustedStaticEval);
     }
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    improving = ss->staticEval > (ss - 2)->staticEval;
 
     ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
