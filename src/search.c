@@ -795,7 +795,7 @@ moves_loop:  // When in check search starts from here.
             && abs(ttValue) < VALUE_MATE_IN_MAX_PLY)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 1024;
-            Depth singularDepth = newDepth / 2;
+            Depth singularDepth = max(1, (depth - 3) / 2);
             ss->excludedMove    = move;
             Move k1 = ss->mpKillers[0], k2 = ss->mpKillers[1];
             value = search(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode, false);
