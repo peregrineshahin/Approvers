@@ -497,7 +497,7 @@ Value search(
     bool     ttHit, givesCheck, improving;
     bool     capture, moveCountPruning;
     bool     ttCapture;
-    int      moveCount, captureCount, quietCount;
+    int      moveCount, captureCount, quietCount, improvement;
 
     // Step 1. Initialize node
     moveCount = captureCount = quietCount = ss->moveCount = 0;
@@ -558,6 +558,7 @@ Value search(
         // Skip early pruning when in check
         unadjustedStaticEval = ss->staticEval = VALUE_NONE;
         improving                             = false;
+        improvement                           = 0;
         goto moves_loop;
     }
     else if (excludedMove)
@@ -592,9 +593,11 @@ Value search(
                  unadjustedStaticEval);
     }
 
-    improving = (ss - 2)->staticEval == VALUE_NONE
-                ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
-                : ss->staticEval > (ss - 2)->staticEval;
+    improvement = (ss - 2)->staticEval != VALUE_NONE ? ss->staticEval - (ss - 2)->staticEval
+                : (ss - 4)->staticEval != VALUE_NONE ? ss->staticEval - (ss - 4)->staticEval
+                                                     : 200;
+
+    improving = improvement > 0;
 
     ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
 
@@ -636,7 +639,7 @@ Value search(
             return nullValue;
     }
 
-    probCutBeta = beta + prb_v1 - prb_v2 * improving;
+    probCutBeta = beta + prb_v1 - clamp(improvement / 4, 0, 100);
 
     // Step 8. ProbCut
     // If we have a good enough capture and a reduced search returns a value
