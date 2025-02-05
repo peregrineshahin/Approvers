@@ -77,6 +77,7 @@ struct Stack {
     int             moveCount;
     int             dextensions;
     bool            ttPv;
+    bool            isTTMove;
     uint8_t         ply;
 
     // MovePicker data

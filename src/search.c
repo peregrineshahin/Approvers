@@ -625,6 +625,7 @@ Value search(
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
 
         ss->currentMove         = MOVE_NULL;
+        ss->isTTMove            = false;
         ss->continuationHistory = &Sentinel;
 
         do_null_move(pos);
@@ -657,6 +658,7 @@ Value search(
             if (move != excludedMove && is_legal(pos, move))
             {
                 ss->currentMove = move;
+                ss->isTTMove    = move == ttMove;
                 ss->continuationHistory =
                   &(*pos->contHist)[stm()][type_of_p(moved_piece(move)) - 1][to_sq(move)];
 
@@ -840,6 +842,7 @@ moves_loop:  // When in check search starts from here.
 
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
+        ss->isTTMove    = move == ttMove;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
         r *= 1056;
@@ -1023,22 +1026,17 @@ moves_loop:  // When in check search starts from here.
     else if (!captured_piece() && prevSq != SQ_NONE)
     {
         int bonusScale =
-          pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
-          + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
-          + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13)
-          + 100 * (ss->cutoffCnt <= 3);
+          (118 * (depth > 5) + 36 * !(PvNode || cutNode) + 161 * ((ss - 1)->moveCount > 8)
+           + 133 * (!ss->checkersBB && bestValue <= ss->staticEval - 107)
+           + 120 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - 84)
+           + 81 * ((ss - 1)->isTTMove) + 100 * (ss->cutoffCnt <= 3)
+           + min(-(ss - 1)->statScore / 108, 320));
 
-        // Proportional to "how much damage we have to undo"
-        bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
+        bonusScale            = max(bonusScale, 0);
+        const int scaledBonus = stat_bonus(depth) * bonusScale;
+        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, scaledBonus * 416 / 32768);
 
-        bonusScale = max(bonusScale, 0);
-
-        const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
-
-        update_continuation_histories(ss - 1, piece_on(prevSq), prevSq, scaledBonus * hs_v9 / 1024);
-
-        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
-                       scaledBonus * hs_v10 / 1024);
+        history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, scaledBonus * 219 / 32768);
     }
 
     // If no good move is found and the previous position was ttPv, then the
@@ -1209,6 +1207,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         do_move(pos, move, givesCheck);
 
         ss->currentMove         = move;
+        ss->isTTMove    = move == ttMove;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
