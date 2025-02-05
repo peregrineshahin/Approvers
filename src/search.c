@@ -606,19 +606,19 @@ Value search(
     }
 
     // Step 5. Razoring
-    if (!PvNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
+    if (!PvNode && !excludedMove && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
-    if (!ss->ttPv
+    if (!ss->ttPv && !excludedMove
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
              >= beta
         && (ttCapture || !ttMove) && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval < VALUE_MATE_IN_MAX_PLY ? (ft_v3 * eval + ft_v4 * beta) / 1024 : eval;
 
     // Step 7. Null move search
-    if (cutNode && eval >= beta
-        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
+    if (cutNode && !excludedMove && eval >= beta
+        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9
         && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
