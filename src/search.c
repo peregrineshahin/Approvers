@@ -51,7 +51,7 @@ int       parameters_count = 0;
 // Search parameters
 PARAM(rd_init_v1, 32020)
 PARAM(rd_v1, 606)
-PARAM(rd_v2, 1242)
+PARAM(rd_v2, 768)
 PARAM(rd_v3, 999)
 PARAM(qmo_v1, 3083)
 PARAM(qmo_v2, 1533)
@@ -219,7 +219,7 @@ static int Reductions[MAX_MOVES];  // [depth or moveNumber]
 
 static Depth reduction(int i, Depth d, int mn) {
     int r = Reductions[d] * Reductions[mn];
-    return (r + rd_v1) / rd_v2 + (!i && r > rd_v3);
+    return r + rd_v1 + (!i && r > rd_v3) * rd_v2;
 }
 
 static int futility_margin(Depth d, bool improving) {
@@ -738,7 +738,7 @@ moves_loop:  // When in check search starts from here.
             moveCountPruning = moveCount >= futility_move_count(improving, depth);
 
             // Reduced depth of the next LMR search
-            int lmrDepth = max(newDepth - r, 0);
+            int lmrDepth = max(newDepth - r / 1024, 0);
 
             if (capture || givesCheck)
             {
@@ -842,9 +842,7 @@ moves_loop:  // When in check search starts from here.
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
 
-        r *= 1056;
         r += r_v4;
-
         r -= abs(r_v5 * correctionValue / 1024);
 
         // Decrease reduction if position is or has been on the PV
