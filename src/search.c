@@ -1242,8 +1242,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     // Save gathered info in transposition table. The static evaluation
     // is saved as it was before adjustment by correction history.
     tte_save(tte, posKey, value_to_tt(bestValue, ss->ply), pvHit,
-             bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, ttDepth, bestMove,
-             unadjustedStaticEval);
+             bestValue >= beta ? BOUND_LOWER : BOUND_UPPER, 0, bestMove, unadjustedStaticEval);
 
     return bestValue;
 }
