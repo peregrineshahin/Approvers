@@ -34,7 +34,7 @@ extern void benchmark();
 extern Parameter parameters[255];
 extern int       parameters_count;
 
-extern alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
+extern alignas(64) int16_t in_biases[L1SIZE];
 #endif
 
 // FEN string of the initial position, normal chess
@@ -130,17 +130,10 @@ void setoption(char* str) {
         return;
     }
 
-    if (strstr(name, "l1w4_v"))
+    if (strstr(name, "inb_v"))
     {
-        int i            = atoi(name + 6);
-        l1_weights[4][i] = atoi(value);
-        return;
-    }
-
-    if (strstr(name, "l1w5_v"))
-    {
-        int i            = atoi(name + 6);
-        l1_weights[5][i] = atoi(value);
+        int i        = atoi(name + 5);
+        in_biases[i] = atoi(value);
         return;
     }
 
@@ -256,11 +249,8 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < parameters_count; i++)
                 printf("option name %s type string\n", parameters[i].name);
 
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("option name l1w4_v%d type string\n", i);
-
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("option name l1w5_v%d type string\n", i);
+            for (int i = 0; i < L1SIZE; i++)
+                printf("option name inb_v%d type string\n", i);
 
             printf("uciok\n");
             fflush(stdout);
@@ -279,13 +269,9 @@ SMALL void uci_loop(int argc, char** argv) {
         }
         else if (strcmp(token, "nnparams") == 0)
         {
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w4_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[4][i],
-                       abs(l1_weights[4][i]) / 20.0);
-
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w5_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[5][i],
-                       abs(l1_weights[5][i]) / 20.0);
+            for (int i = 0; i < L1SIZE; i++)
+                printf("inb_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, in_biases[i],
+                       abs(in_biases[i]) / 20.0);
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
