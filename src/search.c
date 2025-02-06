@@ -153,10 +153,11 @@ PARAM(r_v2, 1636)
 PARAM(r_v3, 1124)
 PARAM(r_v4, 170)
 PARAM(r_v5, 3781)
-PARAM(r_v6, 1322)
+PARAM(r_v6, 1000)
 PARAM(r_v7, 1049)
 PARAM(r_v8, 2301)
 PARAM(r_v9, 1008)
+PARAM(r_v10, 500)
 PARAM(r_v12, 3945)
 PARAM(r_v13, 1177)
 PARAM(r_v14, 1819)
@@ -864,7 +865,7 @@ moves_loop:  // When in check search starts from here.
         {
             // Increase reduction if ttMove is a capture
             if (ttCapture)
-                r += r_v6;
+                r += r_v6 + r_v10 * (depth < 8);
 
             ss->statScore = (*contHist0)[movedType][to_sq(move)]
                           + (*contHist1)[movedType][to_sq(move)]
