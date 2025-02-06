@@ -101,7 +101,7 @@ PARAM(se_v3, 966)
 PARAM(se_v4, 985)
 PARAM(se_v5, 2)
 PARAM(se_v6, 80)
-PARAM(se_v7, 38)
+PARAM(se_v7, 8)
 PARAM(prb_v1, 126)
 PARAM(prb_v2, 46)
 PARAM(prb_v3, 7)
@@ -810,7 +810,7 @@ moves_loop:  // When in check search starts from here.
                     extension              = 2 + (!ttCapture && value < singularBeta - se_v6);
                     ss->multipleExtensions = (ss - 1)->multipleExtensions + 1;
                 }
-                if (PvNode && !ttCapture && ss->multipleExtensions <= 5
+                if (PvNode && !ttCapture && ss->multipleExtensions <= 6
                     && value < singularBeta - se_v7)
                     extension = 2;
             }
