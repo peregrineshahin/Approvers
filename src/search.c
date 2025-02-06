@@ -601,7 +601,7 @@ Value search(
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
-        int bonus = clamp(-depth * qmo_v1 / 1024 * ((ss - 1)->staticEval + ss->staticEval - tempo),
+        int bonus = clamp(-10 * ((ss - 1)->staticEval + ss->staticEval - tempo),
                           -qmo_v2, qmo_v3);
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
