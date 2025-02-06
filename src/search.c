@@ -693,10 +693,16 @@ Value search(
 
     // Step 9. Internal iterative reductions
     if (PvNode && depth >= iir_v1 && !ttMove)
+    {
         depth -= iir_v3;
+        depth = max(1, depth);
+    }
 
     if (cutNode && depth >= iir_v2 && !ttMove)
+    {
         depth -= iir_v4;
+        depth = max(1, depth);
+    }
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
