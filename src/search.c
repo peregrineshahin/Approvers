@@ -101,6 +101,7 @@ PARAM(se_v3, 966)
 PARAM(se_v4, 985)
 PARAM(se_v5, 2)
 PARAM(se_v6, 80)
+PARAM(se_v7, 38)
 PARAM(prb_v1, 126)
 PARAM(prb_v2, 46)
 PARAM(prb_v3, 7)
@@ -596,7 +597,7 @@ Value search(
                 ? (ss->staticEval > (ss - 4)->staticEval || (ss - 4)->staticEval == VALUE_NONE)
                 : ss->staticEval > (ss - 2)->staticEval;
 
-    ss->dextensions = rootNode ? 0 : (ss - 1)->dextensions;
+    ss->multipleExtensions = rootNode ? 0 : (ss - 1)->multipleExtensions;
 
     if (prevSq != SQ_NONE && !(ss - 1)->checkersBB && !captured_piece())
     {
@@ -804,11 +805,14 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->dextensions <= de_v1)
+                if (!PvNode && value < singularBeta - se_v5 && ss->multipleExtensions <= de_v1)
                 {
-                    extension       = 2 + (!ttCapture && value < singularBeta - se_v6);
-                    ss->dextensions = (ss - 1)->dextensions + 1;
+                    extension              = 2 + (!ttCapture && value < singularBeta - se_v6);
+                    ss->multipleExtensions = (ss - 1)->multipleExtensions + 1;
                 }
+                if (PvNode && !ttCapture && ss->multipleExtensions <= 5
+                    && value < singularBeta - se_v7)
+                    extension = 2;
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
@@ -822,7 +826,7 @@ moves_loop:  // When in check search starts from here.
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
             else if (cutNode || ttValue >= beta)
-                extension--;
+                extension = -2;
 
             // The call to search_NonPV with the same value of ss messed up our
             // move picker data. So we fix it.
