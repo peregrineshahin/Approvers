@@ -873,9 +873,12 @@ moves_loop:  // When in check search starts from here.
         }
 
         if ((ss + 1)->cutoffCnt > 3)
-            r += r_v7;
+            r += r_v7 + 1024 * !(PvNode || cutNode);
         else if (move == ttMove)
+        {
             r -= r_v14;
+            r = min(r, 0);
+        }
 
         // Decrease/increase reduction for moves with a good/bad history.
         r -= ss->statScore * r_v13 / 16384;
