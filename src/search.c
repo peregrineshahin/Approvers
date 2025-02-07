@@ -549,7 +549,7 @@ Value search(
         }
 
 
-        if (ttValue < beta && !captured_piece() && prevSq != SQ_NONE)
+        if (!captured_piece() && prevSq != SQ_NONE)
         {
             int bonusScale =
               pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
