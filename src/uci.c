@@ -37,6 +37,9 @@ extern int       parameters_count;
 extern alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
 #endif
 
+#define N 10
+extern int A[N][N][2];
+
 // FEN string of the initial position, normal chess
 char StartFEN[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -130,17 +133,11 @@ void setoption(char* str) {
         return;
     }
 
-    if (strstr(name, "l1w4_v"))
+    int num1, num2, num3;
+    if (sscanf(name, "LMR_%d_%d_%d", &num1, &num2, &num3) == 3)
     {
-        int i            = atoi(name + 6);
-        l1_weights[4][i] = atoi(value);
-        return;
-    }
-
-    if (strstr(name, "l1w5_v"))
-    {
-        int i            = atoi(name + 6);
-        l1_weights[5][i] = atoi(value);
+        A[num1][num2][num3] = atoi(value);
+        printf("LMR_%d_%d_%d = %d\n", num1, num2, num3, A[num1][num2][num3]);
         return;
     }
 
@@ -256,11 +253,10 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < parameters_count; i++)
                 printf("option name %s type string\n", parameters[i].name);
 
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("option name l1w4_v%d type string\n", i);
-
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("option name l1w5_v%d type string\n", i);
+            for (int i = 0; i < N; i++)
+                for (int j = 0; j < N; j++)
+                    for (int k = 0; k < 2; k++)
+                        printf("option name LMR_%d_%d_%d type string\n", i, j, k);
 
             printf("uciok\n");
             fflush(stdout);
@@ -277,15 +273,12 @@ SMALL void uci_loop(int argc, char** argv) {
                        (double) (max - min) / 20.0);
             }
         }
-        else if (strcmp(token, "nnparams") == 0)
+        else if (strcmp(token, "lmrparams") == 0)
         {
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w4_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[4][i],
-                       abs(l1_weights[4][i]) / 20.0);
-
-            for (int i = 0; i < L1SIZE * 2; i++)
-                printf("l1w5_v%d, int, %d, -127, 127, %.3f, 0.002\n", i, l1_weights[5][i],
-                       abs(l1_weights[5][i]) / 20.0);
+            for (int i = 0; i < N; i++)
+                for (int j = 0; j < N; j++)
+                    for (int k = 0; k < 2; k++)
+                        printf("LMR_%d_%d_%d, int, 0, -100, 100, 50.0, 0.002\n", i, j, k);
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
