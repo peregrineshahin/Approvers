@@ -184,6 +184,12 @@ PARAM(fh_v2, 125)
 PARAM(cms_v1, 31329)
 PARAM(hu_v1, 12243)
 PARAM(cpth_v1, 11374)
+PARAM(mat_scale, 21000)
+PARAM(mat_p, 200)
+PARAM(mat_n, 643)
+PARAM(mat_b, 750)
+PARAM(mat_r, 1461)
+PARAM(mat_q, 2321)
 
 // Time management parameters
 PARAM(tm_v1, 377)

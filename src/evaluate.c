@@ -22,12 +22,12 @@
 #include "nnue.h"
 #include "position.h"
 
-int mat_scale = 21000;
-int mat_p     = 200;
-int mat_n     = 643;
-int mat_b     = 750;
-int mat_r     = 1461;
-int mat_q     = 2321;
+extern int mat_scale;
+extern int mat_p;
+extern int mat_n;
+extern int mat_b;
+extern int mat_r;
+extern int mat_q;
 
 Value evaluate(Position* pos) {
     Value v = nnue_evaluate(pos);
