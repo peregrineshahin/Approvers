@@ -548,6 +548,28 @@ Value search(
                                               -stat_malus(depth + 1) * hs_v8 / 1024);
         }
 
+
+        if (ttValue < beta && !captured_piece() && prevSq != SQ_NONE)
+        {
+            int bonusScale =
+              pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
+              + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
+              + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
+
+            // Proportional to "how much damage we have to undo"
+            bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
+
+            bonusScale = max(bonusScale, 0);
+
+            const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
+
+            update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
+                                          scaledBonus * hs_v9 / 1024);
+
+            history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove,
+                           scaledBonus * hs_v10 / 1024);
+        }
+
         return ttValue;
     }
 
