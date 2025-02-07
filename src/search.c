@@ -701,7 +701,7 @@ Value search(
     if (PvNode && depth >= iir_v1 && !ttMove)
         depth -= iir_v3;
 
-    if (cutNode && depth >= iir_v2 && !ttMove)
+    if (cutNode && depth >= 7 && !ttMove)
         depth -= iir_v4;
 
 moves_loop:  // When in check search starts from here.
