@@ -48,6 +48,9 @@ int       parameters_count = 0;
     #define PARAM(Name, Value) int Name = Value;
 #endif
 
+#define N 10
+int A[N][N][2];
+
 // Search parameters
 PARAM(rd_init_v1, 30793)
 PARAM(rd_v1, 617)
@@ -851,6 +854,42 @@ moves_loop:  // When in check search starts from here.
         r += r_v4;
 
         r -= abs(r_v5 * correctionValue / 1024);
+
+        bool C[N] = {
+          ss->checkersBB,
+          ss->cutoffCnt <= 3,
+          (ss - 1)->ttPv,
+          (ss - 1)->checkersBB,
+          move == ss->killers[0],
+          tte_depth(tte) >= depth,
+          !PvNode && !cutNode,
+          capture,
+          givesCheck,
+          improving,
+        };
+
+#define P(x, c) ((x) >= 50 ? (c) : (x) <= -50 ? !(c) : false)
+
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j)
+                if (i < j)  // more reduction
+                {
+                    if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
+                        r++;
+                }
+                else if (i > j)  // less reduction
+                {
+                    if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
+                        r--;
+                }
+                else  // i == j
+                {
+                    if (P(A[i][i][0], C[i]))
+                        r++;
+
+                    if (P(A[i][i][1], C[i]))
+                        r--;
+                }
 
         // Decrease reduction if position is or has been on the PV
         if (ss->ttPv)
