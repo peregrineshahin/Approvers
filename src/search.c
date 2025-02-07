@@ -875,20 +875,20 @@ moves_loop:  // When in check search starts from here.
                 if (i < j)  // more reduction
                 {
                     if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
-                        r++;
+                        r += 1024;
                 }
                 else if (i > j)  // less reduction
                 {
                     if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
-                        r--;
+                        r -= 1024;
                 }
                 else  // i == j
                 {
                     if (P(A[i][i][0], C[i]))
-                        r++;
+                        r += 1024;
 
                     if (P(A[i][i][1], C[i]))
-                        r--;
+                        r -= 1024;
                 }
 
         // Decrease reduction if position is or has been on the PV
