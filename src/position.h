@@ -75,7 +75,6 @@ struct Stack {
     Value           statScore;
     int             cutoffCnt;
     int             moveCount;
-    int             multipleExtensions;
     bool            ttPv;
     uint8_t         ply;
 
