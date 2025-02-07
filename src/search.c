@@ -613,6 +613,9 @@ Value search(
         history_update(*pos->mainHistory, !stm(), (ss - 1)->currentMove, qmo_v4 * bonus / 1024);
     }
 
+    if (priorReduction >= 3 && ss->staticEval + (ss - 1)->staticEval <= 5)
+        depth++;
+
     if (priorReduction >= 1 && !(ss - 1)->checkersBB && ss->staticEval + (ss - 1)->staticEval > 200)
         depth--;
 
