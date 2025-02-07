@@ -38,7 +38,7 @@ Value evaluate(Position* pos) {
 
     v = v * (mat_scale + non_pawn_material) / 32768;
 
-    v = v * (100 - rule50_count()) / 100;
+    v = v * (200 - rule50_count()) / 200;
 
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }
