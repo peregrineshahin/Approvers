@@ -549,10 +549,10 @@ Value search(
         }
 
 
-        if (ttValue < beta && !captured_piece() && prevSq != SQ_NONE)
+        if (ttValue <= alpha && !captured_piece() && prevSq != SQ_NONE)
         {
             int bonusScale =
-              pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
+              pcmb_v1 * (tte_depth(tte) > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
               + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
               + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
 
@@ -561,7 +561,7 @@ Value search(
 
             bonusScale = max(bonusScale, 0);
 
-            const int scaledBonus = stat_bonus(depth) * bonusScale / 32;
+            const int scaledBonus = stat_bonus(tte_depth(tte)) * bonusScale / 32;
 
             update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
                                           scaledBonus * hs_v9 / 1024);
