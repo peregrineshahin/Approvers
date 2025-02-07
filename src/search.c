@@ -100,7 +100,7 @@ PARAM(se_v2, 1267)
 PARAM(se_v3, 923)
 PARAM(se_v4, 956)
 PARAM(se_v5, 2)
-PARAM(se_v6, 68)
+PARAM(se_v6, 11)
 PARAM(se_v7, 37)
 PARAM(prb_v1, 133)
 PARAM(prb_v2, 42)
@@ -165,7 +165,7 @@ PARAM(r_v16, 2919)
 PARAM(ded_v1, 52)
 PARAM(qb_v1, 199)
 PARAM(qb_v2, 151)
-PARAM(de_v1, 10)
+PARAM(de_v1, 16)
 PARAM(hs_v1, 1185)
 PARAM(hs_v2, 1155)
 PARAM(hs_v3, 1442)
@@ -812,9 +812,9 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension = 1;
-                if (!PvNode && value < singularBeta - se_v5 && ss->multipleExtensions <= de_v1)
+                if (!PvNode && ss->multipleExtensions <= de_v1)
                 {
-                    extension              = 2 + (!ttCapture && value < singularBeta - se_v6);
+                    extension              = 2 + (value < singularBeta - se_v6 && !ttCapture);
                     ss->multipleExtensions = (ss - 1)->multipleExtensions + 1;
                 }
                 if (PvNode && !ttCapture && ss->multipleExtensions <= 5
