@@ -861,7 +861,7 @@ moves_loop:  // When in check search starts from here.
         if ((ss - 1)->checkersBB && (ss - 1)->ttPv)
             r -= r_v1;
 
-        if (givesCheck)
+        if (givesCheck && !ss->checkersBB)
             r -= 1024;
 
         // Decrease reduction if position is or has been on the PV
