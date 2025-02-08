@@ -876,6 +876,9 @@ moves_loop:  // When in check search starts from here.
             if (ttCapture)
                 r += r_v6;
 
+            if (ss->cutoffCnt > 3 && !(PvNode || cutNode) && !givesCheck)
+                r += 1024;
+
             ss->statScore = (*contHist0)[movedType][to_sq(move)]
                           + (*contHist1)[movedType][to_sq(move)]
                           + (*contHist2)[movedType][to_sq(move)]
