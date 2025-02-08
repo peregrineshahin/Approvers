@@ -1039,7 +1039,8 @@ moves_loop:  // When in check search starts from here.
         int bonusScale =
           pcmb_v1 * (depth > pcmb_v2) + pcmb_v4 * ((ss - 1)->moveCount > pcmb_v5)
           + pcmb_v6 * (!ss->checkersBB && bestValue <= ss->staticEval - pcmb_v7)
-          + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13);
+          + pcmb_v12 * (!(ss - 1)->checkersBB && bestValue <= -(ss - 1)->staticEval - pcmb_v13)
+          + 110 * (ss->cutoffCnt <= 3);
 
         // Proportional to "how much damage we have to undo"
         bonusScale += min(-(ss - 1)->statScore / pcmb_v8, pcmb_v9);
