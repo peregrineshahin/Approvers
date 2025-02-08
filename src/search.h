@@ -27,6 +27,7 @@
 
 // LimitsType struct stores information sent by the caller about the analysis required.
 struct LimitsType {
+    int       initial;
     int       time[2];
     int       inc[2];
     int       depth;

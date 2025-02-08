@@ -153,6 +153,8 @@ void setoption(char* str) {
 // the thinking time and other parameters from the input string, then
 // starts the search.
 static void go(char* str) {
+    const int initialTime = Limits.initial;
+
     Limits           = (struct LimitsType) {0};
     Limits.startTime = now();  // As early as possible!
 
@@ -160,9 +162,15 @@ static void go(char* str) {
     for (char* token = strtok(str, " \t"); token; token = strtok(NULL, " \t"))
     {
         if (strcmp(token, "wtime") == 0)
+        {
             Limits.time[WHITE] = atoi(strtok(NULL, " \t"));
+            Limits.initial = !initialTime ? Limits.time[WHITE] : initialTime;
+        }
         else if (strcmp(token, "btime") == 0)
+        {
             Limits.time[BLACK] = atoi(strtok(NULL, " \t"));
+            Limits.initial = !initialTime ? Limits.time[BLACK] : initialTime;
+        }
         else if (strcmp(token, "winc") == 0)
             Limits.inc[WHITE] = atoi(strtok(NULL, " \t"));
         else if (strcmp(token, "binc") == 0)
