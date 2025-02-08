@@ -148,6 +148,7 @@ PARAM(pcmb_v8, 126)
 PARAM(pcmb_v9, 267)
 PARAM(pcmb_v12, 154)
 PARAM(pcmb_v13, 73)
+PARAM(r_v1, 1024)
 PARAM(r_v2, 1546)
 PARAM(r_v3, 999)
 PARAM(r_v4, 180)
@@ -856,6 +857,9 @@ moves_loop:  // When in check search starts from here.
         r += r_v4;
 
         r -= abs(r_v5 * correctionValue / 1024);
+
+        if ((ss - 1)->checkersBB && (ss - 1)->ttPv)
+            r -= r_v1;
 
         // Decrease reduction if position is or has been on the PV
         if (ss->ttPv)
