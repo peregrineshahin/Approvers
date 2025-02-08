@@ -662,7 +662,7 @@ Value search(
         Depth probCutDepth = max(depth - 4, 0);
 
         while ((move = next_move(pos, 0)))
-            if (move != excludedMove && is_legal(pos, move))
+            if (move != excludedMove && is_legal(pos, move) && (!ttCapture || move == ttMove))
             {
                 ss->currentMove = move;
                 ss->continuationHistory =
