@@ -858,6 +858,9 @@ moves_loop:  // When in check search starts from here.
 
         r -= abs(r_v5 * correctionValue / 1024);
 
+        if (capture && tte_depth(tte) >= depth)
+            r -= 1024;
+
         if ((ss - 1)->checkersBB && (ss - 1)->ttPv)
             r -= r_v1;
 
