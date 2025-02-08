@@ -211,6 +211,8 @@ PARAM(tm_v22, 173)
 PARAM(tm_v23, 8)
 PARAM(tm_v24, 126)
 PARAM(tm_v25, 51)
+PARAM(tm_v26, 15)
+PARAM(tm_v27, 50)
 
 LimitsType Limits;
 

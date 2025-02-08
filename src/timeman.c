@@ -32,6 +32,8 @@ extern int tm_v17;
 extern int tm_v18;
 extern int tm_v19;
 extern int tm_v20;
+extern int tm_v26;
+extern int tm_v27;
 
 struct TimeManagement Time;  // Our global time management struct
 
@@ -54,8 +56,8 @@ void time_init(Color us, int ply) {
 
     Time.startTime = Limits.startTime;
 
-    int mtg = 50;
-    if (!Limits.inc[us] && Limits.time[us] < 15 * Limits.initial / 100
+    int mtg = tm_v27;
+    if (!Limits.inc[us] && Limits.time[us] < tm_v26 * Limits.initial / 100
         && (double) mtg / Limits.time[us] > 0.05)
         mtg = (int) (Limits.time[us] * 0.05);
 
