@@ -800,7 +800,7 @@ moves_loop:  // When in check search starts from here.
         // Recursive singular search is avoided.
         if (depth >= se_v1 && move == ttMove && !rootNode && !excludedMove
             && tte_bound(tte) & BOUND_LOWER && tte_depth(tte) >= depth - 3
-            && abs(ttValue) < VALUE_MATE_IN_MAX_PLY)
+            && abs(ttValue) < VALUE_MATE_IN_MAX_PLY && ss->ply < pos->rootDepth * 2)
         {
             Value singularBeta  = ttValue - se_v2 * depth / 1024;
             Depth singularDepth = newDepth / 2;
@@ -935,7 +935,7 @@ moves_loop:  // When in check search starts from here.
         if (PvNode && (moveCount == 1 || value > alpha))
         {
             // Extend move from transposition table if we are about to dive into qsearch.
-            if (move == ttMove && ss->ply <= pos->rootDepth * 2)
+            if (move == ttMove && pos->rootDepth > 8)
                 newDepth = max(newDepth, 1);
 
             value = -search(pos, ss + 1, -beta, -alpha, newDepth, false, true);
