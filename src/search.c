@@ -866,7 +866,7 @@ moves_loop:  // When in check search starts from here.
             r -= r_v2 + PvNode * r_v3;
 
         if (cutNode && move != ss->killers[0])
-            r += r_v8;
+            r += r_v8 + 900 * (tte_value(tte) >= beta) - 1024 * ttHit;
 
         if (capture)
             ss->statScore = 0;
