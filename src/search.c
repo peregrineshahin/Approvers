@@ -862,41 +862,8 @@ moves_loop:  // When in check search starts from here.
 
         r -= abs(r_v5 * correctionValue / 1024);
 
-        bool C[N] = {
-          (ss - 1)->ttHit,
-          ss->ttHit,
-          cutNode == (tte_value(tte) >= beta),
-          (ss->ttHit && ttValue < alpha),
-          singularQuietLMR,
-          cutNode,
-          PvNode,
-          move != ttMove,
-          excludedMove,
-          moveCount < 3,
-        };
-
-#define P(x, c) ((x) >= 50 ? (c) : (x) <= -50 ? !(c) : false)
-
-        for (int i = 0; i < N; ++i)
-            for (int j = 0; j < N; ++j)
-                if (i < j)  // more reduction
-                {
-                    if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
-                        r += 1024;
-                }
-                else if (i > j)  // less reduction
-                {
-                    if (P(A[i][j][0], C[i]) && P(A[i][j][1], C[j]))
-                        r -= 1024;
-                }
-                else  // i == j
-                {
-                    if (P(A[i][i][0], C[i]))
-                        r += 1024;
-
-                    if (P(A[i][i][1], C[i]))
-                        r -= 1024;
-                }
+        if (!(ss - 1)->ttHit && !ss->ttHit)
+            r += 768;
 
         if ((ss - 1)->checkersBB && (ss - 1)->ttPv)
             r -= r_v1;
