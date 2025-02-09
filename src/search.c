@@ -858,7 +858,9 @@ moves_loop:  // When in check search starts from here.
 
         r -= abs(r_v5 * correctionValue / 1024);
 
-        if (moveCount < 3 && move != ttMove)
+        if (!ttHit && ttValue >= alpha)
+            r += 768;
+        else if (ttHit && ttValue < alpha)
             r -= 768;
 
         if ((ss - 1)->checkersBB && (ss - 1)->ttPv)
