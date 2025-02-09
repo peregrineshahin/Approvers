@@ -48,9 +48,6 @@ int       parameters_count = 0;
     #define PARAM(Name, Value) int Name = Value;
 #endif
 
-#define N 10
-int A[N][N][2];
-
 // Search parameters
 PARAM(rd_init_v1, 30708)
 PARAM(rd_v1, 593)
@@ -506,7 +503,7 @@ Value search(
     Value    bestValue, value, ttValue, eval, unadjustedStaticEval, probCutBeta;
     bool     givesCheck, improving;
     bool     capture, moveCountPruning;
-    bool     ttCapture, singularQuietLMR;
+    bool     ttCapture;
     int      moveCount, captureCount, quietCount;
 
     // Step 1. Initialize node
@@ -815,7 +812,6 @@ moves_loop:  // When in check search starts from here.
             if (value < singularBeta)
             {
                 extension        = 1;
-                singularQuietLMR = !ttCapture;
                 if (!PvNode && value < singularBeta - se_v5 && ss->multipleExtensions <= de_v1)
                 {
                     extension              = 2 + (!ttCapture && value < singularBeta - se_v6);
