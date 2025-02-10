@@ -90,10 +90,6 @@ PARAM(fp_v1, 7)
 PARAM(fp_v2, 266)
 PARAM(fp_v3, 274)
 PARAM(fp_v4, 8)
-PARAM(fv_v1, 975)
-PARAM(fv_v2, 3390)
-PARAM(fv_v3, 992)
-PARAM(fv_v4, 3347)
 PARAM(se_v1, 5)
 PARAM(se_v2, 1375)
 PARAM(se_v3, 920)
@@ -1250,7 +1246,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
         return mated_in(ss->ply);  // Plies to mate from the root
 
     if (abs(bestValue) < VALUE_MATE_IN_MAX_PLY && bestValue >= beta)
-        bestValue = (fh_v1 * bestValue + fh_v2 * beta) / 1024;
+        bestValue = (3 * bestValue + beta) / 4;
 
     // Save gathered info in transposition table. The static evaluation
     // is saved as it was before adjustment by correction history.
