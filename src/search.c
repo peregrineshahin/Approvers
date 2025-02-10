@@ -887,7 +887,7 @@ moves_loop:  // When in check search starts from here.
         // Step 14. Late move reductions (LMR)
         if (depth >= 2 && moveCount > 1 && (!capture || !ss->ttPv))
         {
-            Depth d = clamp(newDepth - r / 1024, 1, newDepth);
+            Depth d = clamp(newDepth - r / 1024, 1, newDepth + PvNode);
             value   = -search(pos, ss + 1, -(alpha + 1), -alpha, d, true, false);
 
             if (value > alpha && d < newDepth)
