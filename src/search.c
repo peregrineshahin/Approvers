@@ -816,6 +816,8 @@ moves_loop:  // When in check search starts from here.
                 if (PvNode && !ttCapture && ss->multipleExtensions <= 5
                     && value < singularBeta - se_v7)
                     extension = 2;
+
+                depth += !PvNode && depth < 16;
             }
 
             // Multi-cut pruning. Our ttMove is assumed to fail high, and now we
