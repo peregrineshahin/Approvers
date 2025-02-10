@@ -619,6 +619,7 @@ Value search(
     // Step 6. Futility pruning: child node
     if (!ss->ttPv
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
+               - 60 * !cutNode
              >= beta
         && (ttCapture || !ttMove) && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
