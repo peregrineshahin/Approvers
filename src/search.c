@@ -1413,11 +1413,11 @@ static void check_time(void) {
 
     TimePoint elapsed = time_elapsed();
 #ifndef KAGGLE
-    if ((use_time_management() && elapsed > time_maximum() - 10)
+    if ((use_time_management() && elapsed > time_maximum() - 20)
         || (Limits.nodes && Thread.pos->nodes >= Limits.nodes))
         Thread.stop = 1;
 #else
-    if (elapsed > time_maximum() - 10)
+    if (elapsed > time_maximum() - 20)
         Thread.stop = 1;
 #endif
 }
