@@ -626,8 +626,8 @@ Value search(
 
     // Step 7. Null move search
     if (cutNode && eval >= beta
-        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v8 * ss->ttPv + nmp_v9 && !excludedMove
-        && non_pawn_material(pos))
+        && ss->staticEval >= beta - nmp_v6 * depth + nmp_v9 + nmp_v8 * ss->ttPv - 35 * improving
+        && !excludedMove && non_pawn_material(pos))
     {
         // Null move dynamic reduction based on depth and value
         Depth R = (nmp_v1 + nmp_v2 * depth) / nmp_v3 + min((eval - beta) / nmp_v4, 3) + ttCapture;
