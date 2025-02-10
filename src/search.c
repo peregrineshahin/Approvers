@@ -229,7 +229,7 @@ static int futility_margin(Depth d, bool improving) {
 }
 
 static int futility_move_count(bool improving, Depth depth) {
-    return improving ? 3 + depth * depth : (3 + depth * depth) / 2;
+    return improving ? 2 + depth * depth : 1 + depth * depth / 2;
 }
 
 // History and stats update bonus, based on depth
