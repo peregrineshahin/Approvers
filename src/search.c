@@ -285,6 +285,7 @@ SMALL void search_clear(void) {
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
     stats_clear(pos->corrHists);
+    stats_clear(pos->nodeTable);
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 6; pc++)
@@ -371,6 +372,7 @@ void thread_search(Position* pos) {
     for (int i = 0; i <= MAX_PLY; i++)
         ss[i].ply = i;
 
+    stats_clear(pos->nodeTable);
     pos->accumulator->needs_refresh = true;
 
     bestValue = delta = alpha = -VALUE_INFINITE;
@@ -435,6 +437,11 @@ void thread_search(Position* pos) {
         if (!Thread.stop)
 #endif
         {
+            double nodesEffort =
+              (double) pos->nodeTable[from_to(pv->line[0])] / (double) max(1, nodes_searched());
+
+            double nodesFactor = 2.025 - 1.35 * nodesEffort;
+
             double fallingEval = (tm_v1 + tm_v2 / 100.0 * (Thread.previousScore - bestValue)
                                   + tm_v3 / 100.0 * (Thread.iterValue[iterIdx] - bestValue))
                                / (double) tm_v4;
@@ -448,7 +455,8 @@ void thread_search(Position* pos) {
 
             double bestMoveInstability = (tm_v21 / 100.0) + (tm_v22 / 100.0) * totBestMoveChanges;
 
-            double totalTime = time_optimum() * fallingEval * pvFactor * bestMoveInstability;
+            double totalTime =
+              time_optimum() * fallingEval * pvFactor * bestMoveInstability * nodesFactor;
 
             // Stop the search if we have exceeded the totalTime (at least 1ms)
             if (time_elapsed() > totalTime)
@@ -840,6 +848,8 @@ moves_loop:  // When in check search starts from here.
         // Add extension to new depth
         newDepth += extension;
 
+        uint32_t nodeCount = nodes_searched();
+
         // Step 13. Make the move.
         do_move(pos, move, givesCheck);
 
@@ -945,17 +955,15 @@ moves_loop:  // When in check search starts from here.
         if (Thread.stop)
             return 0;
 
-        if (rootNode)
+        if (rootNode && (moveCount == 1 || value > alpha))
         {
-            if (moveCount == 1 || value > alpha)
-            {
-                ss->pv.score = value;
+            pos->nodeTable[from_to(move)] += nodes_searched() - nodeCount;
+            ss->pv.score = value;
 
-                // We record how often the best move has been changed in each
-                // iteration. This information is used for time management.
-                if (moveCount > 1)
-                    pos->bestMoveChanges++;
-            }
+            // We record how often the best move has been changed in each
+            // iteration. This information is used for time management.
+            if (moveCount > 1)
+                pos->bestMoveChanges++;
         }
 
         if (value > bestValue)

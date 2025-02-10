@@ -129,6 +129,7 @@ struct Position {
     // Relevant mainly to the search of the root position.
     Stack*       stack;
     Accumulator* accumulator;
+    uint32_t     nodeTable[4096];
     uint64_t     nodes;
     Depth        rootDepth;
     Depth        completedDepth;
