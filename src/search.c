@@ -62,6 +62,7 @@ PARAM(rz_v2, 326)
 PARAM(rz_v3, 213)
 PARAM(ft_v1, 65)
 PARAM(ft_v2, 15)
+PARAM(ft_v3, 60)
 PARAM(cv_v1, 25)
 PARAM(cv_v2, 850)
 PARAM(nmp_v1, 681)
@@ -614,7 +615,7 @@ Value search(
     // Step 6. Futility pruning: child node
     if (!ss->ttPv
         && eval - futility_margin(depth, improving) + (cv_v1 - cv_v2 * abs(correctionValue) / 1024)
-               - 60 * !cutNode
+               - ft_v3 * !cutNode
              >= beta
         && (ttCapture || !ttMove) && beta > -VALUE_MATE_IN_MAX_PLY)
         return eval;
