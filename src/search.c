@@ -609,7 +609,7 @@ Value search(
     }
 
     // Step 5. Razoring
-    if (!PvNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
+    if (!PvNode && !cutNode && depth < rz_v1 && eval < alpha - rz_v2 - rz_v3 * depth * depth)
         return qsearch(pos, ss, alpha - 1, alpha, 0);
 
     // Step 6. Futility pruning: child node
