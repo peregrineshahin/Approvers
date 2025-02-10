@@ -1311,7 +1311,7 @@ Value correction_value(Position* pos) {
 }
 
 Value to_corrected(Value v, Value cv) {
-    return clamp(v + cv, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
+    return clamp(v + 69 * cv / 56, -VALUE_MATE_IN_MAX_PLY, VALUE_MATE_IN_MAX_PLY);
 }
 
 // Updates histories of the move pairs formed by moves
