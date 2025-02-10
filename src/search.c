@@ -285,12 +285,13 @@ SMALL void search_clear(void) {
     stats_clear(pos->captureHistory);
     stats_clear(pos->contHist);
     stats_clear(pos->corrHists);
+    stats_clear(pos->contCorrHist);
 
 #pragma clang loop unroll(disable)
     for (int pc = 0; pc < 6; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            Sentinel[pc][sq] = -1;
+            Sentinel[pc][sq] = (*pos->contCorrHist)[0][0][pc][sq] = -1;
 
     Thread.previousScore = VALUE_INFINITE;
 }
@@ -363,6 +364,8 @@ void thread_search(Position* pos) {
     for (int i = -7; i < 0; i++)
     {
         ss[i].continuationHistory = &Sentinel;
+        ss[i].contCorrHistory     = &(*pos->contCorrHist)[0][0];
+        ss[i].currentMove         = MOVE_NONE;
         ss[i].staticEval          = VALUE_NONE;
         ss[i].checkersBB          = 0;
     }
@@ -629,6 +632,7 @@ Value search(
 
         ss->currentMove         = MOVE_NULL;
         ss->continuationHistory = &Sentinel;
+        ss->contCorrHistory     = &(*pos->contCorrHist)[0][0];
 
         do_null_move(pos);
         ss->endMoves    = (ss - 1)->endMoves;
@@ -661,6 +665,8 @@ Value search(
                 ss->currentMove = move;
                 ss->continuationHistory =
                   &(*pos->contHist)[stm()][type_of_p(moved_piece(move)) - 1][to_sq(move)];
+                ss->contCorrHistory =
+                  &(*pos->contCorrHist)[type_of_p(moved_piece(move)) - 1][to_sq(move)];
 
                 givesCheck = gives_check(pos, ss, move);
                 do_move(pos, move, givesCheck);
@@ -846,6 +852,7 @@ moves_loop:  // When in check search starts from here.
         // Update the current move (this must be done after singular extension search)
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
+        ss->contCorrHistory     = &(*pos->contCorrHist)[movedType][to_sq(move)];
 
         r *= 1056;
         r += r_v4;
@@ -1162,6 +1169,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
     }
 
     ss->continuationHistory = &Sentinel;
+    ss->contCorrHistory     = &(*pos->contCorrHist)[0][0];
 
     Square prevSq = move_is_ok((ss - 1)->currentMove) ? to_sq((ss - 1)->currentMove) : SQ_NONE;
 
@@ -1217,6 +1225,7 @@ Value qsearch(Position* pos, Stack* ss, Value alpha, Value beta, Depth depth) {
 
         ss->currentMove         = move;
         ss->continuationHistory = &(*pos->contHist)[stm()][movedType][to_sq(move)];
+        ss->contCorrHistory     = &(*pos->contCorrHist)[movedType][to_sq(move)];
 
         value = -qsearch(pos, ss + 1, -beta, -alpha, depth - 1);
         undo_move(pos, move);
@@ -1279,6 +1288,11 @@ static Value value_from_tt(Value v, int ply, int r50c) {
 }
 
 
+static void update_correction_history(int16_t* entry, int32_t weight, int32_t diff) {
+    int32_t update = (*entry * (1024 - weight) + diff * weight) / 1024;
+    *entry         = clamp(update, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
+}
+
 static void update_correction_histories(const Position* pos, Depth depth, int32_t diff) {
     Key keys[] = {pawn_key(),      prev_move_key(), w_nonpawn_key(),
                   b_nonpawn_key(), minor_key(),     major_key()};
@@ -1289,11 +1303,25 @@ static void update_correction_histories(const Position* pos, Depth depth, int32_
 #pragma clang loop unroll(disable)
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
     {
-        int16_t* entry  = &(*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
-        int32_t  update = (*entry * (1024 - newWeight) + scaledDiff * newWeight) / 1024;
-
-        *entry = clamp(update, -CORRECTION_HISTORY_MAX, CORRECTION_HISTORY_MAX);
+        int16_t* entry = &(*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
+        update_correction_history(entry, newWeight, scaledDiff);
     }
+
+    Stack*    ss   = pos->st;
+    Move      move = (ss - 1)->currentMove;
+    PieceType pt   = type_of_p(piece_on(to_sq(move)));
+
+    if (move_is_ok((ss - 2)->currentMove))
+        update_correction_history(&(*(ss - 2)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+
+    if (move_is_ok((ss - 3)->currentMove))
+        update_correction_history(&(*(ss - 3)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+
+    if (move_is_ok((ss - 4)->currentMove))
+        update_correction_history(&(*(ss - 4)->contCorrHistory)[pt][to_sq(move)], depth, diff);
+
+    if (move_is_ok((ss - 5)->currentMove))
+        update_correction_history(&(*(ss - 5)->contCorrHistory)[pt][to_sq(move)], depth, diff);
 }
 
 Value correction_value(Position* pos) {
@@ -1304,6 +1332,22 @@ Value correction_value(Position* pos) {
     int32_t correction = 0;
     for (size_t i = 0; i < CORRECTION_HISTORY_NB; i++)
         correction += weights[i] * (*pos->corrHists)[i][keys[i] & CORRECTION_HISTORY_MASK][stm()];
+
+    Stack*    ss   = pos->st;
+    Move      move = (ss - 1)->currentMove;
+    PieceType pt   = type_of_p(piece_on(to_sq(move)));
+
+    if (move_is_ok((ss - 2)->currentMove))
+        correction += 1024 * (*(ss - 2)->contCorrHistory)[pt][to_sq(move)];
+
+    if (move_is_ok((ss - 3)->currentMove))
+        correction += 1024 * (*(ss - 3)->contCorrHistory)[pt][to_sq(move)];
+
+    if (move_is_ok((ss - 4)->currentMove))
+        correction += 1024 * (*(ss - 4)->contCorrHistory)[pt][to_sq(move)];
+
+    if (move_is_ok((ss - 5)->currentMove))
+        correction += 1024 * (*(ss - 5)->contCorrHistory)[pt][to_sq(move)];
 
     return correction / 1024 / ch_v2;
 }
