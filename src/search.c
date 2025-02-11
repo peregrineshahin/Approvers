@@ -545,7 +545,7 @@ Value search(
                 update_quiet_stats(pos, ss, ttMove, stat_bonus(depth) * hs_v7 / 1024);
 
             // Extra penalty for early quiet moves of the previous ply
-            if ((ss - 1)->moveCount <= 3 && !captured_piece() && prevSq != SQ_NONE)
+            if (!captured_piece() && prevSq != SQ_NONE)
                 update_continuation_histories(ss - 1, piece_on(prevSq), prevSq,
                                               -stat_malus(depth + 1) * hs_v8 / 1024);
         }
