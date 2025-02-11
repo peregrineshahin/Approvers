@@ -22,7 +22,7 @@
 #include "search.h"
 #include "timeman.h"
 
-int MoveOverhead = 12;
+int MoveOverhead = 8;
 
 extern int tm_v13;
 extern int tm_v14;
