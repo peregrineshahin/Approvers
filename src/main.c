@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     zob_init();
     thread_init();
     search_clear();
-    tt_allocate(768);
+    tt_allocate(1024);
 
     uci_loop(argc, argv);
 
