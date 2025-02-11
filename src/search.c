@@ -825,7 +825,8 @@ moves_loop:  // When in check search starts from here.
             // a soft bound.
             else if (value >= beta)
                 return value;
-
+            else if (singularBeta >= beta)
+                return singularBeta;
             // If the eval of ttMove is greater than beta we also check whether
             // there is another move that pushes it over beta. If so, we prune.
             else if (cutNode || ttValue >= beta)
