@@ -746,14 +746,12 @@ moves_loop:  // When in check search starts from here.
 
             if (capture || givesCheck)
             {
-
                 Piece capturedPiece = piece_on(to_sq(move));
 
                 int captHist =
                   (*pos->captureHistory)[movedPiece][to_sq(move)][type_of_p(capturedPiece)];
 
-                int seeHist = clamp(captHist / scsee_v2, -scsee_v3, scsee_v4);
-                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
+                if (!givesCheck && lmrDepth <= 0 && captHist < 0)
                     continue;
 
                 if (!givesCheck && lmrDepth < fp_v1 && !ss->checkersBB)
@@ -763,6 +761,10 @@ moves_loop:  // When in check search starts from here.
                     if (futilityValue <= alpha)
                         continue;
                 }
+
+                int seeHist = clamp(captHist / scsee_v2, -scsee_v3, scsee_v4);
+                if (!see_test(pos, move, -scsee_v1 * depth - seeHist))
+                    continue;
             }
             else
             {
