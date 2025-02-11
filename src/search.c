@@ -811,7 +811,7 @@ moves_loop:  // When in check search starts from here.
                 if (!PvNode && value < singularBeta - se_v5 && ss->multipleExtensions <= de_v1)
                 {
                     extension = 2 + (!ttCapture && value < singularBeta - se_v6)
-                              + (!ttCapture && value < singularBeta - 393);
+                              + (!ttCapture && value < singularBeta - 300);
                     ss->multipleExtensions = (ss - 1)->multipleExtensions + 1;
                 }
                 if (PvNode && !ttCapture && ss->multipleExtensions <= 5
