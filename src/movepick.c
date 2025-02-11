@@ -77,13 +77,14 @@ static void score_quiets(const Position* pos) {
         Square    to   = move & 63;
         Square    from = move >> 6;
         PieceType pt   = type_of_p(piece_on(from)) - 1;
+        Color     pc   = color_of(piece_on(from));
 
         m->value = (*history)[c][move] * 2;
 
-        m->value += (*contHist0)[pt][to] * 2;
-        m->value += (*contHist1)[pt][to] * 2;
-        m->value += (*contHist2)[pt][to] * 2;
-        m->value += (*contHist3)[pt][to];
+        m->value += (*contHist0)[pc][pt][to] * 2;
+        m->value += (*contHist1)[pc][pt][to] * 2;
+        m->value += (*contHist2)[pc][pt][to] * 2;
+        m->value += (*contHist3)[pc][pt][to];
 
         m->value += (m->move == st->mpKillers[0] || m->move == st->mpKillers[1]) * mp_v2;
     }
@@ -103,7 +104,8 @@ static void score_evasions(const Position* pos) {
             m->value = PieceValue[piece_on(to_sq(m->move))] - type_of_p(moved_piece(m->move));
         else
             m->value = (*history)[c][from_to(m->move)]
-                     + (*contHist0)[type_of_p(moved_piece(m->move)) - 1][to_sq(m->move)]
+                     + (*contHist0)[color_of(moved_piece(m->move))]
+                                   [type_of_p(moved_piece(m->move)) - 1][to_sq(m->move)]
                      - (1 << 28);
 }
 

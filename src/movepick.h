@@ -34,8 +34,8 @@ extern int cpth_v1;
 
 #define stats_clear(s) memset(s, 0, sizeof(*s))
 
-static void update_contHist(PieceToHistory cms, PieceType pt, Square to, int v) {
-    cms[pt][to] += v - cms[pt][to] * abs(v) / cms_v1;
+static void update_contHist(PieceToHistory cms, PieceType pt, Color c, Square to, int v) {
+    cms[c][pt][to] += v - cms[c][pt][to] * abs(v) / cms_v1;
 }
 
 static void history_update(ButterflyHistory history, Color c, Move m, int v) {

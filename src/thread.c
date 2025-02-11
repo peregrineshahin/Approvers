@@ -46,7 +46,7 @@ void thread_init() {
     for (int pc = 0; pc < 6; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            Sentinel[pc][sq] = -1;
+            Sentinel[0][pc][sq] = Sentinel[1][pc][sq] = -1;
 
     Thread.pos = pos;
 
