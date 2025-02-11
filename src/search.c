@@ -398,8 +398,12 @@ void thread_search(Position* pos) {
         {
             Value previousScore = pv->score;
             delta               = d_v1;
-            alpha               = max(previousScore - delta, -VALUE_INFINITE);
-            beta                = min(previousScore + delta, VALUE_INFINITE);
+
+            if (previousScore < 2000)
+                delta += previousScore * previousScore / 16384 - 5;
+
+            alpha = max(previousScore - delta, -VALUE_INFINITE);
+            beta  = min(previousScore + delta, VALUE_INFINITE);
         }
 
         while (true)
