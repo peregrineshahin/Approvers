@@ -132,6 +132,7 @@ struct Position {
     uint64_t     nodes;
     Depth        rootDepth;
     Depth        completedDepth;
+    int          contempt;
 
     // Pointers to history tables.
     ButterflyHistory*        mainHistory;

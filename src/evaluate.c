@@ -40,5 +40,7 @@ Value evaluate(Position* pos) {
 
     v = v * (100 - rule50_count()) / 100;
 
+    v = v + pos->contempt;
+
     return clamp(v, VALUE_MATED_IN_MAX_PLY + 1, VALUE_MATE_IN_MAX_PLY - 1);
 }

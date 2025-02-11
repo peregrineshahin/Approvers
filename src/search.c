@@ -400,6 +400,9 @@ void thread_search(Position* pos) {
             delta               = d_v1;
             alpha               = max(previousScore - delta, -VALUE_INFINITE);
             beta                = min(previousScore + delta, VALUE_INFINITE);
+
+            if (previousScore < 1024)
+                pos->contempt = stm() == WHITE ? previousScore / 20 : -previousScore / 20;
         }
 
         while (true)
