@@ -11,10 +11,15 @@
 INCBIN(Network, "../default.nnue");
 
 alignas(64) int16_t in_weights[INSIZE * L1SIZE];
-alignas(64) int16_t in_biases[L1SIZE];
+alignas(64) int16_t in_biases[L1SIZE] = {
+  42,  -24, 10,  124, 20,  21,  2,   126, -7, -13, 117, 126, 35,  31, 46, 20,
+  66,  3,   -4,  27,  1,   65,  -27, 40,  3,  14,  69,  -23, 88,  83, 52, 13,
+  -22, 43,  -34, 23,  -27, 124, 55,  -51, 28, 84,  -35, 54,  -21, -4, 20, 31,
+  -46, -23, 9,   25,  -41, 92,  -50, 68,  19, 91,  46,  90,  13,  47, 57, 30,
+};
 
 alignas(64) int16_t l1_weights[BUCKETS][L1SIZE * 2];
-alignas(64) int16_t l1_biases[BUCKETS];
+alignas(64) int16_t l1_biases[BUCKETS] = {31, 488, 1459, 2674, 3444, 2959, 1189, 838};
 
 SMALL void nnue_init() {
     int8_t* data = (int8_t*) gNetworkData;
@@ -28,16 +33,16 @@ SMALL void nnue_init() {
     }
 
     for (int i = 0; i < L1SIZE; i++)
-        in_biases[i] = *(data++);
+        *(data++);
 
     for (int i = 0; i < BUCKETS; i++)
         for (int j = 0; j < L1SIZE * 2; j++)
             l1_weights[i][j] = *(data++);
 
-    int16_t* data16 = (int16_t*) data;
-
-    for (int i = 0; i < BUCKETS; i++)
-        l1_biases[i] = *(data16++);
+    // int16_t* data16 = (int16_t*) data;
+    //
+    // for (int i = 0; i < BUCKETS; i++)
+    //     l1_biases[i] = *(data16++);
 }
 
 static int make_index(PieceType pt, Color c, Square sq, Square ksq, Color side) {
