@@ -21,7 +21,6 @@
 #include "search.h"
 #include "thread.h"
 
-PieceToHistory Sentinel;
 ThreadStruct   Thread = {0};
 
 void thread_init() {
@@ -43,10 +42,10 @@ void thread_init() {
     pos->st[-1].endMoves = pos->moveList;
 
 #pragma clang loop unroll(disable)
-    for (int pc = 0; pc < 6; pc++)
+    for (int pc = 0; pc < 15; pc++)
 #pragma clang loop unroll(disable)
         for (int sq = 0; sq < 64; sq++)
-            Sentinel[pc][sq] = -1;
+            (*pos->contHist)[0][0][pc][sq] = -1;
 
     Thread.pos = pos;
 
