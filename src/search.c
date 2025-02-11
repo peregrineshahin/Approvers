@@ -641,6 +641,10 @@ Value search(
             return nullValue;
     }
 
+    // Step 9. Internal iterative reductions
+    if (((PvNode || cutNode) && depth >= 7 - 3 * PvNode) && !ttMove)
+        depth--;
+
     probCutBeta = beta + prb_v1 - prb_v2 * improving;
 
     // Step 8. ProbCut
@@ -692,13 +696,6 @@ Value search(
                 }
             }
     }
-
-    // Step 9. Internal iterative reductions
-    if (PvNode && depth >= iir_v1 && !ttMove)
-        depth -= iir_v3;
-
-    if (cutNode && depth >= iir_v2 && !ttMove)
-        depth -= iir_v4;
 
 moves_loop:  // When in check search starts from here.
   ;          // Avoid a compiler warning. A label must be followed by a statement.
