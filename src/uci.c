@@ -35,6 +35,7 @@ extern Parameter parameters[255];
 extern int       parameters_count;
 
 extern alignas(64) int16_t in_biases[L1SIZE];
+extern alignas(64) int16_t l1_biases[BUCKETS];
 #endif
 
 // FEN string of the initial position, normal chess
@@ -134,6 +135,13 @@ void setoption(char* str) {
     {
         int i        = atoi(name + 5);
         in_biases[i] = atoi(value);
+        return;
+    }
+
+    if (strstr(name, "l1b_v"))
+    {
+        int i        = atoi(name + 5);
+        l1_biases[i] = atoi(value);
         return;
     }
 
@@ -252,6 +260,9 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < L1SIZE; i++)
                 printf("option name inb_v%d type string\n", i);
 
+            for (int i = 0; i < BUCKETS; i++)
+                printf("option name l1b_v%d type string\n", i);
+
             printf("uciok\n");
             fflush(stdout);
         }
@@ -272,6 +283,10 @@ SMALL void uci_loop(int argc, char** argv) {
             for (int i = 0; i < L1SIZE; i++)
                 printf("inb_v%d, int, %d, -128, 127, %.3f, 0.002\n", i, in_biases[i],
                        abs(in_biases[i]) / 20.0);
+
+            for (int i = 0; i < BUCKETS; i++)
+                printf("l1b_v%d, int, %d, -5000, 5000, %.3f, 0.002\n", i, l1_biases[i],
+                       min(abs(l1_biases[i]) / 20.0, 5.0));
         }
         else if (strcmp(token, "ucinewgame") == 0)
         {
