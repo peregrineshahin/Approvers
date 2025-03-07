@@ -1,8 +1,6 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
-  Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
-  Copyright (C) 2015-2018 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
+  Copyright (C) 2004-2024 The Stockfish developers (see AUTHORS file)
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,100 +16,174 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MOVEPICK_H
-#define MOVEPICK_H
+#ifndef MOVEPICK_H_INCLUDED
+#define MOVEPICK_H_INCLUDED
 
-#include <string.h>  // For memset
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <limits>
+#include <type_traits>  // IWYU pragma: keep
 
 #include "movegen.h"
 #include "position.h"
-#include "search.h"
 #include "types.h"
 
-extern int cms_v1;
-extern int hu_v1;
-extern int cpth_v1;
+namespace Stockfish {
 
-#define stats_clear(s) memset(s, 0, sizeof(*s))
+constexpr int PAWN_HISTORY_SIZE        = 512;    // has to be a power of 2
+constexpr int CORRECTION_HISTORY_SIZE  = 16384;  // has to be a power of 2
+constexpr int CORRECTION_HISTORY_LIMIT = 1024;
 
-static void update_contHist(PieceToHistory cms, PieceType pt, Square to, int v) {
-    cms[pt][to] += v - cms[pt][to] * abs(v) / cms_v1;
-}
+static_assert((PAWN_HISTORY_SIZE & (PAWN_HISTORY_SIZE - 1)) == 0,
+              "PAWN_HISTORY_SIZE has to be a power of 2");
 
-static void history_update(ButterflyHistory history, Color c, Move m, int v) {
-    m &= 4095;
-    history[c][m] += v - history[c][m] * abs(v) / hu_v1;
-}
+static_assert((CORRECTION_HISTORY_SIZE & (CORRECTION_HISTORY_SIZE - 1)) == 0,
+              "CORRECTION_HISTORY_SIZE has to be a power of 2");
 
-static void cpth_update(CapturePieceToHistory history, Piece pc, Square to, int captured, int v) {
-    history[pc][to][captured] += v - history[pc][to][captured] * abs(v) / cpth_v1;
-}
-
-enum {
-    ST_MAIN_SEARCH,
-    ST_CAPTURES_INIT,
-    ST_GOOD_CAPTURES,
-    ST_QUIET_INIT,
-    ST_QUIET,
-    ST_BAD_CAPTURES,
-
-    ST_EVASION,
-    ST_EVASIONS_INIT,
-    ST_ALL_EVASIONS,
-
-    ST_QSEARCH,
-    ST_QCAPTURES_INIT,
-    ST_QCAPTURES,
-    ST_QCHECKS,
-
-    ST_PROBCUT,
-    ST_PROBCUT_INIT,
-    ST_PROBCUT_2
+enum PawnHistoryType {
+    Normal,
+    Correction
 };
 
-Move next_move(const Position* pos, bool skipQuiets);
-
-// Initialisation of move picker data.
-
-static void mp_init(const Position* pos, Move ttm, Depth d) {
-    Stack* st = pos->st;
-
-    st->depth = d;
-
-    st->mpKillers[0] = st->killers[0];
-    st->mpKillers[1] = st->killers[1];
-
-    st->ttMove = ttm;
-    st->stage  = checkers() ? ST_EVASION : ST_MAIN_SEARCH;
-    if (!ttm || !is_pseudo_legal(pos, ttm))
-        st->stage++;
+template<PawnHistoryType T = Normal>
+inline int pawn_structure_index(const Position& pos) {
+    return pos.pawn_key() & ((T == Normal ? PAWN_HISTORY_SIZE : CORRECTION_HISTORY_SIZE) - 1);
 }
 
-static void mp_init_q(const Position* pos, Move ttm, Depth d, Square s) {
-    Stack* st = pos->st;
+// StatsEntry stores the stat table value. It is usually a number but could
+// be a move or even a nested history. We use a class instead of a naked value
+// to directly call history update operator<<() on the entry so to use stats
+// tables at caller sites as simple multi-dim arrays.
+template<typename T, int D>
+class StatsEntry {
 
-    st->ttMove = ttm;
-    st->stage  = checkers() ? ST_EVASION : ST_QSEARCH;
-    if (!ttm || !is_pseudo_legal(pos, ttm)
-        || !(checkers() || d > DEPTH_QS_RECAPTURES || to_sq(ttm) == s))
-        st->stage++;
+    T entry;
 
-    st->depth           = d;
-    st->recaptureSquare = s;
-}
+   public:
+    void operator=(const T& v) { entry = v; }
+    T*   operator&() { return &entry; }
+    T*   operator->() { return &entry; }
+    operator const T&() const { return entry; }
 
-static void mp_init_pc(const Position* pos, Move ttm, Value th) {
-    Stack* st = pos->st;
+    void operator<<(int bonus) {
+        static_assert(D <= std::numeric_limits<T>::max(), "D overflows T");
 
-    st->threshold = th;
+        // Make sure that bonus is in range [-D, D]
+        int clampedBonus = std::clamp(bonus, -D, D);
+        entry += clampedBonus - entry * std::abs(clampedBonus) / D;
 
-    st->ttMove = ttm;
-    st->stage  = ST_PROBCUT;
+        assert(std::abs(entry) <= D);
+    }
+};
 
-    // In ProbCut we generate captures with SEE higher than the given
-    // threshold.
-    if (!(ttm && capture_stage(pos, ttm) && is_pseudo_legal(pos, ttm) && see_test(pos, ttm, th)))
-        st->stage++;
-}
+// Stats is a generic N-dimensional array used to store various statistics.
+// The first template parameter T is the base type of the array, and the second
+// template parameter D limits the range of updates in [-D, D] when we update
+// values with the << operator, while the last parameters (Size and Sizes)
+// encode the dimensions of the array.
+template<typename T, int D, int Size, int... Sizes>
+struct Stats: public std::array<Stats<T, D, Sizes...>, Size> {
+    using stats = Stats<T, D, Size, Sizes...>;
 
-#endif
+    void fill(const T& v) {
+
+        // For standard-layout 'this' points to the first struct member
+        assert(std::is_standard_layout_v<stats>);
+
+        using entry = StatsEntry<T, D>;
+        entry* p    = reinterpret_cast<entry*>(this);
+        std::fill(p, p + sizeof(*this) / sizeof(entry), v);
+    }
+};
+
+template<typename T, int D, int Size>
+struct Stats<T, D, Size>: public std::array<StatsEntry<T, D>, Size> {};
+
+// In stats table, D=0 means that the template parameter is not used
+enum StatsParams {
+    NOT_USED = 0
+};
+enum StatsType {
+    NoCaptures,
+    Captures
+};
+
+// ButterflyHistory records how often quiet moves have been successful or unsuccessful
+// during the current search, and is used for reduction and move ordering decisions.
+// It uses 2 tables (one for each color) indexed by the move's from and to squares,
+// see www.chessprogramming.org/Butterfly_Boards (~11 elo)
+using ButterflyHistory = Stats<int16_t, 7183, COLOR_NB, int(SQUARE_NB) * int(SQUARE_NB)>;
+
+// CapturePieceToHistory is addressed by a move's [piece][to][captured piece type]
+using CapturePieceToHistory = Stats<int16_t, 10692, PIECE_NB, SQUARE_NB, PIECE_TYPE_NB>;
+
+// PieceToHistory is like ButterflyHistory but is addressed by a move's [piece][to]
+using PieceToHistory = Stats<int16_t, 29952, PIECE_NB, SQUARE_NB>;
+
+// ContinuationHistory is the combined history of a given pair of moves, usually
+// the current one given a previous one. The nested history table is based on
+// PieceToHistory instead of ButterflyBoards.
+// (~63 elo)
+using ContinuationHistory = Stats<PieceToHistory, NOT_USED, PIECE_NB, SQUARE_NB>;
+
+// PawnHistory is addressed by the pawn structure and a move's [piece][to]
+using PawnHistory = Stats<int16_t, 8192, PAWN_HISTORY_SIZE, PIECE_NB, SQUARE_NB>;
+
+// CorrectionHistory is addressed by color and pawn structure
+using CorrectionHistory =
+  Stats<int16_t, CORRECTION_HISTORY_LIMIT, COLOR_NB, CORRECTION_HISTORY_SIZE>;
+
+// The MovePicker class is used to pick one pseudo-legal move at a time from the
+// current position. The most important method is next_move(), which emits one
+// new pseudo-legal move on every call, until there are no moves left, when
+// Move::none() is returned. In order to improve the efficiency of the alpha-beta
+// algorithm, MovePicker attempts to return the moves which are most likely to get
+// a cut-off first.
+class MovePicker {
+
+    enum PickType {
+        Next,
+        Best
+    };
+
+   public:
+    MovePicker(const MovePicker&)            = delete;
+    MovePicker& operator=(const MovePicker&) = delete;
+    MovePicker(const Position&,
+               Move,
+               Depth,
+               const ButterflyHistory*,
+               const CapturePieceToHistory*,
+               const PieceToHistory**,
+               const PawnHistory*);
+    MovePicker(const Position&, Move, int, const CapturePieceToHistory*);
+    Move next_move(bool skipQuiets = false);
+
+   private:
+    template<PickType T, typename Pred>
+    Move select(Pred);
+    template<GenType>
+    void     score();
+    ExtMove* begin() { return cur; }
+    ExtMove* end() { return endMoves; }
+
+    const Position&              pos;
+    const ButterflyHistory*      mainHistory;
+    const CapturePieceToHistory* captureHistory;
+    const PieceToHistory**       continuationHistory;
+    const PawnHistory*           pawnHistory;
+    Move                         ttMove;
+    ExtMove *                    cur, *endMoves, *endBadCaptures, *beginBadQuiets, *endBadQuiets;
+    int                          stage;
+    int                          threshold;
+    Depth                        depth;
+    ExtMove                      moves[MAX_MOVES];
+};
+
+}  // namespace Stockfish
+
+#endif  // #ifndef MOVEPICK_H_INCLUDED

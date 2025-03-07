@@ -1,8 +1,6 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
-  Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
-  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
+  Copyright (C) 2004-2024 The Stockfish developers (see AUTHORS file)
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,105 +16,83 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TT_H
-#define TT_H
+#ifndef TT_H_INCLUDED
+#define TT_H_INCLUDED
 
-#include "misc.h"
+#include <cstddef>
+#include <cstdint>
+#include <tuple>
+
+#include "memory.h"
 #include "types.h"
 
-// TTEntry struct is the 10 bytes transposition table entry, defined as:
+namespace Stockfish {
+
+class ThreadPool;
+struct TTEntry;
+struct Cluster;
+
+// There is only one global hash table for the engine and all its threads. For chess in particular, we even allow racy
+// updates between threads to and from the TT, as taking the time to synchronize access would cost thinking time and
+// thus elo. As a hash table, collisions are possible and may cause chess playing issues (bizarre blunders, faulty mate
+// reports, etc). Fixing these also loses elo; however such risk decreases quickly with larger TT size.
 //
-// key        16 bit
-// depth       8 bit
-// generation  5 bit
-// pv node     1 bit
-// bound type  2 bit
-// move       16 bit
-// value      16 bit
-// eval value 16 bit
-struct TTEntry {
-    uint16_t key16;
-    uint8_t  depth8;
-    uint8_t  genBound8;
-    uint16_t move16;
-    int16_t  value16;
-    int16_t  eval16;
+// `probe` is the primary method: given a board position, we lookup its entry in the table, and return a tuple of:
+//   1) whether the entry already has this position
+//   2) a copy of the prior data (if any) (may be inconsistent due to read races)
+//   3) a writer object to this entry
+// The copied data and the writer are separated to maintain clear boundaries between local vs global objects.
+
+
+// A copy of the data already in the entry (possibly collided). `probe` may be racy, resulting in inconsistent data.
+struct TTData {
+    Move  move;
+    Value value, eval;
+    Depth depth;
+    Bound bound;
+    bool  is_pv;
 };
 
-typedef struct TTEntry TTEntry;
 
-// A TranspositionTable consists of a power of 2 number of clusters and
-// each cluster consists of ClusterSize number of TTEntry. Each non-empty
-// entry contains information of exactly one position. The size of a
-// cluster should divide the size of a cache line size, to ensure that
-// clusters never cross cache lines. This ensures best cache performance,
-// as the cacheline is prefetched, as soon as possible.
+// This is used to make racy writes to the global TT.
+struct TTWriter {
+   public:
+    void write(Key k, Value v, bool pv, Bound b, Depth d, Move m, Value ev, uint8_t generation8);
 
-enum {
-    CacheLineSize = 64,
-    ClusterSize   = 3
+   private:
+    friend class TranspositionTable;
+    TTEntry* entry;
+    TTWriter(TTEntry* tte);
 };
 
-struct Cluster {
-    TTEntry entry[ClusterSize];
-    char    padding[2];  // Align to a divisor of the cache line size
-};
 
-typedef struct Cluster Cluster;
+class TranspositionTable {
 
-struct TranspositionTable {
+   public:
+    ~TranspositionTable() { aligned_large_pages_free(table); }
+
+    void resize(size_t mbSize, ThreadPool& threads);  // Set TT size
+    void clear(ThreadPool& threads);                  // Re-initialize memory, multithreaded
+    int  hashfull()
+      const;  // Approximate what fraction of entries (permille) have been written to during this root search
+
+    void
+    new_search();  // This must be called at the beginning of each root search to track entry aging
+    uint8_t generation() const;  // The current age, used when writing new data to the TT
+    std::tuple<bool, TTData, TTWriter>
+    probe(const Key key) const;  // The main method, whose retvals separate local vs global objects
+    TTEntry* first_entry(const Key key)
+      const;  // This is the hash function; its only external use is memory prefetching.
+
+   private:
+    friend struct TTEntry;
+
     size_t   clusterCount;
-    Cluster* table;
-    void*    mem;
-    size_t   allocSize;
-    uint8_t  generation8;  // Size must be not bigger than TTEntry::genBound8
+    Cluster* table = nullptr;
+
+    uint8_t generation8 = 0;  // Size must be not bigger than TTEntry::genBound8
 };
 
-typedef struct TranspositionTable TranspositionTable;
+}  // namespace Stockfish
 
-extern TranspositionTable TT;
-
-static void tte_save(TTEntry* tte, Key k, Value v, bool pv, int b, Depth d, Move m, Value ev) {
-    // Preserve any existing move for the same position
-    if (m || (uint16_t) k != tte->key16)
-        tte->move16 = (uint16_t) m;
-
-    // Don't overwrite more valuable entries
-    if ((uint16_t) k != tte->key16 || d - DEPTH_OFFSET > tte->depth8 - 4 || b == BOUND_EXACT)
-    {
-
-        tte->key16     = (uint16_t) k;
-        tte->depth8    = (uint8_t) (d - DEPTH_OFFSET);
-        tte->genBound8 = (uint8_t) (TT.generation8 | ((uint8_t) pv << 2) | b);
-        tte->value16   = (int16_t) v;
-        tte->eval16    = (int16_t) ev;
-    }
-}
-
-static Move tte_move(TTEntry* tte) { return tte->move16; }
-
-static Value tte_value(TTEntry* tte) { return tte->value16; }
-
-static Value tte_eval(TTEntry* tte) { return tte->eval16; }
-
-static Depth tte_depth(TTEntry* tte) { return tte->depth8 + DEPTH_OFFSET; }
-
-static bool tte_is_pv(TTEntry* tte) { return tte->genBound8 & 0x4; }
-
-static int tte_bound(TTEntry* tte) { return tte->genBound8 & 0x3; }
-
-void tt_free(void);
-
-static void tt_new_search(void) {
-    TT.generation8 += 8;  // Lower 3 bits are used by PvNode and Bound
-}
-
-static TTEntry* tt_first_entry(Key key) {
-    return &TT.table[mul_hi64(key, TT.clusterCount)].entry[0];
-}
-
-TTEntry* tt_probe(Key key, bool* found);
-void     tt_allocate(size_t mbSize);
-void     tt_clear(void);
-
-#endif
+#endif  // #ifndef TT_H_INCLUDED

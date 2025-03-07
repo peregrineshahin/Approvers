@@ -1,73 +1,12 @@
-.depend
-*.gcda
-*.profraw
-*.s
-*.swp
-*.tar
-*.tar.gz
-approvers*
-TODO
+# Files from build
+**/*.o
+**/*.s
+src/.depend
 
-# Prerequisites
-*.d
+# Built binary
+src/stockfish*
+src/-lstdc++.res
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# Neural network for the NNUE evaluation
+**/*.nnue
 
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# CMake
-cmake-build-*
-
-# JetBrains
-.idea/
-
-# src file to kaggle
-src.zip
-
-*.tmp
