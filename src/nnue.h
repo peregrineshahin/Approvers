@@ -6,12 +6,12 @@
 #include "types.h"
 
 #define INSIZE 768
-#define L1SIZE 64
+#define L1SIZE 1536
 #define BUCKETS 8
 
-#define QA 192
+#define QA 255
 #define QB 64
-#define SCALE 410
+#define SCALE 400
 
 typedef struct Accumulator Accumulator;
 

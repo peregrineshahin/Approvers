@@ -488,9 +488,6 @@ void do_move(Position* pos, Move m, int givesCheck) {
     Square wksq     = square_of(WHITE, KING);
     Square bksq     = square_of(BLACK, KING);
 
-    if (type_of_p(piece) == KING && (from & 4) != (to & 4))
-        acc->needs_refresh = true;
-
     if (unlikely(type_of_m(m) == CASTLING))
     {
         int    kingSide = to > from;
