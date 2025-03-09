@@ -5,8 +5,10 @@ The source code is available at https://github.com/peregrineshahin/Approvers.
 ### Background
 
 We started out as 2 separate teams, shuffling near the top of the leaderboard. Eventually, we decided to join forces.
-Both of us had prior experience as chess engine developers — @peregrineshahin is a Stockfish contributer, a highly skilled professional, and I, @rickonaut,
+Both of us had prior experience as chess engine developers — @peregrineshahin is a Stockfish contributor, a highly skilled professional, and I, @rickonaut,
 eveloped my own chess engine as a pet-project.
+
+We came to understand that a highly ranked submission would likely require optimizing all four key aspects of the tournament. With this in mind, our approach was driven by a commitment to developing a chess engine in a dedicated manner, focusing on optimizing for the size limit, memory limit, tested time control (TC), and the opening book.
 
 ### Testing
 
@@ -16,7 +18,8 @@ distributed compute resources. Our GitHub repository has over 1250 branches, eac
 left all commits and branches intact for historical reference when switching from a private to a public repository. Most functional commits on the `main`
 branch include descriptions with the result of associated SPRT tests.
 
-This was achived using the [OpenBench](https://github.com/AndyGrant/OpenBench), an open source chess testing framework, developed by @agethereal.
+Before merging teams, I had my own private local instance of [OpenBench](https://github.com/AndyGrant/OpenBench) up and running, a generic open source chess testing framework, developed by @agethereal, this made it easier to get started rather than debating whether to use [Fishtest](https://github.com/official-stockfish/fishtest) while both can do the job.
+Once we joined forces, this setup played a key role in helping us develop and refine the engine together.
 
 \* In comparison, `Fix the bugs?` reported ~38M games.
 
@@ -24,8 +27,16 @@ This was achived using the [OpenBench](https://github.com/AndyGrant/OpenBench), 
 
 The starting point is the [Cfish](https://github.com/syzygy1/Cfish), a C port of [Stockfish](https://github.com/official-stockfish/Stockfish).
 
-<...>
+Unfortunately, although we have over 300 commits in the repository, some commits from before merging the teams were not tracked. However, they might not be particularly relevant to the final submission.
 
+We recognized early on the importance of combining domain-specific knowledge with general development skills.
+
+<...>
+### Search
+
+### Time Managment
+
+### Evaluation 
 For evaluation, we introduced NNUE with a pretty straightforward NNUE architecture adopted in different forms in the chess community
 — (768x1hm -> 64)x1 -> 1x8 — 1 hidden layer with 768 features (2 colors \* 6 piece types \* 64 squares) with implementation-specific modifications:
 
@@ -40,12 +51,14 @@ in the repository, compatible with the [Bullet](https://github.com/jw1912/bullet
 The network is quantized to 8 bits for FT weights/biases and L1 weights, and 16 bits for L1 biases. Also, due to unused features for pawns
 (1st and 8th ranks being illegal by the rules of chess) and the mirror squares of kings, the input features are reduced to `704`.
 
+### Memory Optimization
+
 ### Size Optimization
 
 To minimize the size of the binary and fit the largest NNUE model while keeping the crutial `-O3` flag for NNUE performance, we did lots of cleanups
 and simplifications (including functional ones that haven't regressed in our SPRT tests). Additionally, we switched from `gcc` to `clang`,
-as it produces smaller binaries and is at least as fast, later combining with various cflags, `#pragma` directives to disable unrolling on
-individual loops, and applying `minsize`, `cold`, and `section(".text.small")` attributes to non-hot functions. We also fully removed dependencies
+as it produced smaller binaries and at least as fast, later combining with various cflags, `#pragma` directives to disable unrolling on
+individual loops, and applying a combination of `minsize`, `cold`, and `section(".text.small")` attributes to non-hot functions played a big role for achieving our goal. We also fully removed dependencies
 on `libm` and `lpthread` by replacing necessary functions with custom implementations and making the application truly single-threaded.
 
 ### Local Results
