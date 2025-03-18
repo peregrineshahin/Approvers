@@ -6,7 +6,7 @@ The source code is available at https://github.com/peregrineshahin/Approvers.
 
 We started out as 2 separate teams, shuffling near the top of the leaderboard. Eventually, we decided to join forces.
 Both of us had prior experience as chess engine developers — @peregrineshahin is a Stockfish contributor, a highly skilled professional, and I, @rickonaut,
-eveloped my own chess engine as a pet-project.
+developed my own chess engine as a pet-project.
 
 We came to understand that a highly ranked submission would likely require optimizing all four key aspects of the tournament. With this in mind, our approach was driven by a commitment to developing a chess engine in a dedicated manner, focusing on optimizing for the size limit, memory limit, tested time control (TC), and the opening book.
 
