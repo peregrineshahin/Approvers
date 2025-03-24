@@ -14,7 +14,7 @@ We came to understand that a highly ranked submission would likely require optim
 
 As the gold standard in the chess engine community, we used SPRT (Sequential Probability Ratio Test) to determine whether a change is statistically beneficial
 and SPSA (Simultaneous Perturbation Stochastic Approximation) for tuning various constants and parameters. In total, we have played around 20M\* games using
-distributed compute resources. Our GitHub repository has over 1250 branches, each containing different ideas and attempt to improve the submission. We have
+distributed compute resources. Our GitHub repository has over 1250 branches, each containing different ideas and attempts to improve the submission. We have
 left all commits and branches intact for historical reference when switching from a private to a public repository. Most functional commits on the `main`
 branch include descriptions with the result of associated SPRT tests.
 
@@ -31,18 +31,25 @@ Unfortunately, although we have over 300 commits in the repository, some commits
 
 We recognized early on the importance of combining domain-specific knowledge with general development skills.
 
-<...>
-### Search
+### Search Features
 
-### Time Managment
+Due to size limitations, we determined that the most effective strategy for our team was to include four fundamental search features. These features significantly shaped the parameters of our chess engine later on, distinguishing it from conventional engines, generally because these hurt the performance in long time controls:
 
-### Evaluation 
-For evaluation, we introduced NNUE with a pretty straightforward NNUE architecture adopted in different forms in the chess community
-— (768x1hm -> 64)x1 -> 1x8 — 1 hidden layer with 768 features (2 colors \* 6 piece types \* 64 squares) with implementation-specific modifications:
+- Short Time Control (STC) Elo Gainer Optimization – This technique skips root depths at odd plies in Iterative Deepening, a method initially discovered by Shahin while working on Stockfish.
+- STC Fail-High Handling – A strategy that moves on to the next root node in the event of a fail-high, originally discovered in the early days of Stockfish.
+- Quiescence Search Time Checking – An STC optimization that improves performance in Stockfish-clone engines by monitoring time even during Quiescence Search. This was also identified by Shahin during his previous work on Stockfish.
+- Sudden Death Time Control Optimization – A technique developed by the Stockfish team, which scales the Move-To-Go (MTG) parameter dynamically as time control approaches its limit.
 
-- Horizontal king mirroring: inputs are flipped along the vertical axis, i.e., a1 becomes h1, b1 becomes g1, etc., based on the position of the friendly king.
-- 8 output buckets based on the number of pieces left on the board: (piece_count - 2) / 4.
-- SCReLU (Squared Clipped Rectified Linear Unit) activation function: f(x) = min(max(x, 0), 1)^2.
+Interestingly, we discovered that implementing certain well-known Short Time Control (STC) optimizations, which require a complete retuning of the engine’s hyperparameters, enabled us to incorporate established Very Long Long Time Control (VVLTC) optimizations — techniques that typically do not function under STC conditions!
+
+### Evaluation
+
+For evaluation, we introducd NNUE with a pretty straightforward NNUE architecture adopted in different forms in the chess community — (768x1hm -> 64)x1 -> 1x8.
+
+- 768 input features with horizontal king mirroring. Inputs are flipped along the vertical axis, i.e., a1 becomes h1, b1 becomes g1, etc., based on the position of the friendly king.
+- 1 hidden layer with 64 neurons with Squared Clipped Rectified Linear Unit (SCReLU) activation function f(x) = min(max(x, 0), 1)^2.
+- 8 output buckets (a layer stack), selected based on the number of pieces remaining on the board (piece_count - 2) / 4.
+- It outputs a single number, representing an evaluation of a node in the engine's internal units.
 
 The network training involves 3-stages of progressive training, with each stage restarting from the previous one with modifications, finally followed
 by an SPSA session. For the full training configuration, see [training/config.rs](https://github.com/peregrineshahin/Approvers/blob/main/training/config.rs)
@@ -55,7 +62,7 @@ The network is quantized to 8 bits for FT weights/biases and L1 weights, and 16 
 
 ### Size Optimization
 
-To minimize the size of the binary and fit the largest NNUE model while keeping the crutial `-O3` flag for NNUE performance, we did lots of cleanups
+To minimize the size of the binary and fit the largest NNUE model while keeping the crucial `-O3` flag for NNUE performance, we did lots of cleanups
 and simplifications (including functional ones that haven't regressed in our SPRT tests). Additionally, we switched from `gcc` to `clang`,
 as it produced smaller binaries and at least as fast, later combining with various cflags, `#pragma` directives to disable unrolling on
 individual loops, and applying a combination of `minsize`, `cold`, and `section(".text.small")` attributes to non-hot functions played a big role for achieving our goal. We also fully removed dependencies
