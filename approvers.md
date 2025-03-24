@@ -58,8 +58,6 @@ in the repository, compatible with the [Bullet](https://github.com/jw1912/bullet
 The network is quantized to 8 bits for FT weights/biases and L1 weights, and 16 bits for L1 biases. Also, due to unused features for pawns
 (1st and 8th ranks being illegal by the rules of chess) and the mirror squares of kings, the input features are reduced to `704`.
 
-### Memory Optimization
-
 ### Size Optimization
 
 To minimize the size of the binary and fit the largest NNUE model while keeping the crucial `-O3` flag for NNUE performance, we did lots of cleanups
